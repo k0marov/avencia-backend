@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const jwtSecret = secrets.JwtSecret
+var jwtSecret = secrets.JwtSecret
 
 type Issuer func(claims map[string]any, expDuration time.Duration) (string, error)
 type Verifier func(token string) (map[string]any, error)
