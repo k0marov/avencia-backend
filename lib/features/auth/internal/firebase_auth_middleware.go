@@ -2,8 +2,6 @@ package internal
 
 import (
 	"context"
-	"github.com/k0marov/avencia-backend/lib/core/client_errors"
-	"github.com/k0marov/avencia-backend/lib/core/http_helpers"
 	"net/http"
 	"strings"
 
@@ -18,7 +16,7 @@ func NewFirebaseAuthMiddleware(authClient *auth.Client) core.Middleware {
 			bearerToken := tokenFromHeader(r)
 			token, err := authClient.VerifyIDToken(ctx, bearerToken)
 			if err != nil {
-				http_helpers.ThrowClientError(w, client_errors.InvalidAuthToken)
+				http.Error(w, "", http.StatusUnauthorized)
 				return
 			}
 			next.ServeHTTP(w, r.WithContext(context.WithValue(ctx, userContextKey, User{Id: token.UID})))
@@ -49,4 +47,8 @@ func UserFromCtx(ctx context.Context) (User, error) {
 	}
 
 	return User{}, ErrNoUserInContext
+}
+
+func AddUserToCtx(user User, ctx context.Context) context.Context {
+	return context.WithValue(ctx, userContextKey, user)
 }

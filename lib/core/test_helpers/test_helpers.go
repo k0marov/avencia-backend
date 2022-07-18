@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/k0marov/avencia-backend/lib/core/client_errors"
+	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"log"
 	"math/rand"
 	"net/http"
@@ -86,6 +87,17 @@ func AssertJSONData[T any](t testing.TB, response *httptest.ResponseRecorder, wa
 	var gotData T
 	json.NewDecoder(response.Body).Decode(&gotData)
 	Assert(t, gotData, wantData, "json encoded data")
+}
+
+func RandomClientError() client_errors.ClientError {
+	return client_errors.ClientError{
+		DetailCode: RandomString(),
+		HTTPCode:   400 + RandomInt(),
+	}
+}
+
+func RandomUser() auth.User {
+	return auth.User{Id: RandomId()}
 }
 
 func RandomId() string {
