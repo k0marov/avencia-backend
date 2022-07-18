@@ -30,7 +30,7 @@ func TestGenerateCodeHandler(t *testing.T) {
 		}
 		handlers.NewGenerateCodeHandler(generate)(response, requestWithUser)
 
-		AssertJSONData(t, response, responses.CodeResponse{Code: code})
+		AssertJSONData(t, response, responses.CodeResponse{TransactionCode: code})
 	})
 	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, w *httptest.ResponseRecorder) {
 		generate := func(auth.User) (string, error) {
@@ -41,14 +41,14 @@ func TestGenerateCodeHandler(t *testing.T) {
 }
 
 func TestVerifyCodeHandler(t *testing.T) {
-	codeReq := handlers.CodeRequest{Code: RandomString()}
+	codeReq := handlers.CodeRequest{TransactionCode: RandomString()}
 	codeReqBody, _ := json.Marshal(codeReq)
 	request := http_test_helpers.CreateRequest(bytes.NewReader(codeReqBody))
 	userInfo := RandomUserInfo()
 
 	t.Run("happy case", func(t *testing.T) {
 		verify := func(code string) (entities.UserInfo, error) {
-			if code == codeReq.Code {
+			if code == codeReq.TransactionCode {
 				return userInfo, nil
 			}
 			panic("unexpected args")

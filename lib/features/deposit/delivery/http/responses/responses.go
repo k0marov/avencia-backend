@@ -5,5 +5,5 @@ type UserInfoResponse struct {
 }
 
 type CodeResponse struct {
-	Code string `json:"code"`
+	TransactionCode string `json:"transaction_code"`
 }

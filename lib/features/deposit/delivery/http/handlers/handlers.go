@@ -21,19 +21,19 @@ func NewGenerateCodeHandler(generate service.CodeGenerator) http.HandlerFunc {
 			return
 		}
 		log.Printf("generated code %v for user %v", code, user.Id)
-		http_helpers.WriteJson(w, responses.CodeResponse{Code: code})
+		http_helpers.WriteJson(w, responses.CodeResponse{TransactionCode: code})
 	}
 }
 
 type CodeRequest struct {
-	Code string `json:"code"`
+	TransactionCode string `json:"transaction_code"`
 }
 
 func NewVerifyCodeHandler(verify service.CodeVerifier) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var code CodeRequest
 		json.NewDecoder(r.Body).Decode(&code)
-		userInfo, err := verify(code.Code)
+		userInfo, err := verify(code.TransactionCode)
 		if err != nil {
 			http_helpers.HandleServiceError(w, err)
 			return
