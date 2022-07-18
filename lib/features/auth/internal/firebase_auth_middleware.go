@@ -2,6 +2,8 @@ package internal
 
 import (
 	"context"
+	"github.com/k0marov/avencia-backend/lib/core/client_errors"
+	"github.com/k0marov/avencia-backend/lib/core/http_helpers"
 	"net/http"
 	"strings"
 
@@ -14,16 +16,9 @@ func NewFirebaseAuthMiddleware(authClient *auth.Client) core.Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			bearerToken := tokenFromHeader(r)
-			if bearerToken == "" {
-				w.WriteHeader(401)
-				//httperr.Unauthorised("empty-bearer-token", nil, w, r)
-				return
-			}
-
 			token, err := authClient.VerifyIDToken(ctx, bearerToken)
 			if err != nil {
-				w.WriteHeader(401)
-				//httperr.Unauthorised("unable-to-verify-jwt", err, w, r)
+				http_helpers.ThrowClientError(w, client_errors.InvalidAuthToken)
 				return
 			}
 			next.ServeHTTP(w, r.WithContext(context.WithValue(ctx, userContextKey, User{Id: token.UID})))
@@ -38,7 +33,7 @@ func tokenFromHeader(r *http.Request) string {
 		return headerValue[7:]
 	}
 
-	return ""
+	return "" // this will later throw on verification
 }
 
 type ctxKey int

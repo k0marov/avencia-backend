@@ -19,7 +19,10 @@ func init() {
 	jwtSecret = fileSecret
 }
 
-func IssueJWT(subject string, expDuration time.Duration) (string, error) {
+type Issuer func(subject string, expDuration time.Duration) (string, error)
+type Verifier func(token string) (map[string]any, error)
+
+func IssuerImpl(subject string, expDuration time.Duration) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": subject,
 		"exp": time.Now().UTC().Add(expDuration).Unix(),
@@ -28,7 +31,7 @@ func IssueJWT(subject string, expDuration time.Duration) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-func VerifyJWT(tokenString string) (map[string]any, error) {
+func VerifierImpl(tokenString string) (map[string]any, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
