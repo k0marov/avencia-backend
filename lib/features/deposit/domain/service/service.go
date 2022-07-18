@@ -5,6 +5,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/entities"
+	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/values"
 	"time"
 )
 
@@ -17,6 +18,7 @@ const UserIdClaim = "sub"
 
 type CodeGenerator = func(user auth.User) (string, error)
 type CodeVerifier = func(string) (entities.UserInfo, error)
+type BanknoteChecker = func(code string, banknote values.Banknote) (bool, error)
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(user auth.User) (string, error) {
@@ -44,5 +46,12 @@ func NewCodeVerifier(verifyJWT jwt.Verifier) CodeVerifier {
 		return entities.UserInfo{
 			Id: userId,
 		}, nil
+	}
+}
+
+func NewBanknoteChecker() BanknoteChecker {
+	return func(code string, banknote values.Banknote) (bool, error) {
+		// TODO: add the required banknote checking logic
+		return true, nil
 	}
 }
