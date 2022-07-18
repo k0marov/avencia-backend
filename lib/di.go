@@ -3,6 +3,7 @@ package lib
 import (
 	"context"
 	"fmt"
+	"github.com/k0marov/avencia-backend/lib/core/constants"
 	"log"
 	"net/http"
 
@@ -12,7 +13,7 @@ import (
 )
 
 func initFirebase() *firebase.App {
-	opt := option.WithCredentialsFile("firebase_secret.json")
+	opt := option.WithCredentialsFile(constants.FirebaseSecretPath)
 	fbApp, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		log.Fatalf("error initializing Firebase app: %v", err)

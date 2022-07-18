@@ -3,10 +3,21 @@ package jwt
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt"
+	"github.com/k0marov/avencia-backend/lib/core/constants"
+	"io/ioutil"
+	"log"
 	"time"
 )
 
-var testSecret = []byte("test-secret")
+var jwtSecret []byte
+
+func init() {
+	fileSecret, err := ioutil.ReadFile(constants.JwtSecretPath)
+	if err != nil {
+		log.Fatalf("unable to load jwt secret from %s: %v", constants.JwtSecretPath, err)
+	}
+	jwtSecret = fileSecret
+}
 
 func IssueJWT(subject string, expDuration time.Duration) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -14,7 +25,7 @@ func IssueJWT(subject string, expDuration time.Duration) (string, error) {
 		"exp": time.Now().UTC().Add(expDuration).Unix(),
 	})
 
-	return token.SignedString(testSecret)
+	return token.SignedString(jwtSecret)
 }
 
 func VerifyJWT(tokenString string) (map[string]any, error) {
@@ -23,7 +34,7 @@ func VerifyJWT(tokenString string) (map[string]any, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return testSecret, nil
+		return jwtSecret, nil
 	})
 	if err != nil {
 		return make(map[string]any), fmt.Errorf("while parsing a token: %w", err)
