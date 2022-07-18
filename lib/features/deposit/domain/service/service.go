@@ -5,7 +5,10 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/entities"
+	"time"
 )
+
+const ExpDuration = time.Minute * 10
 
 const TransactionTypeClaim = "transaction_type"
 const DepositTransactionType = "deposit"
@@ -14,6 +17,16 @@ const UserIdClaim = "sub"
 
 type CodeGenerator = func(user auth.User) (string, error)
 type CodeVerifier = func(string) (entities.UserInfo, error)
+
+func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
+	return func(user auth.User) (string, error) {
+		claims := map[string]any{
+			UserIdClaim:          user.Id,
+			TransactionTypeClaim: DepositTransactionType,
+		}
+		return issueJWT(claims, ExpDuration)
+	}
+}
 
 func NewCodeVerifier(verifyJWT jwt.Verifier) CodeVerifier {
 	return func(code string) (entities.UserInfo, error) {

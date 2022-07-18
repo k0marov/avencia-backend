@@ -9,14 +9,12 @@ import (
 
 const jwtSecret = secrets.JwtSecret
 
-type Issuer func(subject string, expDuration time.Duration) (string, error)
+type Issuer func(claims map[string]any, expDuration time.Duration) (string, error)
 type Verifier func(token string) (map[string]any, error)
 
-func IssuerImpl(subject string, expDuration time.Duration) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": subject,
-		"exp": time.Now().UTC().Add(expDuration).Unix(),
-	})
+func IssuerImpl(claims map[string]any, expDuration time.Duration) (string, error) {
+	claims["exp"] = time.Now().UTC().Add(expDuration).Unix()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims(claims))
 
 	return token.SignedString(jwtSecret)
 }

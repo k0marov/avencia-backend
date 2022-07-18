@@ -3,10 +3,36 @@ package service_test
 import (
 	"github.com/k0marov/avencia-backend/lib/core/client_errors"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
+	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/service"
+	"reflect"
 	"testing"
+	"time"
 )
+
+func TestCodeGenerator(t *testing.T) {
+	tUser := auth.User{Id: RandomId()}
+	wantClaims := map[string]any{
+		service.UserIdClaim:          tUser.Id,
+		service.TransactionTypeClaim: service.DepositTransactionType,
+	}
+
+	t.Run("forward test", func(t *testing.T) {
+		token := RandomString()
+		err := RandomError()
+		issueJwt := func(gotClaims map[string]any, expDuration time.Duration) (string, error) {
+			if reflect.DeepEqual(gotClaims, wantClaims) && expDuration == service.ExpDuration {
+				return token, err
+			}
+			panic("unexpected")
+		}
+		gotToken, gotErr := service.NewCodeGenerator(issueJwt)(tUser)
+		AssertError(t, gotErr, err)
+		Assert(t, gotToken, token, "returned token")
+
+	})
+}
 
 func TestCodeVerifier(t *testing.T) {
 	tCode := RandomString()
