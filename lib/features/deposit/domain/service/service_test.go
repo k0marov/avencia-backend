@@ -10,12 +10,12 @@ import (
 
 func TestCodeVerifier(t *testing.T) {
 	tCode := RandomString()
-	tUserInfoMap := map[string]any{"sub": "4242"}
+	tClaims := map[string]any{service.UserIdClaim: "4242", service.TransactionTypeClaim: service.DepositTransactionType}
 	tUserInfo := entities.UserInfo{Id: "4242"}
 
 	jwtVerifier := func(token string) (map[string]any, error) {
 		if token == tCode {
-			return tUserInfoMap, nil
+			return tClaims, nil
 		}
 		panic("unexpected")
 	}
@@ -28,7 +28,14 @@ func TestCodeVerifier(t *testing.T) {
 	})
 	t.Run("error case - token does not contain the needed claims", func(t *testing.T) {
 		jwtVerifier := func(string) (map[string]any, error) {
-			return map[string]any{"sub": 42}, nil
+			return map[string]any{service.UserIdClaim: 42, service.TransactionTypeClaim: service.DepositTransactionType}, nil
+		}
+		_, err := service.NewCodeVerifier(jwtVerifier)(tCode)
+		AssertError(t, err, client_errors.InvalidJWT)
+	})
+	t.Run("error case - token has an incorrect transaction_type claim", func(t *testing.T) {
+		jwtVerifier := func(string) (map[string]any, error) {
+			return map[string]any{service.UserIdClaim: "4242", service.TransactionTypeClaim: "random"}, nil
 		}
 		_, err := service.NewCodeVerifier(jwtVerifier)(tCode)
 		AssertError(t, err, client_errors.InvalidJWT)
