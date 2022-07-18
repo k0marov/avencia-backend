@@ -5,6 +5,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/http_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/responses"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/service"
+	"log"
 	"net/http"
 )
 
@@ -19,6 +20,7 @@ func NewGenerateCodeHandler(generate service.CodeGenerator) http.HandlerFunc {
 			http_helpers.HandleServiceError(w, err)
 			return
 		}
+		log.Printf("generated code %v for user %v", code, user.Id)
 		http_helpers.WriteJson(w, responses.CodeResponse{Code: code})
 	}
 }
