@@ -2,8 +2,9 @@ package lib
 
 import (
 	"context"
-	"fmt"
+	"github.com/go-chi/chi/v5"
 	"github.com/k0marov/avencia-backend/lib/core/constants"
+	"github.com/k0marov/avencia-backend/lib/features/deposit"
 	"log"
 	"net/http"
 
@@ -25,13 +26,9 @@ func Initialize() http.Handler {
 	fbApp := initFirebase()
 	authMiddleware := auth.NewAuthMiddleware(fbApp)
 
-	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := auth.UserFromCtx(r.Context())
-		if err != nil {
-			w.Write([]byte("You are not logged in."))
-		} else {
-			w.Write([]byte(fmt.Sprintf("You are logged in. The user id is: %s", user.Id)))
-		}
-	})
-	return authMiddleware(testHandler)
+	r := chi.NewRouter()
+
+	r.Route("/deposit", deposit.NewDepositRouterImpl(authMiddleware))
+
+	return r
 }
