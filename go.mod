@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	firebase.google.com/go v3.13.0+incompatible
+	github.com/go-chi/chi/v5 v5.0.7
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	google.golang.org/api v0.87.0
 )
