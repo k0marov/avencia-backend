@@ -3,21 +3,11 @@ package jwt
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt"
-	"github.com/k0marov/avencia-backend/lib/core/constants"
-	"io/ioutil"
-	"log"
+	"github.com/k0marov/avencia-backend/secrets"
 	"time"
 )
 
-var jwtSecret []byte
-
-func init() {
-	fileSecret, err := ioutil.ReadFile(constants.JwtSecretPath)
-	if err != nil {
-		log.Fatalf("unable to load jwt secret from %s: %v", constants.JwtSecretPath, err)
-	}
-	jwtSecret = fileSecret
-}
+const jwtSecret = secrets.JwtSecret
 
 type Issuer func(subject string, expDuration time.Duration) (string, error)
 type Verifier func(token string) (map[string]any, error)
