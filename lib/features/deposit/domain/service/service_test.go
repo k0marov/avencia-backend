@@ -6,6 +6,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/values"
 	"reflect"
 	"testing"
 	"time"
@@ -73,4 +74,29 @@ func TestCodeVerifier(t *testing.T) {
 		Assert(t, gotUserInfo, tUserInfo, "returned user info")
 	})
 
+}
+
+func TestBanknoteChecker(t *testing.T) {
+	code := RandomString()
+	banknote := values.Banknote{
+		Currency: RandomString(),
+		Amount:   RandomInt(),
+	}
+	t.Run("accept case - jwt checking does not throw", func(t *testing.T) {
+		verifyCode := func(gotCode string) (entities.UserInfo, error) {
+			if gotCode == code {
+				return entities.UserInfo{}, nil
+			}
+			panic("unexpected")
+		}
+		result := service.NewBanknoteChecker(verifyCode)(code, banknote)
+		Assert(t, result, true, "accept == true")
+	})
+	t.Run("reject case - jwt checking throws", func(t *testing.T) {
+		verifyCode := func(string) (entities.UserInfo, error) {
+			return entities.UserInfo{}, RandomError()
+		}
+		result := service.NewBanknoteChecker(verifyCode)(code, banknote)
+		Assert(t, result, false, "accept == false")
+	})
 }

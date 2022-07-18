@@ -13,8 +13,10 @@ func NewDepositRouterImpl(authMiddleware core.Middleware) func(r chi.Router) {
 	// service
 	genCode := service.NewCodeGenerator(jwt.IssuerImpl)
 	verifyCode := service.NewCodeVerifier(jwt.VerifierImpl)
+	checkBanknote := service.NewBanknoteChecker(verifyCode)
 	// handlers
 	genCodeHandler := handlers.NewGenerateCodeHandler(genCode)
 	verifyCodeHandler := handlers.NewVerifyCodeHandler(verifyCode)
-	return router.NewDepositRouter(genCodeHandler, verifyCodeHandler, authMiddleware)
+	checkBanknoteHandler := handlers.NewCheckBanknoteHandler(checkBanknote)
+	return router.NewDepositRouter(genCodeHandler, verifyCodeHandler, checkBanknoteHandler, authMiddleware)
 }

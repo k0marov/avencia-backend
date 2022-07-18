@@ -49,9 +49,9 @@ func NewCodeVerifier(verifyJWT jwt.Verifier) CodeVerifier {
 	}
 }
 
-func NewBanknoteChecker() BanknoteChecker {
+func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 	return func(transactionCode string, banknote values.Banknote) bool {
-		// TODO: add the required banknote checking logic
-		return true
+		_, err := verifyCode(transactionCode)
+		return err == nil
 	}
 }
