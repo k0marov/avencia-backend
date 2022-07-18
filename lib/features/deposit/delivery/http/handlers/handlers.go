@@ -5,6 +5,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/http_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/responses"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/values"
 	"log"
 	"net/http"
 )
@@ -39,5 +40,25 @@ func NewVerifyCodeHandler(verify service.CodeVerifier) http.HandlerFunc {
 			return
 		}
 		http_helpers.WriteJson(w, responses.UserInfoResponse{Id: userInfo.Id})
+	}
+}
+
+type BanknoteCheckRequest struct {
+	TransactionCode string `json:"transaction_code"`
+	Currency        string `json:"currency"`
+	Amount          int    `json:"amount"`
+}
+
+func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var banknoteRequest BanknoteCheckRequest
+		json.NewDecoder(r.Body).Decode(&banknoteRequest)
+
+		response := responses.BanknoteCheckResponse{Accept: checkBanknote(banknoteRequest.TransactionCode, values.Banknote{
+			Currency: banknoteRequest.Currency,
+			Amount:   banknoteRequest.Amount,
+		})}
+
+		http_helpers.WriteJson(w, response)
 	}
 }

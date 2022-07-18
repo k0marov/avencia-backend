@@ -9,6 +9,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/handlers"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/responses"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/entities"
+	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/values"
 	"net/http/httptest"
 	"testing"
 )
@@ -65,4 +66,31 @@ func TestVerifyCodeHandler(t *testing.T) {
 		handlers.NewVerifyCodeHandler(verify)(response, request)
 	})
 
+}
+
+func TestCheckBanknoteHandler(t *testing.T) {
+	t.Run("should call service and return the result in the 'accept' field", func(t *testing.T) {
+		transactionCode := RandomString()
+		currency := RandomString()
+		amount := RandomInt()
+		banknoteJson, _ := json.Marshal(handlers.BanknoteCheckRequest{
+			TransactionCode: transactionCode,
+			Currency:        currency,
+			Amount:          amount,
+		})
+		request := http_test_helpers.CreateRequest(bytes.NewReader(banknoteJson))
+		response := httptest.NewRecorder()
+
+		accept := RandomBool()
+		checker := func(code string, banknote values.Banknote) bool {
+			if code == transactionCode && banknote.Amount == amount && banknote.Currency == currency {
+				return accept
+			}
+			panic("unexpected")
+		}
+
+		handlers.NewCheckBanknoteHandler(checker)(response, request)
+
+		AssertJSONData(t, response, responses.BanknoteCheckResponse{Accept: accept})
+	})
 }

@@ -18,7 +18,7 @@ const UserIdClaim = "sub"
 
 type CodeGenerator = func(user auth.User) (string, error)
 type CodeVerifier = func(string) (entities.UserInfo, error)
-type BanknoteChecker = func(code string, banknote values.Banknote) (bool, error)
+type BanknoteChecker = func(transactionCode string, banknote values.Banknote) bool
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(user auth.User) (string, error) {
@@ -50,8 +50,8 @@ func NewCodeVerifier(verifyJWT jwt.Verifier) CodeVerifier {
 }
 
 func NewBanknoteChecker() BanknoteChecker {
-	return func(code string, banknote values.Banknote) (bool, error) {
+	return func(transactionCode string, banknote values.Banknote) bool {
 		// TODO: add the required banknote checking logic
-		return true, nil
+		return true
 	}
 }

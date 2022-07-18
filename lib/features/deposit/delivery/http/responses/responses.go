@@ -7,3 +7,7 @@ type UserInfoResponse struct {
 type CodeResponse struct {
 	TransactionCode string `json:"transaction_code"`
 }
+
+type BanknoteCheckResponse struct {
+	Accept bool `json:"accept"`
+}
