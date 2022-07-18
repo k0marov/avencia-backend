@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/k0marov/avencia-backend/lib/core/client_errors"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
+	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/entities"
 	"log"
 	"math/rand"
 	"net/http"
@@ -98,6 +99,9 @@ func RandomClientError() client_errors.ClientError {
 
 func RandomUser() auth.User {
 	return auth.User{Id: RandomId()}
+}
+func RandomUserInfo() entities.UserInfo {
+	return entities.UserInfo{Id: RandomId()}
 }
 
 func RandomId() string {

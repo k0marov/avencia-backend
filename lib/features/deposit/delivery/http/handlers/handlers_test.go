@@ -1,11 +1,14 @@
 package handlers_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"github.com/k0marov/avencia-backend/lib/core/http_test_helpers"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/handlers"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/responses"
+	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/entities"
 	"net/http/httptest"
 	"testing"
 )
@@ -35,4 +38,31 @@ func TestGenerateCodeHandler(t *testing.T) {
 		}
 		handlers.NewGenerateCodeHandler(generate)(w, requestWithUser)
 	})
+}
+
+func TestVerifyCodeHandler(t *testing.T) {
+	codeReq := handlers.CodeRequest{Code: RandomString()}
+	codeReqBody, _ := json.Marshal(codeReq)
+	request := http_test_helpers.CreateRequest(bytes.NewReader(codeReqBody))
+	userInfo := RandomUserInfo()
+
+	t.Run("happy case", func(t *testing.T) {
+		verify := func(code string) (entities.UserInfo, error) {
+			if code == codeReq.Code {
+				return userInfo, nil
+			}
+			panic("unexpected args")
+		}
+		response := httptest.NewRecorder()
+		handlers.NewVerifyCodeHandler(verify)(response, request)
+
+		AssertJSONData(t, response, responses.UserInfoResponse{Id: userInfo.Id})
+	})
+	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, response *httptest.ResponseRecorder) {
+		verify := func(string) (entities.UserInfo, error) {
+			return entities.UserInfo{}, err
+		}
+		handlers.NewVerifyCodeHandler(verify)(response, request)
+	})
+
 }

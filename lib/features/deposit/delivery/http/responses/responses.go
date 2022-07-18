@@ -1,6 +1,6 @@
 package responses
 
-type UserResponse struct {
+type UserInfoResponse struct {
 	Id string `json:"id"`
 }
 
