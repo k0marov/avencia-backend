@@ -3,8 +3,8 @@ package lib
 import (
 	"context"
 	"github.com/go-chi/chi/v5"
-	"github.com/k0marov/avencia-backend/lib/core/constants"
 	"github.com/k0marov/avencia-backend/lib/features/deposit"
+	"github.com/k0marov/avencia-backend/secrets"
 	"log"
 	"net/http"
 
@@ -14,7 +14,7 @@ import (
 )
 
 func initFirebase() *firebase.App {
-	opt := option.WithCredentialsFile(constants.FirebaseSecretPath)
+	opt := option.WithCredentialsJSON([]byte(secrets.FirebaseSecret))
 	fbApp, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		log.Fatalf("error initializing Firebase app: %v", err)
