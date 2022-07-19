@@ -61,7 +61,7 @@ func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 	}
 }
 
-type TransactionPerformer = func(values.TransactionData) error
+type TransactionPerformer = func(values.TransactionData) error // yet to be implemented
 
 func NewTransactionFinalizer(atmSecret []byte, perform TransactionPerformer) TransactionFinalizer {
 	return func(transaction values.TransactionData) bool {

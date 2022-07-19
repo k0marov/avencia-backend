@@ -66,6 +66,7 @@ func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.Handler
 type FinalizeTransactionRequest struct {
 	UserId    string `json:"user_id"`
 	ATMSecret string `json:"atm_secret"`
+	Currency  string `json:"currency"`
 	Amount    int    `json:"amount"`
 }
 
@@ -77,6 +78,7 @@ func NewFinalizeTransactionHandler(finalizeTransaction service.TransactionFinali
 		accept := finalizeTransaction(values.TransactionData{
 			UserId:    transactionRequest.UserId,
 			ATMSecret: []byte(transactionRequest.ATMSecret),
+			Currency:  transactionRequest.Currency,
 			Amount:    transactionRequest.Amount,
 		})
 		response := responses.AcceptionResponse{Accept: accept}

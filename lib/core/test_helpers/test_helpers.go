@@ -113,6 +113,7 @@ func RandomTransactionData() values.TransactionData {
 	return values.TransactionData{
 		UserId:    RandomString(),
 		ATMSecret: []byte(RandomString()),
+		Currency:  RandomString(),
 		Amount:    RandomInt(),
 	}
 }

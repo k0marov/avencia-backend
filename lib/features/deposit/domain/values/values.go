@@ -8,5 +8,6 @@ type Banknote struct {
 type TransactionData struct {
 	UserId    string
 	ATMSecret []byte
+	Currency  string
 	Amount    int
 }

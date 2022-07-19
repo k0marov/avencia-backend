@@ -104,6 +104,7 @@ func TestFinalizeTransactionHandler(t *testing.T) {
 		transactionJson, _ := json.Marshal(handlers.FinalizeTransactionRequest{
 			UserId:    transaction.UserId,
 			ATMSecret: string(transaction.ATMSecret),
+			Currency:  transaction.Currency,
 			Amount:    transaction.Amount,
 		})
 		accept := RandomBool()
