@@ -76,17 +76,19 @@ func TestCheckBanknoteHandler(t *testing.T) {
 		transactionCode := RandomString()
 		currency := RandomString()
 		amount := RandomInt()
-		banknoteJson, _ := json.Marshal(api.BanknoteCheckRequest{
+		banknoteRequest := api.BanknoteCheckRequest{
 			TransactionCode: transactionCode,
 			Currency:        currency,
 			Amount:          amount,
-		})
+		}
+		banknoteJson, _ := json.Marshal(banknoteRequest)
+		wantBanknoteValue := values.NewBanknote(banknoteRequest)
 		request := http_test_helpers.CreateRequest(bytes.NewReader(banknoteJson))
 		response := httptest.NewRecorder()
 
 		accept := RandomBool()
 		checker := func(code string, banknote values.Banknote) bool {
-			if code == transactionCode && banknote.Amount == amount && banknote.Currency == currency {
+			if code == transactionCode && banknote == wantBanknoteValue {
 				return accept
 			}
 			panic("unexpected")

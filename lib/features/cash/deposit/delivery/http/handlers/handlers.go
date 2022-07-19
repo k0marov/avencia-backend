@@ -35,7 +35,7 @@ func NewVerifyCodeHandler(verify service.CodeVerifier) http.HandlerFunc {
 			http_helpers.HandleServiceError(w, err)
 			return
 		}
-		http_helpers.WriteJson(w, api.VerifiedCodeResponse{UserInfo: api.UserInfoResponse{Id: userInfo.Id}})
+		http_helpers.WriteJson(w, api.VerifiedCodeResponse{UserInfo: userInfo.ToResponse()})
 	}
 }
 
@@ -44,10 +44,8 @@ func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.Handler
 		var banknoteRequest api.BanknoteCheckRequest
 		json.NewDecoder(r.Body).Decode(&banknoteRequest)
 
-		response := api.AcceptionResponse{Accept: checkBanknote(banknoteRequest.TransactionCode, values.Banknote{
-			Currency: banknoteRequest.Currency,
-			Amount:   banknoteRequest.Amount,
-		})}
+		accept := checkBanknote(banknoteRequest.TransactionCode, values.NewBanknote(banknoteRequest))
+		response := api.AcceptionResponse{Accept: accept}
 
 		http_helpers.WriteJson(w, response)
 	}
@@ -58,12 +56,7 @@ func NewFinalizeTransactionHandler(finalizeTransaction service.TransactionFinali
 		var transactionRequest api.FinalizeTransactionRequest
 		json.NewDecoder(r.Body).Decode(&transactionRequest)
 
-		accept := finalizeTransaction(values.TransactionData{ // TODO: make such mappers a part of values package
-			UserId:    transactionRequest.UserId,
-			ATMSecret: []byte(transactionRequest.ATMSecret),
-			Currency:  transactionRequest.Currency,
-			Amount:    transactionRequest.Amount,
-		})
+		accept := finalizeTransaction(values.NewTransactionData(transactionRequest))
 		response := api.AcceptionResponse{Accept: accept}
 
 		http_helpers.WriteJson(w, response)
