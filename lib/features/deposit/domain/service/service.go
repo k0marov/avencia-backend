@@ -7,6 +7,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/values"
+	"log"
 	"time"
 )
 
@@ -60,11 +61,12 @@ func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 	}
 }
 
-type PerformTransaction = func(values.TransactionData) error
+type TransactionPerformer = func(values.TransactionData) error
 
-func NewTransactionFinalizer(atmSecret []byte, perform PerformTransaction) TransactionFinalizer {
+func NewTransactionFinalizer(atmSecret []byte, perform TransactionPerformer) TransactionFinalizer {
 	return func(transaction values.TransactionData) bool {
 		if subtle.ConstantTimeCompare(transaction.ATMSecret, atmSecret) == 0 {
+			log.Printf("transaction rejected: invalid atm secret")
 			return false
 		}
 		err := perform(transaction)
