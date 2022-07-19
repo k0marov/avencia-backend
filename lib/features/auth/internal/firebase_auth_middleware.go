@@ -16,7 +16,7 @@ func NewFirebaseAuthMiddleware(authClient *auth.Client) core.Middleware {
 			bearerToken := tokenFromHeader(r)
 			token, err := authClient.VerifyIDToken(ctx, bearerToken)
 			if err != nil {
-				http.Error(w, "", http.StatusUnauthorized)
+				next.ServeHTTP(w, r)
 				return
 			}
 			next.ServeHTTP(w, r.WithContext(context.WithValue(ctx, userContextKey, User{Id: token.UID})))
