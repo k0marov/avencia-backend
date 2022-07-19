@@ -59,7 +59,7 @@ func TestVerifyCodeHandler(t *testing.T) {
 		response := httptest.NewRecorder()
 		handlers.NewVerifyCodeHandler(verify)(response, request)
 
-		AssertJSONData(t, response, responses.UserInfoResponse{Id: userInfo.Id})
+		AssertJSONData(t, response, responses.VerifiedCodeResponse{UserInfo: responses.UserInfoResponse{Id: userInfo.Id}})
 	})
 	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, response *httptest.ResponseRecorder) {
 		verify := func(string) (entities.UserInfo, error) {

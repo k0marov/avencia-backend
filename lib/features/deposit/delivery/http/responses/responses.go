@@ -1,5 +1,9 @@
 package responses
 
+type VerifiedCodeResponse struct {
+	UserInfo UserInfoResponse `json:"user_info"`
+}
+
 type UserInfoResponse struct {
 	Id string `json:"id"`
 }

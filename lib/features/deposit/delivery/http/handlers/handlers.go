@@ -39,7 +39,7 @@ func NewVerifyCodeHandler(verify service.CodeVerifier) http.HandlerFunc {
 			http_helpers.HandleServiceError(w, err)
 			return
 		}
-		http_helpers.WriteJson(w, responses.UserInfoResponse{Id: userInfo.Id})
+		http_helpers.WriteJson(w, responses.VerifiedCodeResponse{UserInfo: responses.UserInfoResponse{Id: userInfo.Id}})
 	}
 }
 
