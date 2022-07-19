@@ -6,6 +6,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/client_errors"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/entities"
+	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/values"
 	"log"
 	"math"
 	"math/rand"
@@ -107,6 +108,13 @@ func RandomUser() auth.User {
 }
 func RandomUserInfo() entities.UserInfo {
 	return entities.UserInfo{Id: RandomId()}
+}
+func RandomTransactionData() values.TransactionData {
+	return values.TransactionData{
+		UserId:    RandomString(),
+		ATMSecret: []byte(RandomString()),
+		Amount:    RandomInt(),
+	}
 }
 
 func RandomId() string {

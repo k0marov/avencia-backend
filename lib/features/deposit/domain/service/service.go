@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto/subtle"
 	"github.com/k0marov/avencia-backend/lib/core/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
@@ -59,8 +60,14 @@ func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 	}
 }
 
-func NewTransactionFinalizer() TransactionFinalizer {
+type PerformTransaction = func(values.TransactionData) error
+
+func NewTransactionFinalizer(atmSecret []byte, perform PerformTransaction) TransactionFinalizer {
 	return func(transaction values.TransactionData) bool {
-		panic("unimplemented")
+		if subtle.ConstantTimeCompare(transaction.ATMSecret, atmSecret) == 0 {
+			return false
+		}
+		err := perform(transaction)
+		return err == nil
 	}
 }

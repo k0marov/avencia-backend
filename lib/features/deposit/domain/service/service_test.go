@@ -104,7 +104,29 @@ func TestBanknoteChecker(t *testing.T) {
 }
 
 func TestTransactionFinalizer(t *testing.T) {
-	t.Run("happy case", func(t *testing.T) {
+	transaction := RandomTransactionData()
+	atmSecret := transaction.ATMSecret
+	t.Run("error case - atm secret is invalid", func(t *testing.T) {
+		otherAtmSecret := []byte("asdf")
+		success := service.NewTransactionFinalizer(otherAtmSecret, nil)(transaction)
+		Assert(t, success, false, "success == false")
+	})
+	performTransaction := func(trans values.TransactionData) error {
+		if reflect.DeepEqual(trans, transaction) {
+			return nil
+		}
+		panic("unexpected")
+	}
+	t.Run("error case - executing transaction throws", func(t *testing.T) {
+		performTransaction := func(values.TransactionData) error {
+			return RandomError()
+		}
+		success := service.NewTransactionFinalizer(atmSecret, performTransaction)(transaction)
+		Assert(t, success, false, "success == false")
+	})
 
+	t.Run("happy case", func(t *testing.T) {
+		success := service.NewTransactionFinalizer(atmSecret, performTransaction)(transaction)
+		Assert(t, success, true, "success")
 	})
 }
