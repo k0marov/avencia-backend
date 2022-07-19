@@ -1,7 +1,7 @@
 package service_test
 
 import (
-	"github.com/k0marov/avencia-backend/lib/core/client_errors"
+	"github.com/k0marov/avencia-backend/api/client_errors"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/entities"

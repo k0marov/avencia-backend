@@ -6,19 +6,25 @@ import (
 	"net/http"
 )
 
-type CashDepositHandlers struct {
-	GenCode, VerifyCode, CheckBanknote, FinalizeTransaction http.HandlerFunc
-}
-
-func NewAPIRouter(cashDepositHandlers CashDepositHandlers, authMiddleware core.Middleware) http.Handler {
+func NewAPIRouter(cashDeposit CashDeposit, authMiddleware core.Middleware) http.Handler {
 	r := chi.NewRouter()
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Route("/cash/deposit", func(r chi.Router) {
-			r.Get("/gen-code", authMiddleware(cashDepositHandlers.GenCode).ServeHTTP)
-			r.Post("/verify-code", cashDepositHandlers.VerifyCode)
-			r.Post("/check-banknote", cashDepositHandlers.CheckBanknote)
-			r.Post("/finalize-transaction", cashDepositHandlers.FinalizeTransaction)
+			// Response: CodeResponse
+			r.Get("/gen-code", authMiddleware(cashDeposit.GenCode).ServeHTTP)
+
+			// Request: CodeRequest
+			// Response: VerifiedCodeResponse
+			r.Post("/verify-code", cashDeposit.VerifyCode)
+
+			// Request: BanknoteCheckRequest
+			// Response: AcceptionResponse
+			r.Post("/check-banknote", cashDeposit.CheckBanknote)
+
+			// Request: FinalizeTransactionRequest
+			// Response: AcceptionResponse
+			r.Post("/finalize-transaction", cashDeposit.FinalizeTransaction)
 		})
 	})
 

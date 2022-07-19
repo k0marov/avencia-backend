@@ -12,7 +12,7 @@ import (
 	"log"
 )
 
-func NewCashDepositHandlers(config config.Config) api.CashDepositHandlers {
+func NewCashDepositHandlers(config config.Config) api.CashDeposit {
 	// jwt
 	jwtSecret, err := ioutil.ReadFile(config.JWTSecretPath)
 	if err != nil {
@@ -21,7 +21,8 @@ func NewCashDepositHandlers(config config.Config) api.CashDepositHandlers {
 	jwtIssuer := jwt.NewIssuer(jwtSecret)
 	jwtVerifier := jwt.NewVerifier(jwtSecret)
 
-	// fake (not implemented yet) // TODO: implement transactionPerformer
+	// fake (not implemented yet)
+	// TODO: implement transactionPerformer
 	transactionPerformer := func(data values.TransactionData) error {
 		log.Printf("fake performing a transaction: %+v", data)
 		return errors.New("not implemented")
@@ -37,7 +38,7 @@ func NewCashDepositHandlers(config config.Config) api.CashDepositHandlers {
 	}
 	finalizeTransaction := service.NewTransactionFinalizer(atmSecret, transactionPerformer)
 	// handlers
-	return api.CashDepositHandlers{
+	return api.CashDeposit{
 		GenCode:             handlers.NewGenerateCodeHandler(genCode),
 		VerifyCode:          handlers.NewVerifyCodeHandler(verifyCode),
 		CheckBanknote:       handlers.NewCheckBanknoteHandler(checkBanknote),
