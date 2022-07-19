@@ -102,3 +102,9 @@ func TestBanknoteChecker(t *testing.T) {
 		Assert(t, result, false, "accept == false")
 	})
 }
+
+func TestTransactionFinalizer(t *testing.T) {
+	t.Run("happy case", func(t *testing.T) {
+
+	})
+}

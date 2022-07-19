@@ -13,6 +13,6 @@ type CodeResponse struct {
 	ExpiresAt       int64  `json:"expires_at"`
 }
 
-type BanknoteCheckResponse struct {
+type AcceptionResponse struct {
 	Accept bool `json:"accept"`
 }

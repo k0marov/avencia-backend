@@ -19,6 +19,7 @@ const UserIdClaim = "sub"
 type CodeGenerator = func(user auth.User) (code string, expiresAt time.Time, err error)
 type CodeVerifier = func(string) (entities.UserInfo, error)
 type BanknoteChecker = func(transactionCode string, banknote values.Banknote) bool
+type TransactionFinalizer = func(values.TransactionData) bool
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(user auth.User) (string, time.Time, error) {
@@ -55,5 +56,11 @@ func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 	return func(transactionCode string, banknote values.Banknote) bool {
 		_, err := verifyCode(transactionCode)
 		return err == nil
+	}
+}
+
+func NewTransactionFinalizer() TransactionFinalizer {
+	return func(transaction values.TransactionData) bool {
+		panic("unimplemented")
 	}
 }

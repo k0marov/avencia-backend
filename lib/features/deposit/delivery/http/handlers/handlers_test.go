@@ -93,6 +93,6 @@ func TestCheckBanknoteHandler(t *testing.T) {
 
 		handlers.NewCheckBanknoteHandler(checker)(response, request)
 
-		AssertJSONData(t, response, responses.BanknoteCheckResponse{Accept: accept})
+		AssertJSONData(t, response, responses.AcceptionResponse{Accept: accept})
 	})
 }

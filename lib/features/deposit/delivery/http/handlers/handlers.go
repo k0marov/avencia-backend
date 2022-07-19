@@ -54,7 +54,7 @@ func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.Handler
 		var banknoteRequest BanknoteCheckRequest
 		json.NewDecoder(r.Body).Decode(&banknoteRequest)
 
-		response := responses.BanknoteCheckResponse{Accept: checkBanknote(banknoteRequest.TransactionCode, values.Banknote{
+		response := responses.AcceptionResponse{Accept: checkBanknote(banknoteRequest.TransactionCode, values.Banknote{
 			Currency: banknoteRequest.Currency,
 			Amount:   banknoteRequest.Amount,
 		})}
