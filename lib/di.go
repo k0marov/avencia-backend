@@ -3,8 +3,8 @@ package lib
 import (
 	"context"
 	"github.com/go-chi/chi/v5"
+	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/features/deposit"
-	"github.com/k0marov/avencia-backend/secrets"
 	"log"
 	"net/http"
 
@@ -13,8 +13,8 @@ import (
 	"google.golang.org/api/option"
 )
 
-func initFirebase() *firebase.App {
-	opt := option.WithCredentialsJSON([]byte(secrets.FirebaseSecret))
+func initFirebase(config config.Config) *firebase.App {
+	opt := option.WithCredentialsFile(config.FirebaseSecretPath)
 	fbApp, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		log.Fatalf("error initializing Firebase app: %v", err)
@@ -23,12 +23,14 @@ func initFirebase() *firebase.App {
 }
 
 func Initialize() http.Handler {
-	fbApp := initFirebase()
+	conf := config.LoadConfig()
+
+	fbApp := initFirebase(conf)
 	authMiddleware := auth.NewAuthMiddleware(fbApp)
 
 	r := chi.NewRouter()
 
-	r.Route("/deposit", deposit.NewDepositRouterImpl(authMiddleware))
+	r.Route("/deposit", deposit.NewDepositRouterImpl(authMiddleware, conf))
 
 	return r
 }
