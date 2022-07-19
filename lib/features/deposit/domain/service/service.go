@@ -16,17 +16,19 @@ const DepositTransactionType = "deposit"
 
 const UserIdClaim = "sub"
 
-type CodeGenerator = func(user auth.User) (string, error)
+type CodeGenerator = func(user auth.User) (code string, expiresAt time.Time, err error)
 type CodeVerifier = func(string) (entities.UserInfo, error)
 type BanknoteChecker = func(transactionCode string, banknote values.Banknote) bool
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
-	return func(user auth.User) (string, error) {
+	return func(user auth.User) (string, time.Time, error) {
 		claims := map[string]any{
 			UserIdClaim:          user.Id,
 			TransactionTypeClaim: DepositTransactionType,
 		}
-		return issueJWT(claims, ExpDuration)
+		expireAt := time.Now().UTC().Add(ExpDuration)
+		code, err := issueJWT(claims, expireAt)
+		return code, expireAt, err
 	}
 }
 

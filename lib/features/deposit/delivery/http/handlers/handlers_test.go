@@ -12,6 +12,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/values"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestGenerateCodeHandler(t *testing.T) {
@@ -23,19 +24,20 @@ func TestGenerateCodeHandler(t *testing.T) {
 	t.Run("happy case", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		code := RandomString()
-		generate := func(gotUser auth.User) (string, error) {
+		expAt := time.Date(2022, 1, 1, 1, 1, 1, 0, time.UTC)
+		generate := func(gotUser auth.User) (string, time.Time, error) {
 			if gotUser == user {
-				return code, nil
+				return code, expAt, nil
 			}
 			panic("unexpected")
 		}
 		handlers.NewGenerateCodeHandler(generate)(response, requestWithUser)
 
-		AssertJSONData(t, response, responses.CodeResponse{TransactionCode: code})
+		AssertJSONData(t, response, responses.CodeResponse{TransactionCode: code, ExpiresAt: expAt.Unix()})
 	})
 	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, w *httptest.ResponseRecorder) {
-		generate := func(auth.User) (string, error) {
-			return "", err
+		generate := func(auth.User) (string, time.Time, error) {
+			return "", time.Time{}, err
 		}
 		handlers.NewGenerateCodeHandler(generate)(w, requestWithUser)
 	})

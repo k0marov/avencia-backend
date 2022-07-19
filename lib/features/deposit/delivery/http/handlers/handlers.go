@@ -16,13 +16,13 @@ func NewGenerateCodeHandler(generate service.CodeGenerator) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		code, err := generate(user)
+		code, expiresAt, err := generate(user)
 		if err != nil {
 			http_helpers.HandleServiceError(w, err)
 			return
 		}
 		log.Printf("generated code %v for user %v", code, user.Id)
-		http_helpers.WriteJson(w, responses.CodeResponse{TransactionCode: code})
+		http_helpers.WriteJson(w, responses.CodeResponse{TransactionCode: code, ExpiresAt: expiresAt.Unix()})
 	}
 }
 

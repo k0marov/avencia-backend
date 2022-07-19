@@ -18,17 +18,19 @@ func TestCodeGenerator(t *testing.T) {
 		service.UserIdClaim:          tUser.Id,
 		service.TransactionTypeClaim: service.DepositTransactionType,
 	}
+	wantExpireAt := time.Now().UTC().Add(service.ExpDuration)
 
 	t.Run("forward test", func(t *testing.T) {
 		token := RandomString()
 		err := RandomError()
-		issueJwt := func(gotClaims map[string]any, expDuration time.Duration) (string, error) {
-			if reflect.DeepEqual(gotClaims, wantClaims) && expDuration == service.ExpDuration {
+		issueJwt := func(gotClaims map[string]any, exp time.Time) (string, error) {
+			if reflect.DeepEqual(gotClaims, wantClaims) && TimeAlmostEqual(wantExpireAt, exp) {
 				return token, err
 			}
 			panic("unexpected")
 		}
-		gotToken, gotErr := service.NewCodeGenerator(issueJwt)(tUser)
+		gotToken, expireAt, gotErr := service.NewCodeGenerator(issueJwt)(tUser)
+		Assert(t, TimeAlmostEqual(expireAt, wantExpireAt), true, "the expiration time is Now + ExpDuration")
 		AssertError(t, gotErr, err)
 		Assert(t, gotToken, token, "returned token")
 

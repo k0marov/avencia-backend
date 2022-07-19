@@ -9,11 +9,11 @@ import (
 
 var jwtSecret = secrets.JwtSecret
 
-type Issuer func(claims map[string]any, expDuration time.Duration) (string, error)
+type Issuer func(claims map[string]any, expireAt time.Time) (string, error)
 type Verifier func(token string) (map[string]any, error)
 
-func IssuerImpl(claims map[string]any, expDuration time.Duration) (string, error) {
-	claims["exp"] = time.Now().UTC().Add(expDuration).Unix()
+func IssuerImpl(claims map[string]any, expireAt time.Time) (string, error) {
+	claims["exp"] = expireAt.Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims(claims))
 
 	return token.SignedString(jwtSecret)

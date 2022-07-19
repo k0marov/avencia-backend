@@ -6,6 +6,7 @@ type UserInfoResponse struct {
 
 type CodeResponse struct {
 	TransactionCode string `json:"transaction_code"`
+	ExpiresAt       int64  `json:"expires_at"`
 }
 
 type BanknoteCheckResponse struct {

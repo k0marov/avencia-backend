@@ -7,6 +7,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/entities"
 	"log"
+	"math"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -95,6 +96,10 @@ func RandomClientError() client_errors.ClientError {
 		DetailCode: RandomString(),
 		HTTPCode:   400 + RandomInt(),
 	}
+}
+
+func TimeAlmostEqual(t1, t2 time.Time) bool {
+	return math.Abs(t1.Sub(t2).Minutes()) < 1
 }
 
 func RandomUser() auth.User {
