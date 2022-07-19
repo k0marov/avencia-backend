@@ -12,6 +12,7 @@ type CodeResponse struct {
 	ExpiresAt       int64  `json:"expires_at"`
 }
 
+// TODO: add a "reason" field that denotes a reason for accept = false
 type AcceptionResponse struct {
 	Accept bool `json:"accept"`
 }

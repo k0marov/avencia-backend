@@ -3,14 +3,13 @@ package handlers_test
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/k0marov/avencia-backend/api"
 	"github.com/k0marov/avencia-backend/lib/core/http_test_helpers"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
-	handlers2 "github.com/k0marov/avencia-backend/lib/features/cash/deposit/delivery/http/handlers"
+	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/delivery/http/handlers"
 	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/values"
-	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/handlers"
-	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/responses"
 	"net/http/httptest"
 	"reflect"
 	"testing"
@@ -18,7 +17,7 @@ import (
 )
 
 func TestGenerateCodeHandler(t *testing.T) {
-	http_test_helpers.BaseTest401(t, handlers2.NewGenerateCodeHandler(nil))
+	http_test_helpers.BaseTest401(t, handlers.NewGenerateCodeHandler(nil))
 
 	user := RandomUser()
 	requestWithUser := http_test_helpers.AddAuthDataToRequest(http_test_helpers.CreateRequest(nil), user)
@@ -33,20 +32,20 @@ func TestGenerateCodeHandler(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		handlers2.NewGenerateCodeHandler(generate)(response, requestWithUser)
+		handlers.NewGenerateCodeHandler(generate)(response, requestWithUser)
 
-		AssertJSONData(t, response, responses.CodeResponse{TransactionCode: code, ExpiresAt: expAt.Unix()})
+		AssertJSONData(t, response, api.CodeResponse{TransactionCode: code, ExpiresAt: expAt.Unix()})
 	})
 	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, w *httptest.ResponseRecorder) {
 		generate := func(auth.User) (string, time.Time, error) {
 			return "", time.Time{}, err
 		}
-		handlers2.NewGenerateCodeHandler(generate)(w, requestWithUser)
+		handlers.NewGenerateCodeHandler(generate)(w, requestWithUser)
 	})
 }
 
 func TestVerifyCodeHandler(t *testing.T) {
-	codeReq := handlers.CodeRequest{TransactionCode: RandomString()}
+	codeReq := api.CodeRequest{TransactionCode: RandomString()}
 	codeReqBody, _ := json.Marshal(codeReq)
 	request := http_test_helpers.CreateRequest(bytes.NewReader(codeReqBody))
 	userInfo := RandomUserInfo()
@@ -59,15 +58,15 @@ func TestVerifyCodeHandler(t *testing.T) {
 			panic("unexpected args")
 		}
 		response := httptest.NewRecorder()
-		handlers2.NewVerifyCodeHandler(verify)(response, request)
+		handlers.NewVerifyCodeHandler(verify)(response, request)
 
-		AssertJSONData(t, response, responses.VerifiedCodeResponse{UserInfo: responses.UserInfoResponse{Id: userInfo.Id}})
+		AssertJSONData(t, response, api.VerifiedCodeResponse{UserInfo: api.UserInfoResponse{Id: userInfo.Id}})
 	})
 	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, response *httptest.ResponseRecorder) {
 		verify := func(string) (entities.UserInfo, error) {
 			return entities.UserInfo{}, err
 		}
-		handlers2.NewVerifyCodeHandler(verify)(response, request)
+		handlers.NewVerifyCodeHandler(verify)(response, request)
 	})
 
 }
@@ -77,7 +76,7 @@ func TestCheckBanknoteHandler(t *testing.T) {
 		transactionCode := RandomString()
 		currency := RandomString()
 		amount := RandomInt()
-		banknoteJson, _ := json.Marshal(handlers.BanknoteCheckRequest{
+		banknoteJson, _ := json.Marshal(api.BanknoteCheckRequest{
 			TransactionCode: transactionCode,
 			Currency:        currency,
 			Amount:          amount,
@@ -93,16 +92,16 @@ func TestCheckBanknoteHandler(t *testing.T) {
 			panic("unexpected")
 		}
 
-		handlers2.NewCheckBanknoteHandler(checker)(response, request)
+		handlers.NewCheckBanknoteHandler(checker)(response, request)
 
-		AssertJSONData(t, response, responses.AcceptionResponse{Accept: accept})
+		AssertJSONData(t, response, api.AcceptionResponse{Accept: accept})
 	})
 }
 
 func TestFinalizeTransactionHandler(t *testing.T) {
 	t.Run("should call service and return the result in the 'accept' field", func(t *testing.T) {
 		transaction := RandomTransactionData()
-		transactionJson, _ := json.Marshal(handlers.FinalizeTransactionRequest{
+		transactionJson, _ := json.Marshal(api.FinalizeTransactionRequest{
 			UserId:    transaction.UserId,
 			ATMSecret: string(transaction.ATMSecret),
 			Currency:  transaction.Currency,
@@ -120,8 +119,8 @@ func TestFinalizeTransactionHandler(t *testing.T) {
 			panic("unexpected")
 		}
 
-		handlers2.NewFinalizeTransactionHandler(finalizer)(response, request)
+		handlers.NewFinalizeTransactionHandler(finalizer)(response, request)
 
-		AssertJSONData(t, response, responses.AcceptionResponse{Accept: accept})
+		AssertJSONData(t, response, api.AcceptionResponse{Accept: accept})
 	})
 }
