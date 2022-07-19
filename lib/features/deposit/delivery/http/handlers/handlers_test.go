@@ -11,6 +11,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/values"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -92,6 +93,32 @@ func TestCheckBanknoteHandler(t *testing.T) {
 		}
 
 		handlers.NewCheckBanknoteHandler(checker)(response, request)
+
+		AssertJSONData(t, response, responses.AcceptionResponse{Accept: accept})
+	})
+}
+
+func TestFinalizeTransactionHandler(t *testing.T) {
+	t.Run("should call service and return the result in the 'accept' field", func(t *testing.T) {
+		transaction := RandomTransactionData()
+		transactionJson, _ := json.Marshal(handlers.FinalizeTransactionRequest{
+			UserId:    transaction.UserId,
+			ATMSecret: string(transaction.ATMSecret),
+			Amount:    transaction.Amount,
+		})
+		accept := RandomBool()
+
+		request := http_test_helpers.CreateRequest(bytes.NewReader(transactionJson))
+		response := httptest.NewRecorder()
+
+		finalizer := func(trans values.TransactionData) bool {
+			if reflect.DeepEqual(trans, transaction) {
+				return accept
+			}
+			panic("unexpected")
+		}
+
+		handlers.NewFinalizeTransactionHandler(finalizer)(response, request)
 
 		AssertJSONData(t, response, responses.AcceptionResponse{Accept: accept})
 	})

@@ -62,3 +62,25 @@ func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.Handler
 		http_helpers.WriteJson(w, response)
 	}
 }
+
+type FinalizeTransactionRequest struct {
+	UserId    string `json:"user_id"`
+	ATMSecret string `json:"atm_secret"`
+	Amount    int    `json:"amount"`
+}
+
+func NewFinalizeTransactionHandler(finalizeTransaction service.TransactionFinalizer) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var transactionRequest FinalizeTransactionRequest
+		json.NewDecoder(r.Body).Decode(&transactionRequest)
+
+		accept := finalizeTransaction(values.TransactionData{
+			UserId:    transactionRequest.UserId,
+			ATMSecret: []byte(transactionRequest.ATMSecret),
+			Amount:    transactionRequest.Amount,
+		})
+		response := responses.AcceptionResponse{Accept: accept}
+
+		http_helpers.WriteJson(w, response)
+	}
+}
