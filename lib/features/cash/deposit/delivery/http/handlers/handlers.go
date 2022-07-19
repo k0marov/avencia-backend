@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/k0marov/avencia-backend/api"
 	"github.com/k0marov/avencia-backend/lib/core/http_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/responses"
-	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/values"
+	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/values"
 	"log"
 	"net/http"
 )
@@ -22,39 +22,29 @@ func NewGenerateCodeHandler(generate service.CodeGenerator) http.HandlerFunc {
 			return
 		}
 		log.Printf("generated code %v for user %v", code, user.Id)
-		http_helpers.WriteJson(w, responses.CodeResponse{TransactionCode: code, ExpiresAt: expiresAt.Unix()})
+		http_helpers.WriteJson(w, api.CodeResponse{TransactionCode: code, ExpiresAt: expiresAt.Unix()})
 	}
-}
-
-type CodeRequest struct {
-	TransactionCode string `json:"transaction_code"`
 }
 
 func NewVerifyCodeHandler(verify service.CodeVerifier) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var code CodeRequest
+		var code api.CodeRequest
 		json.NewDecoder(r.Body).Decode(&code)
 		userInfo, err := verify(code.TransactionCode)
 		if err != nil {
 			http_helpers.HandleServiceError(w, err)
 			return
 		}
-		http_helpers.WriteJson(w, responses.VerifiedCodeResponse{UserInfo: responses.UserInfoResponse{Id: userInfo.Id}})
+		http_helpers.WriteJson(w, api.VerifiedCodeResponse{UserInfo: api.UserInfoResponse{Id: userInfo.Id}})
 	}
-}
-
-type BanknoteCheckRequest struct {
-	TransactionCode string `json:"transaction_code"`
-	Currency        string `json:"currency"`
-	Amount          int    `json:"amount"`
 }
 
 func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var banknoteRequest BanknoteCheckRequest
+		var banknoteRequest api.BanknoteCheckRequest
 		json.NewDecoder(r.Body).Decode(&banknoteRequest)
 
-		response := responses.AcceptionResponse{Accept: checkBanknote(banknoteRequest.TransactionCode, values.Banknote{
+		response := api.AcceptionResponse{Accept: checkBanknote(banknoteRequest.TransactionCode, values.Banknote{
 			Currency: banknoteRequest.Currency,
 			Amount:   banknoteRequest.Amount,
 		})}
@@ -63,25 +53,18 @@ func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.Handler
 	}
 }
 
-type FinalizeTransactionRequest struct {
-	UserId    string `json:"user_id"`
-	ATMSecret string `json:"atm_secret"`
-	Currency  string `json:"currency"`
-	Amount    int    `json:"amount"`
-}
-
 func NewFinalizeTransactionHandler(finalizeTransaction service.TransactionFinalizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var transactionRequest FinalizeTransactionRequest
+		var transactionRequest api.FinalizeTransactionRequest
 		json.NewDecoder(r.Body).Decode(&transactionRequest)
 
-		accept := finalizeTransaction(values.TransactionData{
+		accept := finalizeTransaction(values.TransactionData{ // TODO: make such mappers a part of values package
 			UserId:    transactionRequest.UserId,
 			ATMSecret: []byte(transactionRequest.ATMSecret),
 			Currency:  transactionRequest.Currency,
 			Amount:    transactionRequest.Amount,
 		})
-		response := responses.AcceptionResponse{Accept: accept}
+		response := api.AcceptionResponse{Accept: accept}
 
 		http_helpers.WriteJson(w, response)
 	}

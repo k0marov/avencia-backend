@@ -6,10 +6,11 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/http_test_helpers"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
+	handlers2 "github.com/k0marov/avencia-backend/lib/features/cash/deposit/delivery/http/handlers"
+	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/entities"
+	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/handlers"
 	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/responses"
-	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/entities"
-	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/values"
 	"net/http/httptest"
 	"reflect"
 	"testing"
@@ -17,7 +18,7 @@ import (
 )
 
 func TestGenerateCodeHandler(t *testing.T) {
-	http_test_helpers.BaseTest401(t, handlers.NewGenerateCodeHandler(nil))
+	http_test_helpers.BaseTest401(t, handlers2.NewGenerateCodeHandler(nil))
 
 	user := RandomUser()
 	requestWithUser := http_test_helpers.AddAuthDataToRequest(http_test_helpers.CreateRequest(nil), user)
@@ -32,7 +33,7 @@ func TestGenerateCodeHandler(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		handlers.NewGenerateCodeHandler(generate)(response, requestWithUser)
+		handlers2.NewGenerateCodeHandler(generate)(response, requestWithUser)
 
 		AssertJSONData(t, response, responses.CodeResponse{TransactionCode: code, ExpiresAt: expAt.Unix()})
 	})
@@ -40,7 +41,7 @@ func TestGenerateCodeHandler(t *testing.T) {
 		generate := func(auth.User) (string, time.Time, error) {
 			return "", time.Time{}, err
 		}
-		handlers.NewGenerateCodeHandler(generate)(w, requestWithUser)
+		handlers2.NewGenerateCodeHandler(generate)(w, requestWithUser)
 	})
 }
 
@@ -58,7 +59,7 @@ func TestVerifyCodeHandler(t *testing.T) {
 			panic("unexpected args")
 		}
 		response := httptest.NewRecorder()
-		handlers.NewVerifyCodeHandler(verify)(response, request)
+		handlers2.NewVerifyCodeHandler(verify)(response, request)
 
 		AssertJSONData(t, response, responses.VerifiedCodeResponse{UserInfo: responses.UserInfoResponse{Id: userInfo.Id}})
 	})
@@ -66,7 +67,7 @@ func TestVerifyCodeHandler(t *testing.T) {
 		verify := func(string) (entities.UserInfo, error) {
 			return entities.UserInfo{}, err
 		}
-		handlers.NewVerifyCodeHandler(verify)(response, request)
+		handlers2.NewVerifyCodeHandler(verify)(response, request)
 	})
 
 }
@@ -92,7 +93,7 @@ func TestCheckBanknoteHandler(t *testing.T) {
 			panic("unexpected")
 		}
 
-		handlers.NewCheckBanknoteHandler(checker)(response, request)
+		handlers2.NewCheckBanknoteHandler(checker)(response, request)
 
 		AssertJSONData(t, response, responses.AcceptionResponse{Accept: accept})
 	})
@@ -119,7 +120,7 @@ func TestFinalizeTransactionHandler(t *testing.T) {
 			panic("unexpected")
 		}
 
-		handlers.NewFinalizeTransactionHandler(finalizer)(response, request)
+		handlers2.NewFinalizeTransactionHandler(finalizer)(response, request)
 
 		AssertJSONData(t, response, responses.AcceptionResponse{Accept: accept})
 	})

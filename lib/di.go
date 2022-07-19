@@ -2,9 +2,9 @@ package lib
 
 import (
 	"context"
-	"github.com/go-chi/chi/v5"
+	"github.com/k0marov/avencia-backend/api"
 	"github.com/k0marov/avencia-backend/lib/config"
-	"github.com/k0marov/avencia-backend/lib/features/deposit"
+	"github.com/k0marov/avencia-backend/lib/features/cash/deposit"
 	"log"
 	"net/http"
 
@@ -28,9 +28,7 @@ func Initialize() http.Handler {
 	fbApp := initFirebase(conf)
 	authMiddleware := auth.NewAuthMiddleware(fbApp)
 
-	r := chi.NewRouter()
+	cashDepositHandlers := deposit.NewCashDepositHandlers(conf)
 
-	r.Route("/deposit", deposit.NewDepositRouterImpl(authMiddleware, conf))
-
-	return r
+	return api.NewAPIRouter(cashDepositHandlers, authMiddleware)
 }

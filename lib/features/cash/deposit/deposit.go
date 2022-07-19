@@ -2,19 +2,17 @@ package deposit
 
 import (
 	"errors"
-	"github.com/go-chi/chi/v5"
+	"github.com/k0marov/avencia-backend/api"
 	"github.com/k0marov/avencia-backend/lib/config"
-	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
-	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/handlers"
-	"github.com/k0marov/avencia-backend/lib/features/deposit/delivery/http/router"
-	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/deposit/domain/values"
+	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/delivery/http/handlers"
+	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/values"
 	"io/ioutil"
 	"log"
 )
 
-func NewDepositRouterImpl(authMiddleware core.Middleware, config config.Config) func(r chi.Router) {
+func NewCashDepositHandlers(config config.Config) api.CashDepositHandlers {
 	// jwt
 	jwtSecret, err := ioutil.ReadFile(config.JWTSecretPath)
 	if err != nil {
@@ -39,9 +37,10 @@ func NewDepositRouterImpl(authMiddleware core.Middleware, config config.Config) 
 	}
 	finalizeTransaction := service.NewTransactionFinalizer(atmSecret, transactionPerformer)
 	// handlers
-	genCodeHandler := handlers.NewGenerateCodeHandler(genCode)
-	verifyCodeHandler := handlers.NewVerifyCodeHandler(verifyCode)
-	checkBanknoteHandler := handlers.NewCheckBanknoteHandler(checkBanknote)
-	finalizeTransactionHandler := handlers.NewFinalizeTransactionHandler(finalizeTransaction)
-	return router.NewDepositRouter(genCodeHandler, verifyCodeHandler, checkBanknoteHandler, finalizeTransactionHandler, authMiddleware)
+	return api.CashDepositHandlers{
+		GenCode:             handlers.NewGenerateCodeHandler(genCode),
+		VerifyCode:          handlers.NewVerifyCodeHandler(verifyCode),
+		CheckBanknote:       handlers.NewCheckBanknoteHandler(checkBanknote),
+		FinalizeTransaction: handlers.NewFinalizeTransactionHandler(finalizeTransaction),
+	}
 }

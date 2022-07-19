@@ -1,11 +1,10 @@
-package responses
-
-type VerifiedCodeResponse struct {
-	UserInfo UserInfoResponse `json:"user_info"`
-}
+package api
 
 type UserInfoResponse struct {
 	Id string `json:"id"`
+}
+type VerifiedCodeResponse struct {
+	UserInfo UserInfoResponse `json:"user_info"`
 }
 
 type CodeResponse struct {
