@@ -11,8 +11,8 @@ func (ce ClientError) Error() string {
 	return fmt.Sprintf("An error which will be displayed to the client: %v %v", ce.HTTPCode, ce.DetailCode)
 }
 
-var InvalidJWT = ClientError{
-	DetailCode: "invalid-jwt",
+var InvalidCode = ClientError{
+	DetailCode: "invalid-code",
 	HTTPCode:   400,
 }
 

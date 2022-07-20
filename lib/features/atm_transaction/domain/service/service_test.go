@@ -57,21 +57,21 @@ func TestCodeVerifier(t *testing.T) {
 			return nil, RandomError()
 		}
 		_, err := service.NewCodeVerifier(jwtVerifier)(tCode, tType)
-		AssertError(t, err, client_errors.InvalidJWT)
+		AssertError(t, err, client_errors.InvalidCode)
 	})
 	t.Run("error case - claims are invalid (e.g. user id is not a string)", func(t *testing.T) {
 		jwtVerifier := func(string) (map[string]any, error) {
 			return map[string]any{service.UserIdClaim: 42, service.TransactionTypeClaimKey: service.Deposit}, nil
 		}
 		_, err := service.NewCodeVerifier(jwtVerifier)(tCode, tType)
-		AssertError(t, err, client_errors.InvalidJWT)
+		AssertError(t, err, client_errors.InvalidCode)
 	})
 	t.Run("error case - token has an incorrect transaction_type claim", func(t *testing.T) {
 		jwtVerifier := func(string) (map[string]any, error) {
 			return map[string]any{service.UserIdClaim: "4242", service.TransactionTypeClaimKey: "random"}, nil
 		}
 		_, err := service.NewCodeVerifier(jwtVerifier)(tCode, tType)
-		AssertError(t, err, client_errors.InvalidJWT)
+		AssertError(t, err, client_errors.InvalidCode)
 	})
 
 	t.Run("happy case", func(t *testing.T) {

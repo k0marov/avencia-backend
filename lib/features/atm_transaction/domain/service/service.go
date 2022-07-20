@@ -46,14 +46,14 @@ func NewCodeVerifier(verifyJWT jwt.Verifier) CodeVerifier {
 	return func(code string, tType TransactionType) (entities.UserInfo, error) {
 		data, err := verifyJWT(code)
 		if err != nil {
-			return entities.UserInfo{}, client_errors.InvalidJWT
+			return entities.UserInfo{}, client_errors.InvalidCode
 		}
 		if data[TransactionTypeClaimKey] != tType {
-			return entities.UserInfo{}, client_errors.InvalidJWT
+			return entities.UserInfo{}, client_errors.InvalidCode
 		}
 		userId, ok := data[UserIdClaim].(string)
 		if !ok {
-			return entities.UserInfo{}, client_errors.InvalidJWT
+			return entities.UserInfo{}, client_errors.InvalidCode
 		}
 		return entities.UserInfo{
 			Id: userId,
