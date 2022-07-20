@@ -4,14 +4,14 @@ import "github.com/k0marov/avencia-backend/api"
 
 type Banknote struct {
 	Currency string
-	Amount   int
+	Amount   float64
 }
 
 type TransactionData struct {
 	UserId    string
 	ATMSecret []byte
 	Currency  string
-	Amount    int
+	Amount    float64
 }
 
 func NewBanknote(request api.BanknoteCheckRequest) Banknote {
