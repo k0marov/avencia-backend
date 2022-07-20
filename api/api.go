@@ -18,18 +18,22 @@ func NewAPIRouter(cashDeposit ATMTransaction, authMiddleware core.Middleware) ht
 		r.Route("/atm-transaction", func(r chi.Router) {
 			// requires a TransactionTypeQueryArg
 			// Response: CodeResponse
+			// Throws: TransactionTypeNotProvided
 			r.Get("/gen-code", authMiddleware(cashDeposit.GenCode).ServeHTTP)
 
 			// Request: CodeRequest; requires a TransactionTypeQueryArg
 			// Response: VerifiedCodeResponse
+			// Throws: TransactionTypeNotProvided, InvalidCode
 			r.Post("/verify-code", cashDeposit.VerifyCode)
 
 			// Request: BanknoteCheckRequest
 			// Response: 200 if accepted, client error (or 500) if rejected
+			// Throws: InvalidCode (means session-expired)
 			r.Post("/check-banknote", cashDeposit.CheckBanknote)
 
 			// Request: FinalizeTransactionRequest
 			// Response: 200 if accepted, client error (or 500) if rejected
+			// Throws: InvalidATMSecret
 			r.Post("/finalize-transaction", cashDeposit.FinalizeTransaction)
 		})
 	})
