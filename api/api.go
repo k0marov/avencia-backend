@@ -33,7 +33,7 @@ func NewAPIRouter(cashDeposit ATMTransaction, authMiddleware core.Middleware) ht
 
 			// Request: FinalizeTransactionRequest
 			// Response: 200 if accepted, client error (or 500) if rejected
-			// Throws: InvalidATMSecret
+			// Throws: InvalidATMSecret, InsufficientFunds
 			r.Post("/finalize-transaction", cashDeposit.FinalizeTransaction)
 		})
 	})

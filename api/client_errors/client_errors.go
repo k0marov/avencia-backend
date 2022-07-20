@@ -25,3 +25,8 @@ var InvalidATMSecret = ClientError{
 	DetailCode: "invalid-atm-secret",
 	HTTPCode:   400,
 }
+
+var InsufficientFunds = ClientError{
+	DetailCode: "insufficient-funds",
+	HTTPCode:   400,
+}

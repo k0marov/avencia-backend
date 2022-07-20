@@ -43,6 +43,11 @@ func Assert[T any](t testing.TB, got, want T, description string) bool {
 	return true
 }
 
+func FloatsEqual(a, b float64) bool {
+	const l = 0.00001
+	return math.Abs(a-b) < l
+}
+
 func AssertNoError(t testing.TB, got error) {
 	t.Helper()
 	if got != nil {

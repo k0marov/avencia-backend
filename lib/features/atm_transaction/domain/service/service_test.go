@@ -86,7 +86,7 @@ func TestBanknoteChecker(t *testing.T) {
 	code := RandomString()
 	banknote := values.Banknote{
 		Currency: RandomString(),
-		Amount:   RandomInt(),
+		Amount:   RandomFloat(),
 	}
 	t.Run("error case - jwt checking throws", func(t *testing.T) {
 		verificationErr := RandomError()
@@ -126,5 +126,77 @@ func TestTransactionFinalizer(t *testing.T) {
 		}
 		err := service.NewTransactionFinalizer(atmSecret, performTransaction)(transaction)
 		AssertError(t, err, wantErr)
+	})
+}
+
+func TestTransactionPerformer(t *testing.T) {
+	balance := 150.0
+	userId := RandomString()
+	currency := RandomString()
+
+	balanceGetter := func(user string, curr string) (float64, error) {
+		if user == userId && curr == currency {
+			return balance, nil
+		}
+		panic("unexpected")
+	}
+	t.Run("error case - getting current balance throws", func(t *testing.T) {
+		balanceGetter := func(string, string) (float64, error) {
+			return 0, RandomError()
+		}
+		err := service.NewTransactionPerformer(balanceGetter, nil)(values.TransactionData{})
+		AssertSomeError(t, err)
+	})
+	t.Run("error case - not enough funds for withdrawal", func(t *testing.T) {
+		amount := -1000.0
+		err := service.NewTransactionPerformer(balanceGetter, nil)(values.TransactionData{
+			UserId:   userId,
+			Currency: currency,
+			Amount:   amount,
+		})
+		AssertError(t, err, client_errors.InsufficientFunds)
+	})
+
+	t.Run("error case - updating balance throws", func(t *testing.T) {
+		balanceUpdater := func(user string, curr string, newBalance float64) error {
+			if user == userId && curr == currency {
+				return RandomError()
+			}
+			panic("unexpected")
+		}
+		err := service.NewTransactionPerformer(balanceGetter, balanceUpdater)(values.TransactionData{UserId: userId, Currency: currency})
+		AssertSomeError(t, err)
+	})
+	t.Run("happy case", func(t *testing.T) {
+		t.Run("for withdrawing", func(t *testing.T) {
+			amount := -100.0
+			balanceUpdater := func(user string, curr string, newBalance float64) error {
+				if FloatsEqual(newBalance, 50.0) {
+					return nil
+				}
+				panic("unexpected")
+			}
+			err := service.NewTransactionPerformer(balanceGetter, balanceUpdater)(values.TransactionData{
+				UserId:   userId,
+				Currency: currency,
+				Amount:   amount,
+			})
+			AssertNoError(t, err)
+		})
+		t.Run("for depositing", func(t *testing.T) {
+			amount := 100.0
+			balanceUpdater := func(user string, curr string, newBalance float64) error {
+				if FloatsEqual(newBalance, 250.0) {
+					return nil
+				}
+				panic("unexpected")
+			}
+			err := service.NewTransactionPerformer(balanceGetter, balanceUpdater)(values.TransactionData{
+				UserId:   userId,
+				Currency: currency,
+				Amount:   amount,
+			})
+			AssertNoError(t, err)
+		})
 	})
 }
