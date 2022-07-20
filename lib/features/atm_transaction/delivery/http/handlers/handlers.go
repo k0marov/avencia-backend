@@ -55,10 +55,11 @@ func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.Handler
 		var banknoteRequest api.BanknoteCheckRequest
 		json.NewDecoder(r.Body).Decode(&banknoteRequest)
 
-		accept := checkBanknote(banknoteRequest.TransactionCode, values.NewBanknote(banknoteRequest))
-		response := api.AcceptionResponse{Accept: accept}
-
-		http_helpers.WriteJson(w, response)
+		err := checkBanknote(banknoteRequest.TransactionCode, values.NewBanknote(banknoteRequest))
+		if err != nil {
+			http_helpers.HandleServiceError(w, err)
+			return
+		}
 	}
 }
 
@@ -67,9 +68,10 @@ func NewFinalizeTransactionHandler(finalizeTransaction service.TransactionFinali
 		var transactionRequest api.FinalizeTransactionRequest
 		json.NewDecoder(r.Body).Decode(&transactionRequest)
 
-		accept := finalizeTransaction(values.NewTransactionData(transactionRequest))
-		response := api.AcceptionResponse{Accept: accept}
-
-		http_helpers.WriteJson(w, response)
+		err := finalizeTransaction(values.NewTransactionData(transactionRequest))
+		if err != nil {
+			http_helpers.HandleServiceError(w, err)
+			return
+		}
 	}
 }

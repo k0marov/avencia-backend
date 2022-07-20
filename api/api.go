@@ -25,11 +25,11 @@ func NewAPIRouter(cashDeposit ATMTransaction, authMiddleware core.Middleware) ht
 			r.Post("/verify-code", cashDeposit.VerifyCode)
 
 			// Request: BanknoteCheckRequest
-			// Response: AcceptionResponse
+			// Response: 200 if accepted, client error (or 500) if rejected
 			r.Post("/check-banknote", cashDeposit.CheckBanknote)
 
 			// Request: FinalizeTransactionRequest
-			// Response: AcceptionResponse
+			// Response: 200 if accepted, client error (or 500) if rejected
 			r.Post("/finalize-transaction", cashDeposit.FinalizeTransaction)
 		})
 	})

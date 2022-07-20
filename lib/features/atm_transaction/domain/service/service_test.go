@@ -88,22 +88,23 @@ func TestBanknoteChecker(t *testing.T) {
 		Currency: RandomString(),
 		Amount:   RandomInt(),
 	}
-	t.Run("accept case - jwt checking does not throw", func(t *testing.T) {
+	t.Run("error case - jwt checking throws", func(t *testing.T) {
+		verificationErr := RandomError()
+		verifyCode := func(string, service.TransactionType) (entities.UserInfo, error) {
+			return entities.UserInfo{}, verificationErr
+		}
+		err := service.NewBanknoteChecker(verifyCode)(code, banknote)
+		AssertError(t, err, verificationErr)
+	})
+	t.Run("happy case - jwt checking does not throw", func(t *testing.T) {
 		verifyCode := func(gotCode string, tType service.TransactionType) (entities.UserInfo, error) {
 			if gotCode == code && tType == service.Deposit {
 				return entities.UserInfo{}, nil
 			}
 			panic("unexpected")
 		}
-		result := service.NewBanknoteChecker(verifyCode)(code, banknote)
-		Assert(t, result, true, "accept == true")
-	})
-	t.Run("reject case - jwt checking throws", func(t *testing.T) {
-		verifyCode := func(string, service.TransactionType) (entities.UserInfo, error) {
-			return entities.UserInfo{}, RandomError()
-		}
-		result := service.NewBanknoteChecker(verifyCode)(code, banknote)
-		Assert(t, result, false, "accept == false")
+		err := service.NewBanknoteChecker(verifyCode)(code, banknote)
+		AssertNoError(t, err)
 	})
 }
 
@@ -112,25 +113,18 @@ func TestTransactionFinalizer(t *testing.T) {
 	atmSecret := transaction.ATMSecret
 	t.Run("error case - atm secret is invalid", func(t *testing.T) {
 		otherAtmSecret := []byte("asdf")
-		success := service.NewTransactionFinalizer(otherAtmSecret, nil)(transaction)
-		Assert(t, success, false, "success == false")
+		err := service.NewTransactionFinalizer(otherAtmSecret, nil)(transaction)
+		AssertError(t, err, client_errors.InvalidATMSecret)
 	})
-	performTransaction := func(trans values.TransactionData) error {
-		if reflect.DeepEqual(trans, transaction) {
-			return nil
+	t.Run("forward case - return whatever performTransaction returns", func(t *testing.T) {
+		wantErr := RandomError()
+		performTransaction := func(trans values.TransactionData) error {
+			if reflect.DeepEqual(trans, transaction) {
+				return wantErr
+			}
+			panic("unexpected")
 		}
-		panic("unexpected")
-	}
-	t.Run("error case - executing transaction throws", func(t *testing.T) {
-		performTransaction := func(values.TransactionData) error {
-			return RandomError()
-		}
-		success := service.NewTransactionFinalizer(atmSecret, performTransaction)(transaction)
-		Assert(t, success, false, "success == false")
-	})
-
-	t.Run("happy case", func(t *testing.T) {
-		success := service.NewTransactionFinalizer(atmSecret, performTransaction)(transaction)
-		Assert(t, success, true, "success")
+		err := service.NewTransactionFinalizer(atmSecret, performTransaction)(transaction)
+		AssertError(t, err, wantErr)
 	})
 }

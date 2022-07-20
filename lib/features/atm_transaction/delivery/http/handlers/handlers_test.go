@@ -99,57 +99,66 @@ func TestVerifyCodeHandler(t *testing.T) {
 }
 
 func TestCheckBanknoteHandler(t *testing.T) {
-	t.Run("should call service and return the result in the 'accept' field", func(t *testing.T) {
-		transactionCode := RandomString()
-		currency := RandomString()
-		amount := RandomInt()
-		banknoteRequest := api.BanknoteCheckRequest{
-			TransactionCode: transactionCode,
-			Currency:        currency,
-			Amount:          amount,
-		}
-		banknoteJson, _ := json.Marshal(banknoteRequest)
-		wantBanknoteValue := values.NewBanknote(banknoteRequest)
-		request := http_test_helpers.CreateRequest(bytes.NewReader(banknoteJson))
+	transactionCode := RandomString()
+	currency := RandomString()
+	amount := RandomInt()
+	banknoteRequest := api.BanknoteCheckRequest{
+		TransactionCode: transactionCode,
+		Currency:        currency,
+		Amount:          amount,
+	}
+	banknoteJson, _ := json.Marshal(banknoteRequest)
+	wantBanknoteValue := values.NewBanknote(banknoteRequest)
+	request := http_test_helpers.CreateRequest(bytes.NewReader(banknoteJson))
+
+	t.Run("should call service and return status code 200 if there is no error", func(t *testing.T) {
 		response := httptest.NewRecorder()
 
-		accept := RandomBool()
-		checker := func(code string, banknote values.Banknote) bool {
+		checker := func(code string, banknote values.Banknote) error {
 			if code == transactionCode && banknote == wantBanknoteValue {
-				return accept
+				return nil
 			}
 			panic("unexpected")
 		}
 
 		handlers.NewCheckBanknoteHandler(checker)(response, request)
-
-		AssertJSONData(t, response, api.AcceptionResponse{Accept: accept})
+		AssertStatusCode(t, response, http.StatusOK)
+	})
+	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, w *httptest.ResponseRecorder) {
+		checker := func(string, values.Banknote) error {
+			return err
+		}
+		handlers.NewCheckBanknoteHandler(checker)(w, request)
 	})
 }
 
 func TestFinalizeTransactionHandler(t *testing.T) {
-	t.Run("should call service and return the result in the 'accept' field", func(t *testing.T) {
-		transaction := RandomTransactionData()
-		transactionJson, _ := json.Marshal(api.FinalizeTransactionRequest{
-			UserId:    transaction.UserId,
-			ATMSecret: string(transaction.ATMSecret),
-			Currency:  transaction.Currency,
-			Amount:    transaction.Amount,
-		})
-		accept := RandomBool()
+	transaction := RandomTransactionData()
+	transactionJson, _ := json.Marshal(api.FinalizeTransactionRequest{
+		UserId:    transaction.UserId,
+		ATMSecret: string(transaction.ATMSecret),
+		Currency:  transaction.Currency,
+		Amount:    transaction.Amount,
+	})
+	request := http_test_helpers.CreateRequest(bytes.NewReader(transactionJson))
 
-		request := http_test_helpers.CreateRequest(bytes.NewReader(transactionJson))
+	t.Run("should call service and return status code 200 if there is no error", func(t *testing.T) {
 		response := httptest.NewRecorder()
 
-		finalizer := func(trans values.TransactionData) bool {
+		finalizer := func(trans values.TransactionData) error {
 			if reflect.DeepEqual(trans, transaction) {
-				return accept
+				return nil
 			}
 			panic("unexpected")
 		}
 
 		handlers.NewFinalizeTransactionHandler(finalizer)(response, request)
-
-		AssertJSONData(t, response, api.AcceptionResponse{Accept: accept})
+		AssertStatusCode(t, response, http.StatusOK)
+	})
+	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, response *httptest.ResponseRecorder) {
+		finalizer := func(values.TransactionData) error {
+			return err
+		}
+		handlers.NewFinalizeTransactionHandler(finalizer)(response, request)
 	})
 }

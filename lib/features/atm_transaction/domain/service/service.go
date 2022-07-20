@@ -7,7 +7,6 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
-	"log"
 	"time"
 )
 
@@ -27,8 +26,8 @@ const UserIdClaim = "sub"
 
 type CodeGenerator = func(auth.User, TransactionType) (code string, expiresAt time.Time, err error)
 type CodeVerifier = func(string, TransactionType) (entities.UserInfo, error)
-type BanknoteChecker = func(transactionCode string, banknote values.Banknote) bool
-type TransactionFinalizer = func(values.TransactionData) bool
+type BanknoteChecker = func(transactionCode string, banknote values.Banknote) error
+type TransactionFinalizer = func(values.TransactionData) error
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(user auth.User, tType TransactionType) (string, time.Time, error) {
@@ -62,22 +61,20 @@ func NewCodeVerifier(verifyJWT jwt.Verifier) CodeVerifier {
 }
 
 func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
-	return func(transactionCode string, banknote values.Banknote) bool {
+	return func(transactionCode string, banknote values.Banknote) error {
 		_, err := verifyCode(transactionCode, Deposit)
 		// TODO: more banknote checking
-		return err == nil
+		return err
 	}
 }
 
 type TransactionPerformer = func(values.TransactionData) error // yet to be implemented
 
 func NewTransactionFinalizer(atmSecret []byte, perform TransactionPerformer) TransactionFinalizer {
-	return func(transaction values.TransactionData) bool {
+	return func(transaction values.TransactionData) error {
 		if subtle.ConstantTimeCompare(transaction.ATMSecret, atmSecret) == 0 {
-			log.Printf("transaction rejected: invalid atm secret")
-			return false
+			return client_errors.InvalidATMSecret
 		}
-		err := perform(transaction)
-		return err == nil
+		return perform(transaction)
 	}
 }
