@@ -13,21 +13,28 @@ import (
 
 const ExpDuration = time.Minute * 10
 
-const TransactionTypeClaim = "transaction_type"
-const DepositTransactionType = "deposit"
+const TransactionTypeClaimKey = "transaction_type"
+
+// TransactionType is either Deposit or Withdrawal
+type TransactionType string
+
+const (
+	Deposit    TransactionType = "deposit"
+	Withdrawal                 = "withdrawal"
+)
 
 const UserIdClaim = "sub"
 
-type CodeGenerator = func(user auth.User) (code string, expiresAt time.Time, err error)
-type CodeVerifier = func(string) (entities.UserInfo, error)
+type CodeGenerator = func(auth.User, TransactionType) (code string, expiresAt time.Time, err error)
+type CodeVerifier = func(string, TransactionType) (entities.UserInfo, error)
 type BanknoteChecker = func(transactionCode string, banknote values.Banknote) bool
 type TransactionFinalizer = func(values.TransactionData) bool
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
-	return func(user auth.User) (string, time.Time, error) {
+	return func(user auth.User, tType TransactionType) (string, time.Time, error) {
 		claims := map[string]any{
-			UserIdClaim:          user.Id,
-			TransactionTypeClaim: DepositTransactionType,
+			UserIdClaim:             user.Id,
+			TransactionTypeClaimKey: tType,
 		}
 		expireAt := time.Now().UTC().Add(ExpDuration)
 		code, err := issueJWT(claims, expireAt)
@@ -36,12 +43,12 @@ func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 }
 
 func NewCodeVerifier(verifyJWT jwt.Verifier) CodeVerifier {
-	return func(code string) (entities.UserInfo, error) {
+	return func(code string, tType TransactionType) (entities.UserInfo, error) {
 		data, err := verifyJWT(code)
 		if err != nil {
 			return entities.UserInfo{}, client_errors.InvalidJWT
 		}
-		if data[TransactionTypeClaim] != DepositTransactionType {
+		if data[TransactionTypeClaimKey] != tType {
 			return entities.UserInfo{}, client_errors.InvalidJWT
 		}
 		userId, ok := data[UserIdClaim].(string)
@@ -56,7 +63,8 @@ func NewCodeVerifier(verifyJWT jwt.Verifier) CodeVerifier {
 
 func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 	return func(transactionCode string, banknote values.Banknote) bool {
-		_, err := verifyCode(transactionCode)
+		_, err := verifyCode(transactionCode, Deposit)
+		// TODO: more banknote checking
 		return err == nil
 	}
 }

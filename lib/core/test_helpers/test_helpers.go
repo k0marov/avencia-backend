@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/k0marov/avencia-backend/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"log"
@@ -115,6 +116,14 @@ func RandomTransactionData() values.TransactionData {
 		ATMSecret: []byte(RandomString()),
 		Currency:  RandomString(),
 		Amount:    RandomInt(),
+	}
+}
+
+func RandomTransactionType() service.TransactionType {
+	if RandomBool() {
+		return service.Deposit
+	} else {
+		return service.Withdrawal
 	}
 }
 

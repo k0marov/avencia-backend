@@ -12,5 +12,5 @@ type FinalizeTransactionRequest struct {
 	UserId    string `json:"user_id"`
 	ATMSecret string `json:"atm_secret"`
 	Currency  string `json:"currency"`
-	Amount    int    `json:"amount"`
+	Amount    int    `json:"amount"` // negative value means withdrawal
 }
