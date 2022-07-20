@@ -2,6 +2,6 @@ package api
 
 import "net/http"
 
-type CashDeposit struct {
+type ATMTransaction struct {
 	GenCode, VerifyCode, CheckBanknote, FinalizeTransaction http.HandlerFunc
 }

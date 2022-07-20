@@ -1,18 +1,18 @@
-package deposit
+package atm_transaction
 
 import (
 	"errors"
 	"github.com/k0marov/avencia-backend/api"
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
-	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/delivery/http/handlers"
-	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/values"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/delivery/http/handlers"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"io/ioutil"
 	"log"
 )
 
-func NewCashDepositHandlers(config config.Config) api.CashDeposit {
+func NewATMTransactionHandlers(config config.Config) api.ATMTransaction {
 	// jwt
 	jwtSecret, err := ioutil.ReadFile(config.JWTSecretPath)
 	if err != nil {
@@ -38,7 +38,7 @@ func NewCashDepositHandlers(config config.Config) api.CashDeposit {
 	}
 	finalizeTransaction := service.NewTransactionFinalizer(atmSecret, transactionPerformer)
 	// handlers
-	return api.CashDeposit{
+	return api.ATMTransaction{
 		GenCode:             handlers.NewGenerateCodeHandler(genCode),
 		VerifyCode:          handlers.NewVerifyCodeHandler(verifyCode),
 		CheckBanknote:       handlers.NewCheckBanknoteHandler(checkBanknote),

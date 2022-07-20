@@ -6,11 +6,11 @@ import (
 	"net/http"
 )
 
-func NewAPIRouter(cashDeposit CashDeposit, authMiddleware core.Middleware) http.Handler {
+func NewAPIRouter(cashDeposit ATMTransaction, authMiddleware core.Middleware) http.Handler {
 	r := chi.NewRouter()
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Route("/cash/deposit", func(r chi.Router) {
+		r.Route("/atm-transaction", func(r chi.Router) {
 			// Response: CodeResponse
 			r.Get("/gen-code", authMiddleware(cashDeposit.GenCode).ServeHTTP)
 

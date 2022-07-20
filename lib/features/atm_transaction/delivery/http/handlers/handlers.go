@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"github.com/k0marov/avencia-backend/api"
 	"github.com/k0marov/avencia-backend/lib/core/http_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/cash/deposit/domain/values"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"log"
 	"net/http"
 )

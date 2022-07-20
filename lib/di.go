@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/k0marov/avencia-backend/api"
 	"github.com/k0marov/avencia-backend/lib/config"
-	"github.com/k0marov/avencia-backend/lib/features/cash/deposit"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction"
 	"log"
 	"net/http"
 
@@ -28,7 +28,7 @@ func Initialize() http.Handler {
 	fbApp := initFirebase(conf)
 	authMiddleware := auth.NewAuthMiddleware(fbApp)
 
-	cashDepositHandlers := deposit.NewCashDepositHandlers(conf)
+	cashDepositHandlers := atm_transaction.NewATMTransactionHandlers(conf)
 
 	return api.NewAPIRouter(cashDepositHandlers, authMiddleware)
 }
