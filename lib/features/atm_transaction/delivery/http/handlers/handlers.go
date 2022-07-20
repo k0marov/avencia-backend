@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"github.com/k0marov/avencia-backend/api"
+	"github.com/k0marov/avencia-backend/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core/http_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
@@ -16,7 +17,12 @@ func NewGenerateCodeHandler(generate service.CodeGenerator) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		code, expiresAt, err := generate(user)
+		transactionType := r.URL.Query().Get(api.TransactionTypeQueryArg)
+		if transactionType == "" {
+			http_helpers.ThrowClientError(w, client_errors.TransactionTypeNotProvided)
+			return
+		}
+		code, expiresAt, err := generate(user, service.TransactionType(transactionType))
 		if err != nil {
 			http_helpers.HandleServiceError(w, err)
 			return
@@ -28,9 +34,14 @@ func NewGenerateCodeHandler(generate service.CodeGenerator) http.HandlerFunc {
 
 func NewVerifyCodeHandler(verify service.CodeVerifier) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		transactionType := r.URL.Query().Get(api.TransactionTypeQueryArg)
+		if transactionType == "" {
+			http_helpers.ThrowClientError(w, client_errors.TransactionTypeNotProvided)
+			return
+		}
 		var code api.CodeRequest
 		json.NewDecoder(r.Body).Decode(&code)
-		userInfo, err := verify(code.TransactionCode)
+		userInfo, err := verify(code.TransactionCode, service.TransactionType(transactionType))
 		if err != nil {
 			http_helpers.HandleServiceError(w, err)
 			return

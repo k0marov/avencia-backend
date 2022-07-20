@@ -15,3 +15,8 @@ var InvalidJWT = ClientError{
 	DetailCode: "invalid-jwt",
 	HTTPCode:   400,
 }
+
+var TransactionTypeNotProvided = ClientError{
+	DetailCode: "transaction_type-not-provided",
+	HTTPCode:   400,
+}
