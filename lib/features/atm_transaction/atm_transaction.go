@@ -34,7 +34,8 @@ func NewATMTransactionHandlers(config config.Config, getWallet walletService.Wal
 
 	// service
 	genCode := service.NewCodeGenerator(jwtIssuer)
-	verifyCode := service.NewCodeVerifier(jwtVerifier)
+	getUserInfo := service.NewUserInfoGetter(getWallet)
+	verifyCode := service.NewCodeVerifier(jwtVerifier, getUserInfo)
 	checkBanknote := service.NewBanknoteChecker(verifyCode)
 	performTransaction := service.NewTransactionPerformer(getBalance, updateBalance)
 	finalizeTransaction := service.NewTransactionFinalizer(atmSecret, performTransaction)

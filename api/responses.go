@@ -1,7 +1,8 @@
 package api
 
 type UserInfoResponse struct {
-	Id string `json:"id"`
+	Id     string             `json:"id"`
+	Wallet map[string]float64 `json:"wallet"`
 }
 type VerifiedCodeResponse struct {
 	UserInfo UserInfoResponse `json:"user_info"`

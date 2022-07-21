@@ -11,5 +11,5 @@ type UserInfo struct {
 }
 
 func (u UserInfo) ToResponse() api.UserInfoResponse {
-	return api.UserInfoResponse{Id: u.Id}
+	return api.UserInfoResponse{Id: u.Id, Wallet: u.Wallet}
 }
