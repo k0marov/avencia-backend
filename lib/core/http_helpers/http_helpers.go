@@ -2,7 +2,7 @@ package http_helpers
 
 import (
 	"encoding/json"
-	"github.com/k0marov/avencia-backend/api/client_errors"
+	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"log"
 	"net/http"

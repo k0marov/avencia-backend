@@ -1,6 +1,6 @@
 package values
 
-import "github.com/k0marov/avencia-backend/api"
+import "github.com/k0marov/avencia-api-contract/api"
 
 type Banknote struct {
 	Currency string

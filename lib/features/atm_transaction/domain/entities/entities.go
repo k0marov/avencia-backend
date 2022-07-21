@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"github.com/k0marov/avencia-backend/api"
+	"github.com/k0marov/avencia-api-contract/api"
 	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
 )
 

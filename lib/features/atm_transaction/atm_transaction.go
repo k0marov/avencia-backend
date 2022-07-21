@@ -2,7 +2,7 @@ package atm_transaction
 
 import (
 	"cloud.google.com/go/firestore"
-	"github.com/k0marov/avencia-backend/api"
+	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/delivery/http/handlers"

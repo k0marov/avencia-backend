@@ -3,7 +3,7 @@ package service
 import (
 	"crypto/subtle"
 	"fmt"
-	"github.com/k0marov/avencia-backend/api/client_errors"
+	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/store"

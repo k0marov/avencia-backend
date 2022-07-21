@@ -2,7 +2,7 @@ package lib
 
 import (
 	"context"
-	"github.com/k0marov/avencia-backend/api"
+	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction"
 	"github.com/k0marov/avencia-backend/lib/features/wallet"

@@ -3,7 +3,7 @@ package test_helpers
 import (
 	"encoding/json"
 	"errors"
-	"github.com/k0marov/avencia-backend/api/client_errors"
+	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
