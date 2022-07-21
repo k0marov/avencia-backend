@@ -9,6 +9,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/store"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
+	walletService "github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
 	"math"
 	"time"
 )
@@ -31,7 +32,10 @@ type CodeGenerator = func(auth.User, TransactionType) (code string, expiresAt ti
 type CodeVerifier = func(string, TransactionType) (entities.UserInfo, error)
 type BanknoteChecker = func(transactionCode string, banknote values.Banknote) error
 type TransactionFinalizer = func(values.TransactionData) error
+
+// helpers
 type transactionPerformer = func(values.TransactionData) error
+type userInfoGetter = func(userId string) (entities.UserInfo, error)
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(user auth.User, tType TransactionType) (string, time.Time, error) {
@@ -45,7 +49,8 @@ func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	}
 }
 
-func NewCodeVerifier(verifyJWT jwt.Verifier) CodeVerifier {
+// TODO: maybe factor out the validation part into a separate validator
+func NewCodeVerifier(verifyJWT jwt.Verifier, getInfo userInfoGetter) CodeVerifier {
 	return func(code string, tType TransactionType) (entities.UserInfo, error) {
 		data, err := verifyJWT(code)
 		if err != nil {
@@ -58,9 +63,17 @@ func NewCodeVerifier(verifyJWT jwt.Verifier) CodeVerifier {
 		if !ok {
 			return entities.UserInfo{}, client_errors.InvalidCode
 		}
-		return entities.UserInfo{
-			Id: userId,
-		}, nil
+		return getInfo(userId)
+	}
+}
+
+func NewUserInfoGetter(getWallet walletService.WalletGetter) userInfoGetter {
+	return func(userId string) (entities.UserInfo, error) {
+		wallet, err := getWallet(userId)
+		if err != nil {
+			return entities.UserInfo{}, fmt.Errorf("getting wallet for user info: %w", err)
+		}
+		return entities.UserInfo{Id: userId, Wallet: wallet}, nil
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
+	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
 	"reflect"
 	"testing"
 	"time"
@@ -42,9 +43,8 @@ func TestCodeGenerator(t *testing.T) {
 func TestCodeVerifier(t *testing.T) {
 	tCode := RandomString()
 	tType := RandomTransactionType()
-
-	tClaims := map[string]any{service.UserIdClaim: "4242", service.TransactionTypeClaimKey: tType}
-	tUserInfo := entities.UserInfo{Id: "4242"}
+	userId := "4242"
+	tClaims := map[string]any{service.UserIdClaim: userId, service.TransactionTypeClaimKey: tType}
 
 	jwtVerifier := func(token string) (map[string]any, error) {
 		if token == tCode {
@@ -56,30 +56,67 @@ func TestCodeVerifier(t *testing.T) {
 		jwtVerifier := func(string) (map[string]any, error) {
 			return nil, RandomError()
 		}
-		_, err := service.NewCodeVerifier(jwtVerifier)(tCode, tType)
+		_, err := service.NewCodeVerifier(jwtVerifier, nil)(tCode, tType)
 		AssertError(t, err, client_errors.InvalidCode)
 	})
 	t.Run("error case - claims are invalid (e.g. user id is not a string)", func(t *testing.T) {
 		jwtVerifier := func(string) (map[string]any, error) {
 			return map[string]any{service.UserIdClaim: 42, service.TransactionTypeClaimKey: service.Deposit}, nil
 		}
-		_, err := service.NewCodeVerifier(jwtVerifier)(tCode, tType)
+		_, err := service.NewCodeVerifier(jwtVerifier, nil)(tCode, tType)
 		AssertError(t, err, client_errors.InvalidCode)
 	})
 	t.Run("error case - token has an incorrect transaction_type claim", func(t *testing.T) {
 		jwtVerifier := func(string) (map[string]any, error) {
 			return map[string]any{service.UserIdClaim: "4242", service.TransactionTypeClaimKey: "random"}, nil
 		}
-		_, err := service.NewCodeVerifier(jwtVerifier)(tCode, tType)
+		_, err := service.NewCodeVerifier(jwtVerifier, nil)(tCode, tType)
 		AssertError(t, err, client_errors.InvalidCode)
 	})
 
-	t.Run("happy case", func(t *testing.T) {
-		gotUserInfo, err := service.NewCodeVerifier(jwtVerifier)(tCode, tType)
-		AssertNoError(t, err)
+	t.Run("happy case - should forward to userInfoGetter", func(t *testing.T) {
+		tUserInfo := entities.UserInfo{
+			Id:     userId,
+			Wallet: map[string]float64{"USD": 400.0, "BTC": 0.0001},
+		}
+		tErr := RandomError()
+		userInfoGetter := func(user string) (entities.UserInfo, error) {
+			if user == userId {
+				return tUserInfo, tErr
+			}
+			panic("unexpected")
+		}
+		gotUserInfo, err := service.NewCodeVerifier(jwtVerifier, userInfoGetter)(tCode, tType)
+		AssertError(t, err, tErr)
 		Assert(t, gotUserInfo, tUserInfo, "returned user info")
 	})
 
+}
+
+func TestUserInfoGetter(t *testing.T) {
+	userId := RandomString()
+	t.Run("error case - getting wallet throws", func(t *testing.T) {
+		getWallet := func(user string) (walletEntities.Wallet, error) {
+			if user == userId {
+				return walletEntities.Wallet{}, RandomError()
+			}
+			panic("unexpected")
+		}
+		_, err := service.NewUserInfoGetter(getWallet)(userId)
+		AssertSomeError(t, err)
+	})
+	t.Run("happy case", func(t *testing.T) {
+		wallet := walletEntities.Wallet{"RUB": 1000, "USD": 100.5}
+		getWallet := func(string) (walletEntities.Wallet, error) {
+			return wallet, nil
+		}
+		gotInfo, err := service.NewUserInfoGetter(getWallet)(userId)
+		AssertNoError(t, err)
+		Assert(t, gotInfo, entities.UserInfo{
+			Id:     userId,
+			Wallet: wallet,
+		}, "returned user info")
+	})
 }
 
 func TestBanknoteChecker(t *testing.T) {
