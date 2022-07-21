@@ -1,7 +1,7 @@
 package service_test
 
 import (
-	"github.com/k0marov/avencia-backend/api/client_errors"
+	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
@@ -44,7 +44,7 @@ func TestCodeVerifier(t *testing.T) {
 	tCode := RandomString()
 	tType := RandomTransactionType()
 	userId := "4242"
-	tClaims := map[string]any{service.UserIdClaim: userId, service.TransactionTypeClaimKey: tType}
+	tClaims := map[string]any{service.UserIdClaim: userId, service.TransactionTypeClaimKey: string(tType)}
 
 	jwtVerifier := func(token string) (map[string]any, error) {
 		if token == tCode {
