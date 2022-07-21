@@ -56,7 +56,7 @@ func NewCodeVerifier(verifyJWT jwt.Verifier, getInfo userInfoGetter) CodeVerifie
 		if err != nil {
 			return entities.UserInfo{}, client_errors.InvalidCode
 		}
-		if data[TransactionTypeClaimKey] != tType {
+		if data[TransactionTypeClaimKey] != string(tType) {
 			return entities.UserInfo{}, client_errors.InvalidTransactionType
 		}
 		userId, ok := data[UserIdClaim].(string)

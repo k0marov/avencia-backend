@@ -68,7 +68,7 @@ func TestCodeVerifier(t *testing.T) {
 	})
 	t.Run("error case - claims are invalid (e.g. user id is not a string)", func(t *testing.T) {
 		jwtVerifier := func(string) (map[string]any, error) {
-			return map[string]any{service.UserIdClaim: 42, service.TransactionTypeClaimKey: service.Deposit}, nil
+			return map[string]any{service.UserIdClaim: 42, service.TransactionTypeClaimKey: string(tType)}, nil
 		}
 		_, err := service.NewCodeVerifier(jwtVerifier, nil)(tCode, tType)
 		AssertError(t, err, client_errors.InvalidCode)
