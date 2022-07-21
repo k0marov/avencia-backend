@@ -8,11 +8,12 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/delivery/http/handlers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/store"
+	walletService "github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
 	"io/ioutil"
 	"log"
 )
 
-func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client) api.ATMTransaction {
+func NewATMTransactionHandlers(config config.Config, getWallet walletService.WalletGetter, fsClient *firestore.Client) api.ATMTransaction {
 	// config
 	atmSecret, err := ioutil.ReadFile(config.ATMSecretPath)
 	if err != nil {
@@ -28,7 +29,7 @@ func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client)
 	jwtVerifier := jwt.NewVerifier(jwtSecret)
 
 	// store
-	getBalance := store.NewBalanceGetter(fsClient)
+	getBalance := store.NewBalanceGetter(getWallet)
 	updateBalance := store.NewBalanceUpdater(fsClient)
 
 	// service

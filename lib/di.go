@@ -5,6 +5,7 @@ import (
 	"github.com/k0marov/avencia-backend/api"
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction"
+	"github.com/k0marov/avencia-backend/lib/features/wallet"
 	"log"
 	"net/http"
 
@@ -26,9 +27,15 @@ func Initialize() http.Handler {
 	conf := config.LoadConfig()
 
 	fbApp := initFirebase(conf)
+	fsClient, err := fbApp.Firestore(context.Background())
+	if err != nil {
+		log.Fatalf("error while initializing firestore client: %v", err)
+	}
+
 	authMiddleware := auth.NewAuthMiddleware(fbApp)
+	getWallet := wallet.NewWalletGetterImpl(fsClient)
 
-	cashDepositHandlers := atm_transaction.NewATMTransactionHandlers(conf)
+	atmTransactionHandlers := atm_transaction.NewATMTransactionHandlers(conf, getWallet, fsClient)
 
-	return api.NewAPIRouter(cashDepositHandlers, authMiddleware)
+	return api.NewAPIRouter(atmTransactionHandlers, authMiddleware)
 }
