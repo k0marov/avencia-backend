@@ -101,7 +101,7 @@ func TestVerifyCodeHandler(t *testing.T) {
 func TestCheckBanknoteHandler(t *testing.T) {
 	transactionCode := RandomString()
 	currency := RandomString()
-	amount := RandomInt()
+	amount := RandomFloat()
 	banknoteRequest := api.BanknoteCheckRequest{
 		TransactionCode: transactionCode,
 		Currency:        currency,
