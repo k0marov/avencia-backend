@@ -5,15 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/store"
 )
 
-// SimpleFirestoreClient this interface is used instead of full firestore.Client since interfaces should be lean
-type SimpleFirestoreClient interface {
-	Doc(string) *firestore.DocumentRef
-}
-
-func NewBalanceGetter(client SimpleFirestoreClient) store.BalanceGetter {
+func NewBalanceGetter(client firestore_facade.SimpleFirestoreFacade) store.BalanceGetter {
 	return func(userId string, currency string) (float64, error) {
 		docRef := client.Doc("Wallets/" + userId)
 		if docRef == nil {
@@ -39,7 +35,7 @@ func NewBalanceGetter(client SimpleFirestoreClient) store.BalanceGetter {
 	}
 }
 
-func NewBalanceUpdater(client SimpleFirestoreClient) store.BalanceUpdater {
+func NewBalanceUpdater(client firestore_facade.SimpleFirestoreFacade) store.BalanceUpdater {
 	return func(userId, currency string, newBalance float64) error {
 		docRef := client.Doc("Wallets/" + userId)
 		if docRef == nil {
