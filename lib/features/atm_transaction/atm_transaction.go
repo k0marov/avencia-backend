@@ -1,17 +1,18 @@
 package atm_transaction
 
 import (
-	"errors"
+	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/api"
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/delivery/http/handlers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/store"
 	"io/ioutil"
 	"log"
 )
 
-func NewATMTransactionHandlers(config config.Config) api.ATMTransaction {
+func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client) api.ATMTransaction {
 	// config
 	atmSecret, err := ioutil.ReadFile(config.ATMSecretPath)
 	if err != nil {
@@ -26,16 +27,9 @@ func NewATMTransactionHandlers(config config.Config) api.ATMTransaction {
 	jwtIssuer := jwt.NewIssuer(jwtSecret)
 	jwtVerifier := jwt.NewVerifier(jwtSecret)
 
-	// fake (not implemented yet)
-	// TODO: implement getBalance, updateBalance
-	getBalance := func(userId string, currency string) (float64, error) {
-		log.Printf("fake getting balance for user %s and currency %s", userId, currency)
-		return 0, errors.New("unimplemented")
-	}
-	updateBalance := func(userId string, currency string, newBalance float64) error {
-		log.Printf("fake setting balance for user %s and currency %s to %v", userId, currency, newBalance)
-		return errors.New("unimplemented")
-	}
+	// store
+	getBalance := store.NewBalanceGetter(fsClient)
+	updateBalance := store.NewBalanceUpdater(fsClient)
 
 	// service
 	genCode := service.NewCodeGenerator(jwtIssuer)
