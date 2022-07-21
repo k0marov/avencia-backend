@@ -16,6 +16,11 @@ var InvalidCode = ClientError{
 	HTTPCode:   400,
 }
 
+var InvalidTransactionType = ClientError{
+	DetailCode: "invalid-transaction-type",
+	HTTPCode:   400,
+}
+
 var TransactionTypeNotProvided = ClientError{
 	DetailCode: "transaction_type-not-provided",
 	HTTPCode:   400,
