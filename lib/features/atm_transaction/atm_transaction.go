@@ -31,18 +31,18 @@ func NewATMTransactionHandlers(config config.Config, getWallet walletService.Wal
 
 	// store
 	getBalance := store.NewBalanceGetter(getWallet)
-	updateBalance := store.NewBalanceUpdater(fsClient)
+	performTrans := store.NewTransactionPerformer(fsClient)
 
 	// validators
 	codeValidator := validators.NewTransCodeValidator(jwtVerifier)
+	transValidator := validators.NewTransactionValidator(atmSecret, getBalance)
 
 	// service
 	genCode := service.NewCodeGenerator(jwtIssuer)
 	getUserInfo := service.NewUserInfoGetter(getWallet)
 	verifyCode := service.NewCodeVerifier(codeValidator, getUserInfo)
 	checkBanknote := service.NewBanknoteChecker(verifyCode)
-	performTransaction := service.NewTransactionPerformer(getBalance, updateBalance)
-	finalizeTransaction := service.NewTransactionFinalizer(atmSecret, performTransaction)
+	finalizeTransaction := service.NewTransactionFinalizer(transValidator, performTrans)
 	// handlers
 	return api.ATMTransaction{
 		GenCode:             handlers.NewGenerateCodeHandler(genCode),

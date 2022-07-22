@@ -1,9 +1,7 @@
 package service
 
 import (
-	"crypto/subtle"
 	"fmt"
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/store"
@@ -11,7 +9,6 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	walletService "github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
-	"math"
 	"time"
 )
 
@@ -67,33 +64,12 @@ func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 	}
 }
 
-func NewTransactionFinalizer(atmSecret []byte, perform transactionPerformer) TransactionFinalizer {
+func NewTransactionFinalizer(validate validators.TransactionValidator, perform store.TransactionPerformer) TransactionFinalizer {
 	return func(gotAtmSecret []byte, t values.TransactionData) error {
-		if subtle.ConstantTimeCompare(gotAtmSecret, atmSecret) == 0 {
-			return client_errors.InvalidATMSecret
-		}
-		// TODO: add limit check
-		return perform(t)
-	}
-}
-
-// TODO: move getting current balance and validating against InsufficientFunds to a separate validator
-
-func NewTransactionPerformer(getBalance store.BalanceGetter, updateBalance store.BalanceUpdater) transactionPerformer {
-	return func(t values.TransactionData) error {
-		balance, err := getBalance(t.UserId, t.Money.Currency)
+		bal, err := validate(gotAtmSecret, t)
 		if err != nil {
-			return fmt.Errorf("getting current balance: %w", err)
+			return err
 		}
-		if t.Money.Amount < 0 {
-			if float64(balance) < math.Abs(float64(t.Money.Amount)) {
-				return client_errors.InsufficientFunds
-			}
-		}
-		err = updateBalance(t.UserId, t.Money.Currency, balance+t.Money.Amount)
-		if err != nil {
-			return fmt.Errorf("updating balance: %w", err)
-		}
-		return nil
+		return perform(t.UserId, t.Money.Currency, bal+t.Money.Amount)
 	}
 }

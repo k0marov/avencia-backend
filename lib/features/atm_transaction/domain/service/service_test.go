@@ -1,7 +1,6 @@
 package service_test
 
 import (
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
@@ -44,7 +43,6 @@ func TestCodeGenerator(t *testing.T) {
 func TestCodeVerifier(t *testing.T) {
 	tCode := RandomString()
 	tType := RandomTransactionType()
-	userId := "4242"
 	t.Run("error case - validating the code throws, should rethrow it", func(t *testing.T) {
 		err := RandomError()
 		codeValidator := func(code string, transType values.TransactionType) (string, error) {
@@ -57,17 +55,13 @@ func TestCodeVerifier(t *testing.T) {
 		AssertError(t, gotErr, err)
 	})
 	t.Run("happy case - should forward to userInfoGetter", func(t *testing.T) {
+		tUserInfo := RandomUserInfo()
 		codeValidator := func(string, values.TransactionType) (string, error) {
-			return userId, nil
-		}
-
-		tUserInfo := entities.UserInfo{
-			Id:     userId,
-			Wallet: map[core.Currency]core.MoneyAmount{"USD": 400.0, "BTC": 0.0001},
+			return tUserInfo.Id, nil
 		}
 		tErr := RandomError()
 		userInfoGetter := func(user string) (entities.UserInfo, error) {
-			if user == userId {
+			if user == tUserInfo.Id {
 				return tUserInfo, tErr
 			}
 			panic("unexpected")
@@ -130,96 +124,31 @@ func TestBanknoteChecker(t *testing.T) {
 
 func TestTransactionFinalizer(t *testing.T) {
 	transaction := RandomTransactionData()
-	atmSecret := []byte(RandomString())
-	t.Run("error case - atm secret is invalid", func(t *testing.T) {
-		invalidSecret := []byte("asdf")
-		err := service.NewTransactionFinalizer(atmSecret, nil)(invalidSecret, transaction)
-		AssertError(t, err, client_errors.InvalidATMSecret)
+	atmSecret := RandomSecret()
+	t.Run("error case - validation throws", func(t *testing.T) {
+		err := RandomError()
+		validate := func(secret []byte, t values.TransactionData) (core.MoneyAmount, error) {
+			if reflect.DeepEqual(secret, atmSecret) && t == transaction {
+				return core.MoneyAmount(0), err
+			}
+			panic("unexpected")
+		}
+		gotErr := service.NewTransactionFinalizer(validate, nil)(atmSecret, transaction)
+		AssertError(t, gotErr, err)
 	})
 	t.Run("forward case - return whatever performTransaction returns", func(t *testing.T) {
 		wantErr := RandomError()
-		performTransaction := func(trans values.TransactionData) error {
-			if reflect.DeepEqual(trans, transaction) {
+		currentBalance := RandomMoneyAmount()
+		validate := func([]byte, values.TransactionData) (core.MoneyAmount, error) {
+			return currentBalance, nil
+		}
+		performTransaction := func(userId string, currency core.Currency, newBal core.MoneyAmount) error {
+			if userId == transaction.UserId && currency == transaction.Money.Currency && newBal == currentBalance+transaction.Money.Amount {
 				return wantErr
 			}
 			panic("unexpected")
 		}
-		err := service.NewTransactionFinalizer(atmSecret, performTransaction)(atmSecret, transaction)
+		err := service.NewTransactionFinalizer(validate, performTransaction)(atmSecret, transaction)
 		AssertError(t, err, wantErr)
-	})
-}
-
-func TestTransactionPerformer(t *testing.T) {
-	balance := core.MoneyAmount(150.0)
-	userId := RandomString()
-	currency := RandomCurrency()
-
-	balanceGetter := func(user string, curr core.Currency) (core.MoneyAmount, error) {
-		if user == userId && curr == currency {
-			return balance, nil
-		}
-		panic("unexpected")
-	}
-	t.Run("error case - getting current balance throws", func(t *testing.T) {
-		balanceGetter := func(string, core.Currency) (core.MoneyAmount, error) {
-			return 0, RandomError()
-		}
-		err := service.NewTransactionPerformer(balanceGetter, nil)(values.TransactionData{})
-		AssertSomeError(t, err)
-	})
-	t.Run("error case - not enough funds for withdrawal", func(t *testing.T) {
-		amount := core.MoneyAmount(-1000.0)
-		err := service.NewTransactionPerformer(balanceGetter, nil)(values.TransactionData{
-			UserId: userId,
-			Money: core.Money{
-				Currency: currency,
-				Amount:   amount,
-			},
-		})
-		AssertError(t, err, client_errors.InsufficientFunds)
-	})
-
-	t.Run("error case - updating balance throws", func(t *testing.T) {
-		balanceUpdater := func(user string, curr core.Currency, newBalance core.MoneyAmount) error {
-			if user == userId && curr == currency {
-				return RandomError()
-			}
-			panic("unexpected")
-		}
-		err := service.NewTransactionPerformer(balanceGetter, balanceUpdater)(values.TransactionData{UserId: userId, Money: core.Money{Currency: currency}})
-		AssertSomeError(t, err)
-	})
-	t.Run("happy case", func(t *testing.T) {
-		t.Run("for withdrawing", func(t *testing.T) {
-			amount := core.MoneyAmount(-100.0)
-			balanceUpdater := func(user string, curr core.Currency, newBalance core.MoneyAmount) error {
-				if FloatsEqual(float64(newBalance), 50.0) {
-					return nil
-				}
-				panic("unexpected")
-			}
-			err := service.NewTransactionPerformer(balanceGetter, balanceUpdater)(values.TransactionData{
-				UserId: userId,
-				Money:  core.Money{Currency: currency, Amount: amount},
-			})
-			AssertNoError(t, err)
-		})
-		t.Run("for depositing", func(t *testing.T) {
-			amount := core.MoneyAmount(100.0)
-			balanceUpdater := func(user string, curr core.Currency, newBalance core.MoneyAmount) error {
-				if FloatsEqual(float64(newBalance), 250.0) {
-					return nil
-				}
-				panic("unexpected")
-			}
-			err := service.NewTransactionPerformer(balanceGetter, balanceUpdater)(values.TransactionData{
-				UserId: userId,
-				Money: core.Money{
-					Currency: currency,
-					Amount:   amount,
-				},
-			})
-			AssertNoError(t, err)
-		})
 	})
 }

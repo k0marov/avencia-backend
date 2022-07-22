@@ -23,7 +23,7 @@ func NewBalanceGetter(getWallet service.WalletGetter) store.BalanceGetter {
 
 // TODO move balance updating logic to the wallet feature, and rename this to TransactionStorer
 // TODO: add updating limit
-func NewBalanceUpdater(client firestore_facade.TransactionFirestoreFacade) store.BalanceUpdater {
+func NewTransactionPerformer(client firestore_facade.TransactionFirestoreFacade) store.TransactionPerformer {
 	return func(userId string, currency core.Currency, newBalance core.MoneyAmount) error {
 		docRef := client.Doc("Wallets/" + userId)
 		if docRef == nil {

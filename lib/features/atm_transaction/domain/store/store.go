@@ -7,3 +7,5 @@ type BalanceGetter = func(userId string, currency core.Currency) (core.MoneyAmou
 
 // BalanceUpdater also updates the withdrawn limit
 type BalanceUpdater = func(userId string, currency core.Currency, newValue core.MoneyAmount) error
+
+type TransactionPerformer = func(userId string, currency core.Currency, newValue core.MoneyAmount) error
