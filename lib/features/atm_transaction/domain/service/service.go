@@ -7,6 +7,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/store"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	walletService "github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
@@ -16,19 +17,8 @@ import (
 
 const ExpDuration = time.Minute * 10
 
-// TransactionType is either Deposit or Withdrawal
-type TransactionType string
-
-const (
-	Deposit    TransactionType = "deposit"
-	Withdrawal                 = "withdrawal"
-)
-
-const UserIdClaim = "sub"
-const TransactionTypeClaim = "transaction_type"
-
-type CodeGenerator = func(auth.User, TransactionType) (code string, expiresAt time.Time, err error)
-type CodeVerifier = func(string, TransactionType) (entities.UserInfo, error)
+type CodeGenerator = func(auth.User, values.TransactionType) (code string, expiresAt time.Time, err error)
+type CodeVerifier = func(string, values.TransactionType) (entities.UserInfo, error)
 type BanknoteChecker = func(transactionCode string, banknote values.Banknote) error
 type TransactionFinalizer = func(atmSecret []byte, t values.TransactionData) error
 
@@ -37,10 +27,10 @@ type transactionPerformer = func(values.TransactionData) error
 type userInfoGetter = func(userId string) (entities.UserInfo, error)
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
-	return func(user auth.User, tType TransactionType) (string, time.Time, error) {
+	return func(user auth.User, tType values.TransactionType) (string, time.Time, error) {
 		claims := map[string]any{
-			UserIdClaim:          user.Id,
-			TransactionTypeClaim: tType,
+			values.UserIdClaim:          user.Id,
+			values.TransactionTypeClaim: tType,
 		}
 		expireAt := time.Now().UTC().Add(ExpDuration)
 		code, err := issueJWT(claims, expireAt)
@@ -48,19 +38,11 @@ func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	}
 }
 
-// TODO: maybe factor out the validation part into a separate validator
-func NewCodeVerifier(verifyJWT jwt.Verifier, getInfo userInfoGetter) CodeVerifier {
-	return func(code string, tType TransactionType) (entities.UserInfo, error) {
-		data, err := verifyJWT(code)
+func NewCodeVerifier(validate validators.TransCodeValidator, getInfo userInfoGetter) CodeVerifier {
+	return func(code string, tType values.TransactionType) (entities.UserInfo, error) {
+		userId, err := validate(code, tType)
 		if err != nil {
-			return entities.UserInfo{}, client_errors.InvalidCode
-		}
-		if data[TransactionTypeClaim] != string(tType) {
-			return entities.UserInfo{}, client_errors.InvalidTransactionType
-		}
-		userId, ok := data[UserIdClaim].(string)
-		if !ok {
-			return entities.UserInfo{}, client_errors.InvalidCode
+			return entities.UserInfo{}, err
 		}
 		return getInfo(userId)
 	}
@@ -79,7 +61,7 @@ func NewUserInfoGetter(getWallet walletService.WalletGetter) userInfoGetter {
 
 func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 	return func(transactionCode string, banknote values.Banknote) error {
-		_, err := verifyCode(transactionCode, Deposit)
+		_, err := verifyCode(transactionCode, values.Deposit)
 		// TODO: more banknote checking
 		return err
 	}
@@ -94,6 +76,8 @@ func NewTransactionFinalizer(atmSecret []byte, perform transactionPerformer) Tra
 		return perform(t)
 	}
 }
+
+// TODO: move getting current balance and validating against InsufficientFunds to a separate validator
 
 func NewTransactionPerformer(getBalance store.BalanceGetter, updateBalance store.BalanceUpdater) transactionPerformer {
 	return func(t values.TransactionData) error {

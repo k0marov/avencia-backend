@@ -10,7 +10,6 @@ import (
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/delivery/http/handlers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"net/http"
@@ -39,7 +38,7 @@ func TestGenerateCodeHandler(t *testing.T) {
 	t.Run("happy case", func(t *testing.T) {
 		code := RandomString()
 		expAt := time.Date(2022, 1, 1, 1, 1, 1, 0, time.UTC)
-		generate := func(gotUser auth.User, transType service.TransactionType) (string, time.Time, error) {
+		generate := func(gotUser auth.User, transType values.TransactionType) (string, time.Time, error) {
 			if gotUser == user && transType == tType {
 				return code, expAt, nil
 			}
@@ -52,7 +51,7 @@ func TestGenerateCodeHandler(t *testing.T) {
 		AssertJSONData(t, response, api.CodeResponse{TransactionCode: code, ExpiresAt: expAt.Unix()})
 	})
 	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, w *httptest.ResponseRecorder) {
-		generate := func(auth.User, service.TransactionType) (string, time.Time, error) {
+		generate := func(auth.User, values.TransactionType) (string, time.Time, error) {
 			return "", time.Time{}, err
 		}
 		handlers.NewGenerateCodeHandler(generate)(w, requestWithUser)
@@ -78,7 +77,7 @@ func TestVerifyCodeHandler(t *testing.T) {
 
 	t.Run("happy case", func(t *testing.T) {
 		userInfo := RandomUserInfo()
-		verify := func(code string, transType service.TransactionType) (entities.UserInfo, error) {
+		verify := func(code string, transType values.TransactionType) (entities.UserInfo, error) {
 			if code == codeReq.TransactionCode && transType == tType {
 				return userInfo, nil
 			}
@@ -90,7 +89,7 @@ func TestVerifyCodeHandler(t *testing.T) {
 		AssertJSONData(t, response, api.VerifiedCodeResponse{UserInfo: api.UserInfoResponse{Id: userInfo.Id}})
 	})
 	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, response *httptest.ResponseRecorder) {
-		verify := func(string, service.TransactionType) (entities.UserInfo, error) {
+		verify := func(string, values.TransactionType) (entities.UserInfo, error) {
 			return entities.UserInfo{}, err
 		}
 		handlers.NewVerifyCodeHandler(verify)(response, request)
@@ -126,7 +125,6 @@ func TestCheckBanknoteHandler(t *testing.T) {
 }
 
 func TestFinalizeTransactionHandler(t *testing.T) {
-	atmSecret := []byte(RandomString())
 	req := RandomFinalizeTransationRequest()
 	transactionJson, _ := json.Marshal(req)
 	transaction := values.NewTransactionData(req)
@@ -136,7 +134,7 @@ func TestFinalizeTransactionHandler(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		finalizer := func(secret []byte, trans values.TransactionData) error {
-			if reflect.DeepEqual(secret, atmSecret) && reflect.DeepEqual(trans, transaction) {
+			if string(secret) == req.ATMSecret && reflect.DeepEqual(trans, transaction) {
 				return nil
 			}
 			panic("unexpected")

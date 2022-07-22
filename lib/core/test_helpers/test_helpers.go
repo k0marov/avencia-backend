@@ -7,7 +7,6 @@ import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
@@ -169,11 +168,11 @@ func RandomBanknote() values.Banknote {
 	return values.Banknote{Money: RandomMoney()}
 }
 
-func RandomTransactionType() service.TransactionType {
+func RandomTransactionType() values.TransactionType {
 	if RandomBool() {
-		return service.Deposit
+		return values.Deposit
 	} else {
-		return service.Withdrawal
+		return values.Withdrawal
 	}
 }
 

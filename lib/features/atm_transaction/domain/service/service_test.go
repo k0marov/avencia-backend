@@ -19,8 +19,8 @@ func TestCodeGenerator(t *testing.T) {
 	tType := RandomTransactionType()
 
 	wantClaims := map[string]any{
-		service.UserIdClaim:          tUser.Id,
-		service.TransactionTypeClaim: tType,
+		values.UserIdClaim:          tUser.Id,
+		values.TransactionTypeClaim: tType,
 	}
 	wantExpireAt := time.Now().UTC().Add(service.ExpDuration)
 
@@ -45,37 +45,22 @@ func TestCodeVerifier(t *testing.T) {
 	tCode := RandomString()
 	tType := RandomTransactionType()
 	userId := "4242"
-	tClaims := map[string]any{service.UserIdClaim: userId, service.TransactionTypeClaim: string(tType)}
-
-	jwtVerifier := func(token string) (map[string]any, error) {
-		if token == tCode {
-			return tClaims, nil
+	t.Run("error case - validating the code throws, should rethrow it", func(t *testing.T) {
+		err := RandomError()
+		codeValidator := func(code string, transType values.TransactionType) (string, error) {
+			if code == tCode && transType == tType {
+				return "", err
+			}
+			panic("unexpected")
 		}
-		panic("unexpected")
-	}
-	t.Run("error case - token is invalid", func(t *testing.T) {
-		jwtVerifier := func(string) (map[string]any, error) {
-			return nil, RandomError()
-		}
-		_, err := service.NewCodeVerifier(jwtVerifier, nil)(tCode, tType)
-		AssertError(t, err, client_errors.InvalidCode)
+		_, gotErr := service.NewCodeVerifier(codeValidator, nil)(tCode, tType)
+		AssertError(t, gotErr, err)
 	})
-	t.Run("error case - token has an incorrect transaction_type claim", func(t *testing.T) {
-		jwtVerifier := func(string) (map[string]any, error) {
-			return map[string]any{service.UserIdClaim: "4242", service.TransactionTypeClaim: "random"}, nil
-		}
-		_, err := service.NewCodeVerifier(jwtVerifier, nil)(tCode, tType)
-		AssertError(t, err, client_errors.InvalidTransactionType)
-	})
-	t.Run("error case - claims are invalid (e.g. user id is not a string)", func(t *testing.T) {
-		jwtVerifier := func(string) (map[string]any, error) {
-			return map[string]any{service.UserIdClaim: 42, service.TransactionTypeClaim: string(tType)}, nil
-		}
-		_, err := service.NewCodeVerifier(jwtVerifier, nil)(tCode, tType)
-		AssertError(t, err, client_errors.InvalidCode)
-	})
-
 	t.Run("happy case - should forward to userInfoGetter", func(t *testing.T) {
+		codeValidator := func(string, values.TransactionType) (string, error) {
+			return userId, nil
+		}
+
 		tUserInfo := entities.UserInfo{
 			Id:     userId,
 			Wallet: map[core.Currency]core.MoneyAmount{"USD": 400.0, "BTC": 0.0001},
@@ -87,7 +72,7 @@ func TestCodeVerifier(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		gotUserInfo, err := service.NewCodeVerifier(jwtVerifier, userInfoGetter)(tCode, tType)
+		gotUserInfo, err := service.NewCodeVerifier(codeValidator, userInfoGetter)(tCode, tType)
 		AssertError(t, err, tErr)
 		Assert(t, gotUserInfo, tUserInfo, "returned user info")
 	})
@@ -125,15 +110,15 @@ func TestBanknoteChecker(t *testing.T) {
 	banknote := RandomBanknote()
 	t.Run("error case - jwt checking throws", func(t *testing.T) {
 		verificationErr := RandomError()
-		verifyCode := func(string, service.TransactionType) (entities.UserInfo, error) {
+		verifyCode := func(string, values.TransactionType) (entities.UserInfo, error) {
 			return entities.UserInfo{}, verificationErr
 		}
 		err := service.NewBanknoteChecker(verifyCode)(code, banknote)
 		AssertError(t, err, verificationErr)
 	})
 	t.Run("happy case - jwt checking does not throw", func(t *testing.T) {
-		verifyCode := func(gotCode string, tType service.TransactionType) (entities.UserInfo, error) {
-			if gotCode == code && tType == service.Deposit {
+		verifyCode := func(gotCode string, tType values.TransactionType) (entities.UserInfo, error) {
+			if gotCode == code && tType == values.Deposit {
 				return entities.UserInfo{}, nil
 			}
 			panic("unexpected")

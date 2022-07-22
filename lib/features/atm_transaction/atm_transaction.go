@@ -7,6 +7,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/delivery/http/handlers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/store"
 	walletService "github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
 	"io/ioutil"
@@ -32,10 +33,13 @@ func NewATMTransactionHandlers(config config.Config, getWallet walletService.Wal
 	getBalance := store.NewBalanceGetter(getWallet)
 	updateBalance := store.NewBalanceUpdater(fsClient)
 
+	// validators
+	codeValidator := validators.NewTransCodeValidator(jwtVerifier)
+
 	// service
 	genCode := service.NewCodeGenerator(jwtIssuer)
 	getUserInfo := service.NewUserInfoGetter(getWallet)
-	verifyCode := service.NewCodeVerifier(jwtVerifier, getUserInfo)
+	verifyCode := service.NewCodeVerifier(codeValidator, getUserInfo)
 	checkBanknote := service.NewBanknoteChecker(verifyCode)
 	performTransaction := service.NewTransactionPerformer(getBalance, updateBalance)
 	finalizeTransaction := service.NewTransactionFinalizer(atmSecret, performTransaction)

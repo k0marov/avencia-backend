@@ -22,7 +22,7 @@ func NewGenerateCodeHandler(generate service.CodeGenerator) http.HandlerFunc {
 			http_helpers.ThrowClientError(w, client_errors.TransactionTypeNotProvided)
 			return
 		}
-		code, expiresAt, err := generate(user, service.TransactionType(transactionType))
+		code, expiresAt, err := generate(user, values.TransactionType(transactionType))
 		if err != nil {
 			http_helpers.HandleServiceError(w, err)
 			return
@@ -41,7 +41,7 @@ func NewVerifyCodeHandler(verify service.CodeVerifier) http.HandlerFunc {
 		}
 		var code api.CodeRequest
 		json.NewDecoder(r.Body).Decode(&code)
-		userInfo, err := verify(code.TransactionCode, service.TransactionType(transactionType))
+		userInfo, err := verify(code.TransactionCode, values.TransactionType(transactionType))
 		if err != nil {
 			http_helpers.HandleServiceError(w, err)
 			return
