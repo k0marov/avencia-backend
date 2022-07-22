@@ -3,11 +3,10 @@ package service_test
 import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
-	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
+	userEntities "github.com/k0marov/avencia-backend/lib/features/user/domain/entities"
 	"reflect"
 	"testing"
 	"time"
@@ -60,7 +59,7 @@ func TestCodeVerifier(t *testing.T) {
 			return tUserInfo.Id, nil
 		}
 		tErr := RandomError()
-		userInfoGetter := func(user string) (entities.UserInfo, error) {
+		userInfoGetter := func(user string) (userEntities.UserInfo, error) {
 			if user == tUserInfo.Id {
 				return tUserInfo, tErr
 			}
@@ -73,47 +72,21 @@ func TestCodeVerifier(t *testing.T) {
 
 }
 
-func TestUserInfoGetter(t *testing.T) {
-	userId := RandomString()
-	t.Run("error case - getting wallet throws", func(t *testing.T) {
-		getWallet := func(user string) (walletEntities.Wallet, error) {
-			if user == userId {
-				return walletEntities.Wallet{}, RandomError()
-			}
-			panic("unexpected")
-		}
-		_, err := service.NewUserInfoGetter(getWallet)(userId)
-		AssertSomeError(t, err)
-	})
-	t.Run("happy case", func(t *testing.T) {
-		wallet := walletEntities.Wallet{"RUB": 1000, "USD": 100.5}
-		getWallet := func(string) (walletEntities.Wallet, error) {
-			return wallet, nil
-		}
-		gotInfo, err := service.NewUserInfoGetter(getWallet)(userId)
-		AssertNoError(t, err)
-		Assert(t, gotInfo, entities.UserInfo{
-			Id:     userId,
-			Wallet: wallet,
-		}, "returned user info")
-	})
-}
-
 func TestBanknoteChecker(t *testing.T) {
 	code := RandomString()
 	banknote := RandomBanknote()
 	t.Run("error case - jwt checking throws", func(t *testing.T) {
 		verificationErr := RandomError()
-		verifyCode := func(string, values.TransactionType) (entities.UserInfo, error) {
-			return entities.UserInfo{}, verificationErr
+		verifyCode := func(string, values.TransactionType) (userEntities.UserInfo, error) {
+			return userEntities.UserInfo{}, verificationErr
 		}
 		err := service.NewBanknoteChecker(verifyCode)(code, banknote)
 		AssertError(t, err, verificationErr)
 	})
 	t.Run("happy case - jwt checking does not throw", func(t *testing.T) {
-		verifyCode := func(gotCode string, tType values.TransactionType) (entities.UserInfo, error) {
+		verifyCode := func(gotCode string, tType values.TransactionType) (userEntities.UserInfo, error) {
 			if gotCode == code && tType == values.Deposit {
-				return entities.UserInfo{}, nil
+				return userEntities.UserInfo{}, nil
 			}
 			panic("unexpected")
 		}

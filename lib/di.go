@@ -5,8 +5,8 @@ import (
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction"
+	userService "github.com/k0marov/avencia-backend/lib/features/user/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/wallet"
-	walletStore "github.com/k0marov/avencia-backend/lib/features/wallet/store"
 	"log"
 	"net/http"
 
@@ -34,9 +34,16 @@ func Initialize() http.Handler {
 	}
 
 	authMiddleware := auth.NewAuthMiddleware(fbApp)
-	getWallet := wallet.NewWalletGetterImpl(fsClient)
+	walletServices := wallet.NewWalletServicesImpl(fsClient)
+	walletDeps := atm_transaction.WalletDeps{
+		GetBalance:    walletServices.GetBalance,
+		UpdateBalance: walletServices.BalanceUpdaterFactory,
+	}
+	userDeps := atm_transaction.UserDeps{
+		GetUserInfo: userService.NewUserInfoGetter(walletServices.GetWallet),
+	}
 
-	atmTransactionHandlers := atm_transaction.NewATMTransactionHandlers(conf, getWallet, walletStore.NewBalanceUpdater, fsClient)
+	atmTransactionHandlers := atm_transaction.NewATMTransactionHandlers(conf, walletDeps, userDeps, fsClient)
 
 	return api.NewAPIRouter(atmTransactionHandlers, authMiddleware)
 }

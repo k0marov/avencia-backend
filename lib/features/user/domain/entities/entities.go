@@ -10,13 +10,6 @@ type UserInfo struct {
 	Wallet walletEntities.Wallet
 }
 
-func walletToResponse(w walletEntities.Wallet) (r map[string]float64) {
-	for k, v := range w {
-		r[string(k)] = float64(v)
-	}
-	return
-}
-
 func (u UserInfo) ToResponse() api.UserInfoResponse {
-	return api.UserInfoResponse{Id: u.Id, Wallet: walletToResponse(u.Wallet)}
+	return api.UserInfoResponse{Id: u.Id, Wallet: u.Wallet.ToResponse()}
 }

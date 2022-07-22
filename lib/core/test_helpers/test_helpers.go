@@ -6,9 +6,9 @@ import (
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
+	userEntities "github.com/k0marov/avencia-backend/lib/features/user/domain/entities"
 	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
 	"log"
 	"math"
@@ -114,8 +114,8 @@ func TimeAlmostEqual(t1, t2 time.Time) bool {
 func RandomUser() auth.User {
 	return auth.User{Id: RandomId()}
 }
-func RandomUserInfo() entities.UserInfo {
-	return entities.UserInfo{Id: RandomId(), Wallet: RandomWallet()}
+func RandomUserInfo() userEntities.UserInfo {
+	return userEntities.UserInfo{Id: RandomId(), Wallet: RandomWallet()}
 }
 func RandomTransactionData() values.TransactionData {
 	return values.TransactionData{

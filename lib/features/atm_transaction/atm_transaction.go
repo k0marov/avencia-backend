@@ -9,6 +9,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/store"
+	userService "github.com/k0marov/avencia-backend/lib/features/user/domain/service"
 	walletService "github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
 	walletStore "github.com/k0marov/avencia-backend/lib/features/wallet/domain/store"
 	"io/ioutil"
@@ -20,7 +21,11 @@ type WalletDeps struct {
 	UpdateBalance walletStore.BalanceUpdaterFactory
 }
 
-func NewATMTransactionHandlers(config config.Config, wallet WalletDeps, fsClient *firestore.Client) api.ATMTransaction {
+type UserDeps struct {
+	GetUserInfo userService.UserInfoGetter
+}
+
+func NewATMTransactionHandlers(config config.Config, wallet WalletDeps, user UserDeps, fsClient *firestore.Client) api.ATMTransaction {
 	// config
 	atmSecret, err := ioutil.ReadFile(config.ATMSecretPath)
 	if err != nil {
@@ -44,8 +49,7 @@ func NewATMTransactionHandlers(config config.Config, wallet WalletDeps, fsClient
 
 	// service
 	genCode := service.NewCodeGenerator(jwtIssuer)
-	getUserInfo := service.NewUserInfoGetter(getWallet)
-	verifyCode := service.NewCodeVerifier(codeValidator, getUserInfo)
+	verifyCode := service.NewCodeVerifier(codeValidator, user.GetUserInfo)
 	checkBanknote := service.NewBanknoteChecker(verifyCode)
 	finalizeTransaction := service.NewTransactionFinalizer(transValidator, performTrans)
 	// handlers

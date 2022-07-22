@@ -6,8 +6,8 @@ import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/store"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
+	walletService "github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
 	"math"
 )
 
@@ -37,7 +37,7 @@ func NewTransCodeValidator(verifyJWT jwt.Verifier) TransCodeValidator {
 // TODO: add .toNum method to MoneyAmount
 
 // TODO: add limit check
-func NewTransactionValidator(atmSecret []byte, getBalance store.BalanceGetter) TransactionValidator {
+func NewTransactionValidator(atmSecret []byte, getBalance walletService.BalanceGetter) TransactionValidator {
 	return func(gotSecret []byte, t values.TransactionData) (curBalance core.MoneyAmount, err error) {
 		if subtle.ConstantTimeCompare(gotSecret, atmSecret) == 0 {
 			return core.MoneyAmount(0), client_errors.InvalidATMSecret

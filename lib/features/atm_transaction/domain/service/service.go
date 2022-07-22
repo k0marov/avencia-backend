@@ -1,27 +1,22 @@
 package service
 
 import (
-	"fmt"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/store"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
-	walletService "github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
+	userEntities "github.com/k0marov/avencia-backend/lib/features/user/domain/entities"
+	userService "github.com/k0marov/avencia-backend/lib/features/user/domain/service"
 	"time"
 )
 
 const ExpDuration = time.Minute * 10
 
 type CodeGenerator = func(auth.User, values.TransactionType) (code string, expiresAt time.Time, err error)
-type CodeVerifier = func(string, values.TransactionType) (entities.UserInfo, error)
+type CodeVerifier = func(string, values.TransactionType) (userEntities.UserInfo, error)
 type BanknoteChecker = func(transactionCode string, banknote values.Banknote) error
 type TransactionFinalizer = func(atmSecret []byte, t values.TransactionData) error
-
-// helpers
-type transactionPerformer = func(values.TransactionData) error
-type userInfoGetter = func(userId string) (entities.UserInfo, error)
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(user auth.User, tType values.TransactionType) (string, time.Time, error) {
@@ -35,24 +30,13 @@ func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	}
 }
 
-func NewCodeVerifier(validate validators.TransCodeValidator, getInfo userInfoGetter) CodeVerifier {
-	return func(code string, tType values.TransactionType) (entities.UserInfo, error) {
+func NewCodeVerifier(validate validators.TransCodeValidator, getInfo userService.UserInfoGetter) CodeVerifier {
+	return func(code string, tType values.TransactionType) (userEntities.UserInfo, error) {
 		userId, err := validate(code, tType)
 		if err != nil {
-			return entities.UserInfo{}, err
+			return userEntities.UserInfo{}, err
 		}
 		return getInfo(userId)
-	}
-}
-
-// TODO: add returning the remaining limits
-func NewUserInfoGetter(getWallet walletService.WalletGetter) userInfoGetter {
-	return func(userId string) (entities.UserInfo, error) {
-		wallet, err := getWallet(userId)
-		if err != nil {
-			return entities.UserInfo{}, fmt.Errorf("getting wallet for user info: %w", err)
-		}
-		return entities.UserInfo{Id: userId, Wallet: wallet}, nil
 	}
 }
 
