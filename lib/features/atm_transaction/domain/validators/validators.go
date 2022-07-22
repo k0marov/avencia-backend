@@ -34,8 +34,6 @@ func NewTransCodeValidator(verifyJWT jwt.Verifier) TransCodeValidator {
 	}
 }
 
-// TODO: add .toNum method to MoneyAmount
-
 // TODO: add limit check
 func NewTransactionValidator(atmSecret []byte, getBalance walletService.BalanceGetter) TransactionValidator {
 	return func(gotSecret []byte, t values.TransactionData) (curBalance core.MoneyAmount, err error) {
@@ -47,7 +45,7 @@ func NewTransactionValidator(atmSecret []byte, getBalance walletService.BalanceG
 			return core.MoneyAmount(0), fmt.Errorf("getting current balance: %w", err)
 		}
 		if t.Money.Amount < 0 {
-			if float64(bal) < math.Abs(float64(t.Money.Amount)) {
+			if bal.Num() < math.Abs(t.Money.Amount.Num()) {
 				return core.MoneyAmount(0), client_errors.InsufficientFunds
 			}
 		}

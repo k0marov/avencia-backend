@@ -9,6 +9,7 @@ import (
 type UserInfoGetter = func(userId string) (entities.UserInfo, error)
 
 // TODO: add returning the remaining limits
+
 func NewUserInfoGetter(getWallet walletService.WalletGetter) UserInfoGetter {
 	return func(userId string) (entities.UserInfo, error) {
 		wallet, err := getWallet(userId)

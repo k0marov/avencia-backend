@@ -6,7 +6,7 @@ type Wallet map[core.Currency]core.MoneyAmount
 
 func (w Wallet) ToResponse() (r map[string]float64) {
 	for k, v := range w {
-		r[string(k)] = float64(v)
+		r[string(k)] = v.Num()
 	}
 	return
 }
