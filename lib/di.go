@@ -37,13 +37,14 @@ func Initialize() http.Handler {
 	walletServices := wallet.NewWalletServicesImpl(fsClient)
 	walletDeps := atm_transaction.WalletDeps{
 		GetBalance:    walletServices.GetBalance,
-		UpdateBalance: walletServices.BalanceUpdaterFactory,
+		UpdateBalance: walletServices.BalanceUpdater,
 	}
 	userDeps := atm_transaction.UserDeps{
-		GetUserInfo: userService.NewUserInfoGetter(walletServices.GetWallet),
+		GetUserInfo: userService.NewUserInfoGetter(walletServices.GetWallet, nil),
 	}
+	limitsDeps := atm_transaction.LimitsDeps{CheckLimit: nil}
 
-	atmTransactionHandlers := atm_transaction.NewATMTransactionHandlers(conf, walletDeps, userDeps, fsClient)
+	atmTransactionHandlers := atm_transaction.NewATMTransactionHandlers(conf, fsClient, walletDeps, userDeps, limitsDeps)
 
 	return api.NewAPIRouter(atmTransactionHandlers, authMiddleware)
 }

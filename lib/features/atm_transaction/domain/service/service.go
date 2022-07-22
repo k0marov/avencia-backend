@@ -54,6 +54,6 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform s
 		if err != nil {
 			return err
 		}
-		return perform(t.UserId, t.Money.Currency, bal+t.Money.Amount)
+		return perform(bal, t)
 	}
 }

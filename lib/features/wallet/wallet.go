@@ -8,18 +8,22 @@ import (
 )
 
 type Services struct {
-	GetWallet             service.WalletGetter
-	GetBalance            service.BalanceGetter
-	BalanceUpdaterFactory store.BalanceUpdaterFactory
+	GetWallet      service.WalletGetter
+	GetBalance     service.BalanceGetter
+	BalanceUpdater store.BalanceUpdater
 }
 
 func NewWalletServicesImpl(fsClient *firestore.Client) Services {
-	storeGetWallet := storeImpl.NewWalletGetter(fsClient)
+	walletDocGetter := storeImpl.NewWalletDocGetter(fsClient)
+
+	storeGetWallet := storeImpl.NewWalletGetter(fsClient, walletDocGetter)
+	updateBalance := storeImpl.NewBalanceUpdater(walletDocGetter)
+
 	getWallet := service.NewWalletGetter(storeGetWallet)
 	getBalance := service.NewBalanceGetter(getWallet)
 	return Services{
-		GetWallet:             getWallet,
-		GetBalance:            getBalance,
-		BalanceUpdaterFactory: storeImpl.NewBalanceUpdater,
+		GetWallet:      getWallet,
+		GetBalance:     getBalance,
+		BalanceUpdater: updateBalance,
 	}
 }

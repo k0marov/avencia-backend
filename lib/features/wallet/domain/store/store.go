@@ -6,7 +6,4 @@ import (
 )
 
 type WalletGetter = func(userId string) (map[string]any, error)
-type BalanceUpdater = func(userId string, currency core.Currency, newBalance core.MoneyAmount) error
-
-// BalanceUpdaterFactory is used where you need to pass a custom client (e.g inside a RunTransaction)
-type BalanceUpdaterFactory = func(client firestore_facade.SimpleFirestoreFacade) BalanceUpdater
+type BalanceUpdater = func(writeBatch firestore_facade.WriteBatch, userId string, currency core.Currency, newBalance core.MoneyAmount)

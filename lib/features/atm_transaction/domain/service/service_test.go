@@ -115,8 +115,8 @@ func TestTransactionFinalizer(t *testing.T) {
 		validate := func([]byte, values.TransactionData) (core.MoneyAmount, error) {
 			return currentBalance, nil
 		}
-		performTransaction := func(userId string, currency core.Currency, newBal core.MoneyAmount) error {
-			if userId == transaction.UserId && currency == transaction.Money.Currency && newBal == currentBalance+transaction.Money.Amount {
+		performTransaction := func(curBal core.MoneyAmount, trans values.TransactionData) error {
+			if curBal == currentBalance && trans == transaction {
 				return wantErr
 			}
 			panic("unexpected")

@@ -9,6 +9,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/store"
+	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	userService "github.com/k0marov/avencia-backend/lib/features/user/domain/service"
 	walletService "github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
 	walletStore "github.com/k0marov/avencia-backend/lib/features/wallet/domain/store"
@@ -18,14 +19,18 @@ import (
 
 type WalletDeps struct {
 	GetBalance    walletService.BalanceGetter
-	UpdateBalance walletStore.BalanceUpdaterFactory
+	UpdateBalance walletStore.BalanceUpdater
 }
 
 type UserDeps struct {
 	GetUserInfo userService.UserInfoGetter
 }
 
-func NewATMTransactionHandlers(config config.Config, wallet WalletDeps, user UserDeps, fsClient *firestore.Client) api.ATMTransaction {
+type LimitsDeps struct {
+	CheckLimit limitsService.LimitChecker
+}
+
+func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client, wallet WalletDeps, user UserDeps, limits LimitsDeps) api.ATMTransaction {
 	// config
 	atmSecret, err := ioutil.ReadFile(config.ATMSecretPath)
 	if err != nil {
@@ -45,7 +50,7 @@ func NewATMTransactionHandlers(config config.Config, wallet WalletDeps, user Use
 
 	// validators
 	codeValidator := validators.NewTransCodeValidator(jwtVerifier)
-	transValidator := validators.NewTransactionValidator(atmSecret, wallet.GetBalance)
+	transValidator := validators.NewTransactionValidator(atmSecret, limits.CheckLimit, wallet.GetBalance)
 
 	// service
 	genCode := service.NewCodeGenerator(jwtIssuer)

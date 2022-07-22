@@ -3,7 +3,6 @@ package store
 import (
 	"cloud.google.com/go/firestore"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
@@ -12,13 +11,24 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func NewWalletGetter(client firestore_facade.SimpleFirestoreFacade) store.WalletGetter {
-	return func(userId string) (map[string]any, error) {
-		docRef := client.Doc("Wallets/" + userId)
-		if docRef == nil {
-			return nil, errors.New("getting document ref for user's wallet returned nil")
+// TODO: add validation of that userId, currency and other things that can be used as document ids are not empty at the API boundary level
+
+// WalletDocGetter the passed in userId shouldn't be empty
+type WalletDocGetter = func(userId string) *firestore.DocumentRef
+
+func NewWalletDocGetter(client firestore_facade.Simple) WalletDocGetter {
+	return func(userId string) *firestore.DocumentRef {
+		doc := client.Doc("Wallets/" + userId)
+		if doc == nil {
+			panic("getting document ref for user's wallet returned nil. Probably userId is empty.")
 		}
-		wallet, err := docRef.Get(context.Background())
+		return doc
+	}
+}
+
+func NewWalletGetter(client firestore_facade.Simple, getWalletDoc WalletDocGetter) store.WalletGetter {
+	return func(userId string) (map[string]any, error) {
+		wallet, err := getWalletDoc(userId).Get(context.Background())
 		if status.Code(err) == codes.NotFound {
 			return map[string]any{}, nil
 		}
@@ -29,17 +39,10 @@ func NewWalletGetter(client firestore_facade.SimpleFirestoreFacade) store.Wallet
 	}
 }
 
-// NewBalanceUpdater implements BalanceUpdaterFactory
-func NewBalanceUpdater(client firestore_facade.SimpleFirestoreFacade) store.BalanceUpdater {
-	return func(userId string, currency core.Currency, newBalance core.MoneyAmount) error {
-		docRef := client.Doc("Wallets/" + userId)
-		if docRef == nil {
-			return errors.New("getting document ref for user's wallet returned nil")
-		}
-		_, err := docRef.Set(context.Background(), map[string]any{string(currency): float64(newBalance)}, firestore.MergeAll)
-		if err != nil {
-			return fmt.Errorf("while updating %s with %v for %v: %w", currency, newBalance, docRef, err)
-		}
-		return nil
+func NewBalanceUpdater(getWalletDoc WalletDocGetter) store.BalanceUpdater {
+	return func(batch firestore_facade.WriteBatch, userId string, currency core.Currency, newBalance core.MoneyAmount) {
+		doc := getWalletDoc(userId)
+		newValue := map[string]any{string(currency): newBalance.Num()}
+		batch.Set(doc, newValue, firestore.MergeAll)
 	}
 }
