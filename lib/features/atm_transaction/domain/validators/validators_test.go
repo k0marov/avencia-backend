@@ -62,14 +62,28 @@ func TestTransactionValidator(t *testing.T) {
 		},
 	}
 	t.Run("error case - atm secret is invalid", func(t *testing.T) {
-		_, err := validators.NewTransactionValidator(rightAtmSecret, nil)(RandomSecret(), trans)
+		_, err := validators.NewTransactionValidator(rightAtmSecret, nil, nil)(RandomSecret(), trans)
 		AssertError(t, err, client_errors.InvalidATMSecret)
+	})
+	checkLimit := func(t values.TransactionData) error {
+		return nil
+	}
+	t.Run("error case - limit checker throws", func(t *testing.T) {
+		err := RandomError()
+		checkLimit := func(t values.TransactionData) error {
+			if t == trans {
+				return err
+			}
+			panic("unexpected")
+		}
+		_, gotErr := validators.NewTransactionValidator(rightAtmSecret, checkLimit, nil)(rightAtmSecret, trans)
+		AssertError(t, gotErr, err)
 	})
 	t.Run("error case - getting balance throws", func(t *testing.T) {
 		getBalance := func(string, core.Currency) (core.MoneyAmount, error) {
 			return core.MoneyAmount(0), RandomError()
 		}
-		_, err := validators.NewTransactionValidator(rightAtmSecret, getBalance)(rightAtmSecret, trans)
+		_, err := validators.NewTransactionValidator(rightAtmSecret, checkLimit, getBalance)(rightAtmSecret, trans)
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - insufficient funds", func(t *testing.T) {
@@ -81,7 +95,7 @@ func TestTransactionValidator(t *testing.T) {
 				Amount: core.MoneyAmount(-50.0),
 			},
 		}
-		_, err := validators.NewTransactionValidator(rightAtmSecret, getBalance)(rightAtmSecret, trans)
+		_, err := validators.NewTransactionValidator(rightAtmSecret, checkLimit, getBalance)(rightAtmSecret, trans)
 		AssertError(t, err, client_errors.InsufficientFunds)
 	})
 	t.Run("happy case", func(t *testing.T) {
@@ -91,7 +105,7 @@ func TestTransactionValidator(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		bal, err := validators.NewTransactionValidator(rightAtmSecret, getBalance)(rightAtmSecret, trans)
+		bal, err := validators.NewTransactionValidator(rightAtmSecret, checkLimit, getBalance)(rightAtmSecret, trans)
 		AssertNoError(t, err)
 		Assert(t, bal, curBalance, "returned current balance")
 	})
