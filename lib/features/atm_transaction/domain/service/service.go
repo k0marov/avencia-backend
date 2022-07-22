@@ -67,6 +67,7 @@ func NewCodeVerifier(verifyJWT jwt.Verifier, getInfo userInfoGetter) CodeVerifie
 	}
 }
 
+// TODO: add returning the remaining limits
 func NewUserInfoGetter(getWallet walletService.WalletGetter) userInfoGetter {
 	return func(userId string) (entities.UserInfo, error) {
 		wallet, err := getWallet(userId)
