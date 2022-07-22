@@ -20,7 +20,8 @@ func NewBalanceGetter(getWallet service.WalletGetter) store.BalanceGetter {
 	}
 }
 
-func NewBalanceUpdater(client firestore_facade.SimpleFirestoreFacade) store.BalanceUpdater {
+// TODO: add updating limit
+func NewBalanceUpdater(client firestore_facade.TransactionFirestoreFacade) store.BalanceUpdater {
 	return func(userId, currency string, newBalance float64) error {
 		docRef := client.Doc("Wallets/" + userId)
 		if docRef == nil {

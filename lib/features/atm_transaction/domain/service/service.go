@@ -90,6 +90,7 @@ func NewTransactionFinalizer(atmSecret []byte, perform transactionPerformer) Tra
 		if subtle.ConstantTimeCompare(transaction.ATMSecret, atmSecret) == 0 {
 			return client_errors.InvalidATMSecret
 		}
+		// TODO: add limit check
 		return perform(transaction)
 	}
 }
@@ -107,7 +108,7 @@ func NewTransactionPerformer(getBalance store.BalanceGetter, updateBalance store
 		}
 		err = updateBalance(t.UserId, t.Currency, balance+t.Amount)
 		if err != nil {
-			return fmt.Errorf("updaing balance: %w", err)
+			return fmt.Errorf("updating balance: %w", err)
 		}
 		return nil
 	}
