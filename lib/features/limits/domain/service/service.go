@@ -12,7 +12,7 @@ import (
 )
 
 // LimitChecker returns a client error if rejected; simple error if server error; nil if accepted
-// LimitChecker does not update the withdrawn value, see WithdrawnUpdater
+// LimitChecker does not update the withdrawn value, see WithdrawUpdater
 type LimitChecker = func(wantTransaction transValues.Transaction) error
 type LimitsGetter = func(userId string) (entities.Limits, error)
 
@@ -20,7 +20,7 @@ type LimitsGetter = func(userId string) (entities.Limits, error)
 // returns an error if transaction is not a withdrawal, in other words, when the Amount is positive
 type WithdrawnUpdateGetter = func(t transValues.Transaction) (core.Money, error)
 
-func NewLimitsGetter(getWithdrawns store.WithdrawnsGetter, limitedCurrencies map[core.Currency]core.MoneyAmount) LimitsGetter {
+func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[core.Currency]core.MoneyAmount) LimitsGetter {
 	return func(userId string) (entities.Limits, error) {
 		withdrawns, err := getWithdrawns(userId)
 		if err != nil {

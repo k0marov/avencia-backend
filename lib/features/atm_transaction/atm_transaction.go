@@ -30,7 +30,7 @@ type UserDeps struct {
 type LimitsDeps struct {
 	CheckLimit          limitsService.LimitChecker
 	GetUpdatedWithdrawn limitsService.WithdrawnUpdateGetter
-	UpdateWithdrawn     limitsStore.WithdrawnUpdater
+	UpdateWithdrawn     limitsStore.WithdrawUpdater
 }
 
 func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client, wallet WalletDeps, user UserDeps, limits LimitsDeps) api.ATMTransaction {

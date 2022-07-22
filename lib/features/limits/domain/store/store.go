@@ -6,6 +6,6 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
 )
 
-type WithdrawnsGetter = func(userId string) (map[string]values.WithdrawnWithUpdated, error)
+type WithdrawsGetter = func(userId string) (map[string]values.WithdrawnWithUpdated, error)
 
-type WithdrawnUpdater = func(batch firestore_facade.WriteBatch, userId string, withdrawn core.Money)
+type WithdrawUpdater = func(batch firestore_facade.WriteBatch, userId string, withdrawn core.Money)

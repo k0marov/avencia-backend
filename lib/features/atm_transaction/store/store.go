@@ -12,7 +12,7 @@ import (
 	walletStore "github.com/k0marov/avencia-backend/lib/features/wallet/domain/store"
 )
 
-func NewTransactionPerformer(client *firestore.Client, updateBalance walletStore.BalanceUpdater, getNewWithdrawn limitsService.WithdrawnUpdateGetter, updateWithdrawn limitsStore.WithdrawnUpdater) store.TransactionPerformer {
+func NewTransactionPerformer(client *firestore.Client, updateBalance walletStore.BalanceUpdater, getNewWithdrawn limitsService.WithdrawnUpdateGetter, updateWithdrawn limitsStore.WithdrawUpdater) store.TransactionPerformer {
 	return func(curBal core.MoneyAmount, t values.Transaction) error {
 		batch := client.Batch()
 		if t.Money.Amount < 0 {
