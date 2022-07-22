@@ -5,6 +5,7 @@ import (
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction"
+	"github.com/k0marov/avencia-backend/lib/features/limits"
 	userService "github.com/k0marov/avencia-backend/lib/features/user/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/wallet"
 	"log"
@@ -35,14 +36,20 @@ func Initialize() http.Handler {
 
 	authMiddleware := auth.NewAuthMiddleware(fbApp)
 	walletServices := wallet.NewWalletServicesImpl(fsClient)
+	limitsServices := limits.NewLimitsServicesImpl(fsClient)
+
 	walletDeps := atm_transaction.WalletDeps{
 		GetBalance:    walletServices.GetBalance,
 		UpdateBalance: walletServices.BalanceUpdater,
 	}
 	userDeps := atm_transaction.UserDeps{
-		GetUserInfo: userService.NewUserInfoGetter(walletServices.GetWallet, nil),
+		GetUserInfo: userService.NewUserInfoGetter(walletServices.GetWallet, limitsServices.GetLimits),
 	}
-	limitsDeps := atm_transaction.LimitsDeps{} // TODO: implement the limits feature
+	limitsDeps := atm_transaction.LimitsDeps{
+		CheckLimit:          limitsServices.CheckLimit,
+		GetUpdatedWithdrawn: limitsServices.GetWithdrawnUpdate,
+		UpdateWithdrawn:     limitsServices.UpdateWithdrawn,
+	}
 
 	atmTransactionHandlers := atm_transaction.NewATMTransactionHandlers(conf, fsClient, walletDeps, userDeps, limitsDeps)
 
