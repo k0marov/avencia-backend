@@ -3,6 +3,7 @@ package service_test
 import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
+	"github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
 	"testing"
 )
@@ -35,5 +36,37 @@ func TestWalletGetter(t *testing.T) {
 		gotWallet, err := service.NewWalletGetter(getWallet)(userId)
 		AssertNoError(t, err)
 		Assert(t, gotWallet, wallet, "returned wallet")
+	})
+}
+
+func TestBalanceGetter(t *testing.T) {
+	userId := RandomString()
+	t.Run("error case", func(t *testing.T) {
+		getWallet := func(user string) (entities.Wallet, error) {
+			return entities.Wallet{}, RandomError()
+		}
+		_, err := service.NewBalanceGetter(getWallet)(userId, RandomCurrency())
+		AssertSomeError(t, err)
+	})
+	t.Run("should return 0 if there is no such currency in wallet", func(t *testing.T) {
+		wallet := entities.Wallet{}
+		getWallet := func(user string) (entities.Wallet, error) {
+			if user == userId {
+				return wallet, nil
+			}
+			panic("unexpected")
+		}
+		balance, err := service.NewBalanceGetter(getWallet)(userId, RandomCurrency())
+		AssertNoError(t, err)
+		Assert(t, balance, 0, "returned balance")
+	})
+	t.Run("should return the value from wallet", func(t *testing.T) {
+		wallet := entities.Wallet{"RUB": 4000, "USD": 300}
+		getWallet := func(string) (entities.Wallet, error) {
+			return wallet, nil
+		}
+		balance, err := service.NewBalanceGetter(getWallet)(userId, "USD")
+		AssertNoError(t, err)
+		Assert(t, balance, core.MoneyAmount(300), "returned balance")
 	})
 }

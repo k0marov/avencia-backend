@@ -9,6 +9,9 @@ import (
 
 type WalletGetter = func(userId string) (entities.Wallet, error)
 
+// BalanceGetter Should return 0 if the wallet field for the given currency is null
+type BalanceGetter = func(userId string, currency core.Currency) (core.MoneyAmount, error)
+
 func NewWalletGetter(getWallet store.WalletGetter) WalletGetter {
 	return func(userId string) (entities.Wallet, error) {
 		storedWallet, err := getWallet(userId)
@@ -24,5 +27,15 @@ func NewWalletGetter(getWallet store.WalletGetter) WalletGetter {
 			wallet[core.Currency(curr)] = core.MoneyAmount(balFl)
 		}
 		return wallet, nil
+	}
+}
+
+func NewBalanceGetter(getWallet WalletGetter) BalanceGetter {
+	return func(userId string, currency core.Currency) (core.MoneyAmount, error) {
+		wallet, err := getWallet(userId)
+		if err != nil {
+			return 0, fmt.Errorf("getting wallet to later extract balance: %w", err)
+		}
+		return wallet[currency], nil
 	}
 }

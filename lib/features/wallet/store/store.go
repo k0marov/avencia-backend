@@ -1,9 +1,11 @@
 package store
 
 import (
+	"cloud.google.com/go/firestore"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	"github.com/k0marov/avencia-backend/lib/features/wallet/domain/store"
 	"google.golang.org/grpc/codes"
@@ -24,5 +26,20 @@ func NewWalletGetter(client firestore_facade.SimpleFirestoreFacade) store.Wallet
 			return nil, fmt.Errorf("while getting user's wallet document: %w", err)
 		}
 		return wallet.Data(), nil
+	}
+}
+
+// NewBalanceUpdater implements BalanceUpdaterFactory
+func NewBalanceUpdater(client firestore_facade.SimpleFirestoreFacade) store.BalanceUpdater {
+	return func(userId string, currency core.Currency, newBalance core.MoneyAmount) error {
+		docRef := client.Doc("Wallets/" + userId)
+		if docRef == nil {
+			return errors.New("getting document ref for user's wallet returned nil")
+		}
+		_, err := docRef.Set(context.Background(), map[string]any{string(currency): float64(newBalance)}, firestore.MergeAll)
+		if err != nil {
+			return fmt.Errorf("while updating %s with %v for %v: %w", currency, newBalance, docRef, err)
+		}
+		return nil
 	}
 }
