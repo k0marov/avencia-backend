@@ -12,7 +12,6 @@ import (
 	walletStore "github.com/k0marov/avencia-backend/lib/features/wallet/domain/store"
 )
 
-// TODO: add updating limit
 func NewTransactionPerformer(client *firestore.Client, updateBalance walletStore.BalanceUpdater, getNewWithdrawn limitsService.WithdrawnUpdateGetter, updateWithdrawn limitsStore.WithdrawnUpdater) store.TransactionPerformer {
 	return func(curBal core.MoneyAmount, t values.Transaction) error {
 		batch := client.Batch()
