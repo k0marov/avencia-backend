@@ -8,4 +8,5 @@ import (
 
 type WithdrawsGetter = func(userId string) (map[string]values.WithdrawnWithUpdated, error)
 
+// WithdrawUpdater withdrawn's Amount should be positive
 type WithdrawUpdater = func(batch firestore_facade.WriteBatch, userId string, withdrawn core.Money)

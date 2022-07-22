@@ -23,6 +23,9 @@ func NewWithdrawsDocGetter(client firestore_facade.Simple) withdrawDocGetter {
 	}
 }
 
+const withdrawnKey = "withdrawn"
+
+// TODO: somehow simplify this
 func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
 	return func(userId string) (res map[string]values.WithdrawnWithUpdated, err error) {
 		coll := client.Collection(fmt.Sprintf("Withdraws/%s/Withdraws", userId))
@@ -35,7 +38,7 @@ func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
 			if err != nil {
 				return map[string]values.WithdrawnWithUpdated{}, fmt.Errorf("fetching a withdraw document: %w", err)
 			}
-			withdrawnVal := snap.Data()["withdrawn"]
+			withdrawnVal := snap.Data()[withdrawnKey]
 			withdrawn, ok := withdrawnVal.(float64)
 			if !ok {
 				return map[string]values.WithdrawnWithUpdated{}, fmt.Errorf("withdrawn value %v is not a float", withdrawnVal)
@@ -46,5 +49,12 @@ func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
 			}
 		}
 		return
+	}
+}
+
+func NewWithdrawUpdater(getDoc withdrawDocGetter) store.WithdrawUpdater {
+	return func(batch firestore_facade.WriteBatch, userId string, withdrawn core.Money) {
+		doc := getDoc(userId, withdrawn.Currency)
+		batch.Set(doc, map[string]any{withdrawnKey: withdrawn.Amount}, firestore.MergeAll)
 	}
 }
