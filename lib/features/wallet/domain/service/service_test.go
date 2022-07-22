@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"github.com/k0marov/avencia-backend/lib/core"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
 	"testing"
@@ -24,7 +25,7 @@ func TestWalletGetter(t *testing.T) {
 	})
 	t.Run("happy case", func(t *testing.T) {
 		storedWallet := map[string]any{"USD": 400.0, "RUB": 42000.0, "BTC": 0.001}
-		wallet := map[string]float64{"USD": 400.0, "RUB": 42000.0, "BTC": 0.001}
+		wallet := map[core.Currency]core.MoneyAmount{"USD": 400.0, "RUB": 42000.0, "BTC": 0.001}
 		getWallet := func(user string) (map[string]any, error) {
 			if user == userId {
 				return storedWallet, nil

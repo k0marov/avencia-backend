@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/wallet/domain/store"
 )
@@ -14,13 +15,13 @@ func NewWalletGetter(getWallet store.WalletGetter) WalletGetter {
 		if err != nil {
 			return entities.Wallet{}, fmt.Errorf("getting wallet from store: %w", err)
 		}
-		wallet := map[string]float64{}
+		wallet := map[core.Currency]core.MoneyAmount{}
 		for curr, bal := range storedWallet {
 			balFl, ok := bal.(float64)
 			if !ok {
 				return entities.Wallet{}, fmt.Errorf("balance %v for currency %v is not a float", bal, curr)
 			}
-			wallet[curr] = balFl
+			wallet[core.Currency(curr)] = core.MoneyAmount(balFl)
 		}
 		return wallet, nil
 	}

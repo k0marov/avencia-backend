@@ -137,8 +137,8 @@ func TestFinalizeTransactionHandler(t *testing.T) {
 	transactionJson, _ := json.Marshal(api.FinalizeTransactionRequest{
 		UserId:    transaction.UserId,
 		ATMSecret: string(transaction.ATMSecret),
-		Currency:  transaction.Currency,
-		Amount:    transaction.Amount,
+		Currency:  string(transaction.Money.Currency),
+		Amount:    float64(transaction.Money.Amount),
 	})
 	request := http_test_helpers.CreateRequest(bytes.NewReader(transactionJson))
 

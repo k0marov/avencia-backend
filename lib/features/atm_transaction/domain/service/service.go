@@ -16,8 +16,6 @@ import (
 
 const ExpDuration = time.Minute * 10
 
-const TransactionTypeClaimKey = "transaction_type"
-
 // TransactionType is either Deposit or Withdrawal
 type TransactionType string
 
@@ -27,6 +25,7 @@ const (
 )
 
 const UserIdClaim = "sub"
+const TransactionTypeClaim = "transaction_type"
 
 type CodeGenerator = func(auth.User, TransactionType) (code string, expiresAt time.Time, err error)
 type CodeVerifier = func(string, TransactionType) (entities.UserInfo, error)
@@ -40,8 +39,8 @@ type userInfoGetter = func(userId string) (entities.UserInfo, error)
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(user auth.User, tType TransactionType) (string, time.Time, error) {
 		claims := map[string]any{
-			UserIdClaim:             user.Id,
-			TransactionTypeClaimKey: tType,
+			UserIdClaim:          user.Id,
+			TransactionTypeClaim: tType,
 		}
 		expireAt := time.Now().UTC().Add(ExpDuration)
 		code, err := issueJWT(claims, expireAt)
@@ -56,7 +55,7 @@ func NewCodeVerifier(verifyJWT jwt.Verifier, getInfo userInfoGetter) CodeVerifie
 		if err != nil {
 			return entities.UserInfo{}, client_errors.InvalidCode
 		}
-		if data[TransactionTypeClaimKey] != string(tType) {
+		if data[TransactionTypeClaim] != string(tType) {
 			return entities.UserInfo{}, client_errors.InvalidTransactionType
 		}
 		userId, ok := data[UserIdClaim].(string)
@@ -98,16 +97,16 @@ func NewTransactionFinalizer(atmSecret []byte, perform transactionPerformer) Tra
 
 func NewTransactionPerformer(getBalance store.BalanceGetter, updateBalance store.BalanceUpdater) transactionPerformer {
 	return func(t values.TransactionData) error {
-		balance, err := getBalance(t.UserId, t.Currency)
+		balance, err := getBalance(t.UserId, t.Money.Currency)
 		if err != nil {
 			return fmt.Errorf("getting current balance: %w", err)
 		}
-		if t.Amount < 0 {
-			if balance < math.Abs(t.Amount) {
+		if t.Money.Amount < 0 {
+			if float64(balance) < math.Abs(float64(t.Money.Amount)) {
 				return client_errors.InsufficientFunds
 			}
 		}
-		err = updateBalance(t.UserId, t.Currency, balance+t.Amount)
+		err = updateBalance(t.UserId, t.Money.Currency, balance+t.Money.Amount)
 		if err != nil {
 			return fmt.Errorf("updating balance: %w", err)
 		}

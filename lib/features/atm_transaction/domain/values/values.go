@@ -1,31 +1,37 @@
 package values
 
-import "github.com/k0marov/avencia-api-contract/api"
+import (
+	"github.com/k0marov/avencia-api-contract/api"
+	"github.com/k0marov/avencia-backend/lib/core"
+)
 
 type Banknote struct {
-	Currency string
-	Amount   float64
+	Money core.Money
 }
 
 type TransactionData struct {
 	UserId    string
 	ATMSecret []byte
-	Currency  string
-	Amount    float64
+	Money     core.Money
 }
 
 func NewBanknote(request api.BanknoteCheckRequest) Banknote {
 	return Banknote{
-		Currency: request.Currency,
-		Amount:   request.Amount,
+		Money: core.Money{
+			Currency: core.Currency(request.Currency),
+			Amount:   core.MoneyAmount(request.Amount),
+		},
 	}
 }
 
+// TODO: move ATMSecret out of TransactionData
 func NewTransactionData(request api.FinalizeTransactionRequest) TransactionData {
 	return TransactionData{
 		UserId:    request.UserId,
 		ATMSecret: []byte(request.ATMSecret),
-		Currency:  request.Currency,
-		Amount:    request.Amount,
+		Money: core.Money{
+			Currency: core.Currency(request.Currency),
+			Amount:   core.MoneyAmount(request.Amount),
+		},
 	}
 }

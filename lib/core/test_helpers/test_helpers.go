@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
+	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
@@ -119,8 +120,14 @@ func RandomTransactionData() values.TransactionData {
 	return values.TransactionData{
 		UserId:    RandomString(),
 		ATMSecret: []byte(RandomString()),
-		Currency:  RandomString(),
-		Amount:    RandomFloat(),
+		Money:     RandomMoney(),
+	}
+}
+
+func RandomMoney() core.Money {
+	return core.Money{
+		Currency: core.Currency(RandomString()),
+		Amount:   core.MoneyAmount(RandomFloat()),
 	}
 }
 

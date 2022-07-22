@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
+	"github.com/k0marov/avencia-backend/lib/core"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
@@ -18,8 +19,8 @@ func TestCodeGenerator(t *testing.T) {
 	tType := RandomTransactionType()
 
 	wantClaims := map[string]any{
-		service.UserIdClaim:             tUser.Id,
-		service.TransactionTypeClaimKey: tType,
+		service.UserIdClaim:          tUser.Id,
+		service.TransactionTypeClaim: tType,
 	}
 	wantExpireAt := time.Now().UTC().Add(service.ExpDuration)
 
@@ -44,7 +45,7 @@ func TestCodeVerifier(t *testing.T) {
 	tCode := RandomString()
 	tType := RandomTransactionType()
 	userId := "4242"
-	tClaims := map[string]any{service.UserIdClaim: userId, service.TransactionTypeClaimKey: string(tType)}
+	tClaims := map[string]any{service.UserIdClaim: userId, service.TransactionTypeClaim: string(tType)}
 
 	jwtVerifier := func(token string) (map[string]any, error) {
 		if token == tCode {
@@ -61,14 +62,14 @@ func TestCodeVerifier(t *testing.T) {
 	})
 	t.Run("error case - token has an incorrect transaction_type claim", func(t *testing.T) {
 		jwtVerifier := func(string) (map[string]any, error) {
-			return map[string]any{service.UserIdClaim: "4242", service.TransactionTypeClaimKey: "random"}, nil
+			return map[string]any{service.UserIdClaim: "4242", service.TransactionTypeClaim: "random"}, nil
 		}
 		_, err := service.NewCodeVerifier(jwtVerifier, nil)(tCode, tType)
 		AssertError(t, err, client_errors.InvalidTransactionType)
 	})
 	t.Run("error case - claims are invalid (e.g. user id is not a string)", func(t *testing.T) {
 		jwtVerifier := func(string) (map[string]any, error) {
-			return map[string]any{service.UserIdClaim: 42, service.TransactionTypeClaimKey: string(tType)}, nil
+			return map[string]any{service.UserIdClaim: 42, service.TransactionTypeClaim: string(tType)}, nil
 		}
 		_, err := service.NewCodeVerifier(jwtVerifier, nil)(tCode, tType)
 		AssertError(t, err, client_errors.InvalidCode)
@@ -77,7 +78,7 @@ func TestCodeVerifier(t *testing.T) {
 	t.Run("happy case - should forward to userInfoGetter", func(t *testing.T) {
 		tUserInfo := entities.UserInfo{
 			Id:     userId,
-			Wallet: map[string]float64{"USD": 400.0, "BTC": 0.0001},
+			Wallet: map[core.Currency]core.MoneyAmount{"USD": 400.0, "BTC": 0.0001},
 		}
 		tErr := RandomError()
 		userInfoGetter := func(user string) (entities.UserInfo, error) {
@@ -119,11 +120,15 @@ func TestUserInfoGetter(t *testing.T) {
 	})
 }
 
+// TODO: add RandomXXX test helpers for all entities and values
+
 func TestBanknoteChecker(t *testing.T) {
 	code := RandomString()
 	banknote := values.Banknote{
-		Currency: RandomString(),
-		Amount:   RandomFloat(),
+		Money: core.Money{
+			Currency: core.Currency(RandomString()),
+			Amount:   core.MoneyAmount(RandomFloat()),
+		},
 	}
 	t.Run("error case - jwt checking throws", func(t *testing.T) {
 		verificationErr := RandomError()
@@ -167,71 +172,74 @@ func TestTransactionFinalizer(t *testing.T) {
 }
 
 func TestTransactionPerformer(t *testing.T) {
-	balance := 150.0
+	balance := core.MoneyAmount(150.0)
 	userId := RandomString()
-	currency := RandomString()
+	currency := core.Currency(RandomString())
 
-	balanceGetter := func(user string, curr string) (float64, error) {
+	balanceGetter := func(user string, curr core.Currency) (core.MoneyAmount, error) {
 		if user == userId && curr == currency {
 			return balance, nil
 		}
 		panic("unexpected")
 	}
 	t.Run("error case - getting current balance throws", func(t *testing.T) {
-		balanceGetter := func(string, string) (float64, error) {
+		balanceGetter := func(string, core.Currency) (core.MoneyAmount, error) {
 			return 0, RandomError()
 		}
 		err := service.NewTransactionPerformer(balanceGetter, nil)(values.TransactionData{})
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - not enough funds for withdrawal", func(t *testing.T) {
-		amount := -1000.0
+		amount := core.MoneyAmount(-1000.0)
 		err := service.NewTransactionPerformer(balanceGetter, nil)(values.TransactionData{
-			UserId:   userId,
-			Currency: currency,
-			Amount:   amount,
+			UserId: userId,
+			Money: core.Money{
+				Currency: currency,
+				Amount:   amount,
+			},
 		})
 		AssertError(t, err, client_errors.InsufficientFunds)
 	})
 
 	t.Run("error case - updating balance throws", func(t *testing.T) {
-		balanceUpdater := func(user string, curr string, newBalance float64) error {
+		balanceUpdater := func(user string, curr core.Currency, newBalance core.MoneyAmount) error {
 			if user == userId && curr == currency {
 				return RandomError()
 			}
 			panic("unexpected")
 		}
-		err := service.NewTransactionPerformer(balanceGetter, balanceUpdater)(values.TransactionData{UserId: userId, Currency: currency})
+		err := service.NewTransactionPerformer(balanceGetter, balanceUpdater)(values.TransactionData{UserId: userId, Money: core.Money{Currency: currency}})
 		AssertSomeError(t, err)
 	})
 	t.Run("happy case", func(t *testing.T) {
 		t.Run("for withdrawing", func(t *testing.T) {
-			amount := -100.0
-			balanceUpdater := func(user string, curr string, newBalance float64) error {
-				if FloatsEqual(newBalance, 50.0) {
+			amount := core.MoneyAmount(-100.0)
+			balanceUpdater := func(user string, curr core.Currency, newBalance core.MoneyAmount) error {
+				if FloatsEqual(float64(newBalance), 50.0) {
 					return nil
 				}
 				panic("unexpected")
 			}
 			err := service.NewTransactionPerformer(balanceGetter, balanceUpdater)(values.TransactionData{
-				UserId:   userId,
-				Currency: currency,
-				Amount:   amount,
+				UserId: userId,
+				Money:  core.Money{Currency: currency, Amount: amount},
 			})
 			AssertNoError(t, err)
 		})
 		t.Run("for depositing", func(t *testing.T) {
-			amount := 100.0
-			balanceUpdater := func(user string, curr string, newBalance float64) error {
-				if FloatsEqual(newBalance, 250.0) {
+			amount := core.MoneyAmount(100.0)
+			balanceUpdater := func(user string, curr core.Currency, newBalance core.MoneyAmount) error {
+				if FloatsEqual(float64(newBalance), 250.0) {
 					return nil
 				}
 				panic("unexpected")
 			}
 			err := service.NewTransactionPerformer(balanceGetter, balanceUpdater)(values.TransactionData{
-				UserId:   userId,
-				Currency: currency,
-				Amount:   amount,
+				UserId: userId,
+				Money: core.Money{
+					Currency: currency,
+					Amount:   amount,
+				},
 			})
 			AssertNoError(t, err)
 		})

@@ -1,6 +1,5 @@
 package entities
 
-// TODO: make Wallet a struct
+import "github.com/k0marov/avencia-backend/lib/core"
 
-// Wallet key is currency, value is balance
-type Wallet = map[string]float64
+type Wallet = map[core.Currency]core.MoneyAmount
