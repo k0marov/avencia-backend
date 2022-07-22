@@ -132,11 +132,14 @@ func TestCheckBanknoteHandler(t *testing.T) {
 	})
 }
 
+// TODO: fix reading secrets: remove trailing \n
+
 func TestFinalizeTransactionHandler(t *testing.T) {
 	transaction := RandomTransactionData()
+	atmSecret := []byte(RandomString())
 	transactionJson, _ := json.Marshal(api.FinalizeTransactionRequest{
 		UserId:    transaction.UserId,
-		ATMSecret: string(transaction.ATMSecret),
+		ATMSecret: string(atmSecret),
 		Currency:  string(transaction.Money.Currency),
 		Amount:    float64(transaction.Money.Amount),
 	})
@@ -145,8 +148,8 @@ func TestFinalizeTransactionHandler(t *testing.T) {
 	t.Run("should call service and return status code 200 if there is no error", func(t *testing.T) {
 		response := httptest.NewRecorder()
 
-		finalizer := func(trans values.TransactionData) error {
-			if reflect.DeepEqual(trans, transaction) {
+		finalizer := func(secret []byte, trans values.TransactionData) error {
+			if reflect.DeepEqual(secret, atmSecret) && reflect.DeepEqual(trans, transaction) {
 				return nil
 			}
 			panic("unexpected")
@@ -156,7 +159,7 @@ func TestFinalizeTransactionHandler(t *testing.T) {
 		AssertStatusCode(t, response, http.StatusOK)
 	})
 	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, response *httptest.ResponseRecorder) {
-		finalizer := func(values.TransactionData) error {
+		finalizer := func([]byte, values.TransactionData) error {
 			return err
 		}
 		handlers.NewFinalizeTransactionHandler(finalizer)(response, request)

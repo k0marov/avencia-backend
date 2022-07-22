@@ -152,10 +152,10 @@ func TestBanknoteChecker(t *testing.T) {
 
 func TestTransactionFinalizer(t *testing.T) {
 	transaction := RandomTransactionData()
-	atmSecret := transaction.ATMSecret
+	atmSecret := []byte(RandomString())
 	t.Run("error case - atm secret is invalid", func(t *testing.T) {
-		otherAtmSecret := []byte("asdf")
-		err := service.NewTransactionFinalizer(otherAtmSecret, nil)(transaction)
+		invalidSecret := []byte("asdf")
+		err := service.NewTransactionFinalizer(atmSecret, nil)(invalidSecret, transaction)
 		AssertError(t, err, client_errors.InvalidATMSecret)
 	})
 	t.Run("forward case - return whatever performTransaction returns", func(t *testing.T) {
@@ -166,7 +166,7 @@ func TestTransactionFinalizer(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		err := service.NewTransactionFinalizer(atmSecret, performTransaction)(transaction)
+		err := service.NewTransactionFinalizer(atmSecret, performTransaction)(atmSecret, transaction)
 		AssertError(t, err, wantErr)
 	})
 }

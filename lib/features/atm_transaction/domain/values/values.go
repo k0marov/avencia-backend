@@ -10,9 +10,8 @@ type Banknote struct {
 }
 
 type TransactionData struct {
-	UserId    string
-	ATMSecret []byte
-	Money     core.Money
+	UserId string
+	Money  core.Money
 }
 
 func NewBanknote(request api.BanknoteCheckRequest) Banknote {
@@ -24,11 +23,9 @@ func NewBanknote(request api.BanknoteCheckRequest) Banknote {
 	}
 }
 
-// TODO: move ATMSecret out of TransactionData
 func NewTransactionData(request api.FinalizeTransactionRequest) TransactionData {
 	return TransactionData{
-		UserId:    request.UserId,
-		ATMSecret: []byte(request.ATMSecret),
+		UserId: request.UserId,
 		Money: core.Money{
 			Currency: core.Currency(request.Currency),
 			Amount:   core.MoneyAmount(request.Amount),

@@ -65,10 +65,10 @@ func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.Handler
 
 func NewFinalizeTransactionHandler(finalizeTransaction service.TransactionFinalizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var transactionRequest api.FinalizeTransactionRequest
-		json.NewDecoder(r.Body).Decode(&transactionRequest)
+		var t api.FinalizeTransactionRequest
+		json.NewDecoder(r.Body).Decode(&t)
 
-		err := finalizeTransaction(values.NewTransactionData(transactionRequest))
+		err := finalizeTransaction([]byte(t.ATMSecret), values.NewTransactionData(t))
 		if err != nil {
 			http_helpers.HandleServiceError(w, err)
 			return

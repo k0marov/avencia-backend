@@ -118,9 +118,8 @@ func RandomUserInfo() entities.UserInfo {
 }
 func RandomTransactionData() values.TransactionData {
 	return values.TransactionData{
-		UserId:    RandomString(),
-		ATMSecret: []byte(RandomString()),
-		Money:     RandomMoney(),
+		UserId: RandomString(),
+		Money:  RandomMoney(),
 	}
 }
 

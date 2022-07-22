@@ -30,7 +30,7 @@ const TransactionTypeClaim = "transaction_type"
 type CodeGenerator = func(auth.User, TransactionType) (code string, expiresAt time.Time, err error)
 type CodeVerifier = func(string, TransactionType) (entities.UserInfo, error)
 type BanknoteChecker = func(transactionCode string, banknote values.Banknote) error
-type TransactionFinalizer = func(values.TransactionData) error
+type TransactionFinalizer = func(atmSecret []byte, t values.TransactionData) error
 
 // helpers
 type transactionPerformer = func(values.TransactionData) error
@@ -86,12 +86,12 @@ func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 }
 
 func NewTransactionFinalizer(atmSecret []byte, perform transactionPerformer) TransactionFinalizer {
-	return func(transaction values.TransactionData) error {
-		if subtle.ConstantTimeCompare(transaction.ATMSecret, atmSecret) == 0 {
+	return func(gotAtmSecret []byte, t values.TransactionData) error {
+		if subtle.ConstantTimeCompare(gotAtmSecret, atmSecret) == 0 {
 			return client_errors.InvalidATMSecret
 		}
 		// TODO: add limit check
-		return perform(transaction)
+		return perform(t)
 	}
 }
 
