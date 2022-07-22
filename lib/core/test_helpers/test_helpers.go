@@ -8,6 +8,8 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
+	limitsEntities "github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
+	limitsValues "github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
 	userEntities "github.com/k0marov/avencia-backend/lib/features/user/domain/entities"
 	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
 	"log"
@@ -161,6 +163,17 @@ func RandomFinalizeTransationRequest() api.FinalizeTransactionRequest {
 		ATMSecret: RandomString(),
 		Currency:  RandomString(),
 		Amount:    RandomFloat(),
+	}
+}
+
+func RandomLimits() limitsEntities.Limits {
+	return limitsEntities.Limits{RandomCurrency(): RandomLimit(), RandomCurrency(): RandomLimit()}
+}
+
+func RandomLimit() limitsValues.Limit {
+	return limitsValues.Limit{
+		Withdrawn: RandomMoneyAmount(),
+		Max:       RandomMoneyAmount(),
 	}
 }
 
