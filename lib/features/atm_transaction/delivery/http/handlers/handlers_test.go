@@ -132,8 +132,6 @@ func TestCheckBanknoteHandler(t *testing.T) {
 	})
 }
 
-// TODO: fix reading secrets: remove trailing \n
-
 func TestFinalizeTransactionHandler(t *testing.T) {
 	transaction := RandomTransactionData()
 	atmSecret := []byte(RandomString())
