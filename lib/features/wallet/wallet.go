@@ -16,7 +16,7 @@ type Services struct {
 func NewWalletServicesImpl(fsClient *firestore.Client) Services {
 	walletDocGetter := storeImpl.NewWalletDocGetter(fsClient)
 
-	storeGetWallet := storeImpl.NewWalletGetter(fsClient, walletDocGetter)
+	storeGetWallet := storeImpl.NewWalletGetter(walletDocGetter)
 	updateBalance := storeImpl.NewBalanceUpdater(walletDocGetter)
 
 	getWallet := service.NewWalletGetter(storeGetWallet)

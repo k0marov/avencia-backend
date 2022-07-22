@@ -11,8 +11,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// TODO: add validation of that userId, currency and other things that can be used as document ids are not empty at the API boundary level
-
 // WalletDocGetter the passed in userId shouldn't be empty
 type WalletDocGetter = func(userId string) *firestore.DocumentRef
 
@@ -26,7 +24,7 @@ func NewWalletDocGetter(client firestore_facade.Simple) WalletDocGetter {
 	}
 }
 
-func NewWalletGetter(client firestore_facade.Simple, getWalletDoc WalletDocGetter) store.WalletGetter {
+func NewWalletGetter(getWalletDoc WalletDocGetter) store.WalletGetter {
 	return func(userId string) (map[string]any, error) {
 		wallet, err := getWalletDoc(userId).Get(context.Background())
 		if status.Code(err) == codes.NotFound {
