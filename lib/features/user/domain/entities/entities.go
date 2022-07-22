@@ -12,7 +12,10 @@ type UserInfo struct {
 	Limits limitsEntities.Limits
 }
 
-// TODO: add limits to UserInfo response
 func (u UserInfo) ToResponse() api.UserInfoResponse {
-	return api.UserInfoResponse{Id: u.Id, Wallet: u.Wallet.ToResponse()}
+	return api.UserInfoResponse{
+		Id:     u.Id,
+		Wallet: u.Wallet.ToResponse(),
+		Limits: u.Limits.ToResponse(),
+	}
 }

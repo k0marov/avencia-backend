@@ -117,7 +117,7 @@ func RandomUser() auth.User {
 	return auth.User{Id: RandomId()}
 }
 func RandomUserInfo() userEntities.UserInfo {
-	return userEntities.UserInfo{Id: RandomId(), Wallet: RandomWallet()}
+	return userEntities.UserInfo{Id: RandomId(), Wallet: RandomWallet(), Limits: RandomLimits()}
 }
 func RandomTransactionData() values.Transaction {
 	return values.Transaction{
