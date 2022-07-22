@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
@@ -37,5 +38,23 @@ func NewLimitsGetter(getWithdrawns store.WithdrawnsGetter, limitedCurrencies map
 			}
 		}
 		return limits, nil
+	}
+}
+
+func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
+	return func(t transValues.Transaction) error {
+		if t.Money.Amount > 0 { // it's a deposit
+			return nil
+		}
+		withdraw := -t.Money.Amount
+		limits, err := getLimits(t.UserId)
+		if err != nil {
+			return fmt.Errorf("while getting user's limits: %w", err)
+		}
+		limit := limits[t.Money.Currency]
+		if limit.Max != 0 && limit.Withdrawn+withdraw > limit.Max {
+			return client_errors.WithdrawLimitExceeded
+		}
+		return nil
 	}
 }
