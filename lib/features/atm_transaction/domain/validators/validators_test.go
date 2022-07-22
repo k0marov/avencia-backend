@@ -54,7 +54,7 @@ func TestTransCodeValidator(t *testing.T) {
 func TestTransactionValidator(t *testing.T) {
 	rightAtmSecret := RandomSecret()
 	curBalance := core.MoneyAmount(100.0)
-	trans := values.TransactionData{
+	trans := values.Transaction{
 		UserId: RandomString(),
 		Money: core.Money{
 			Currency: RandomCurrency(),
@@ -65,12 +65,12 @@ func TestTransactionValidator(t *testing.T) {
 		_, err := validators.NewTransactionValidator(rightAtmSecret, nil, nil)(RandomSecret(), trans)
 		AssertError(t, err, client_errors.InvalidATMSecret)
 	})
-	checkLimit := func(t values.TransactionData) error {
+	checkLimit := func(t values.Transaction) error {
 		return nil
 	}
 	t.Run("error case - limit checker throws", func(t *testing.T) {
 		err := RandomError()
-		checkLimit := func(t values.TransactionData) error {
+		checkLimit := func(t values.Transaction) error {
 			if t == trans {
 				return err
 			}
@@ -90,7 +90,7 @@ func TestTransactionValidator(t *testing.T) {
 		getBalance := func(string, core.Currency) (core.MoneyAmount, error) {
 			return core.MoneyAmount(30.0), nil
 		}
-		trans := values.TransactionData{
+		trans := values.Transaction{
 			Money: core.Money{
 				Amount: core.MoneyAmount(-50.0),
 			},

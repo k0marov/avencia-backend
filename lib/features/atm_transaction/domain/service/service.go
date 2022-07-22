@@ -16,7 +16,7 @@ const ExpDuration = time.Minute * 10
 type CodeGenerator = func(auth.User, values.TransactionType) (code string, expiresAt time.Time, err error)
 type CodeVerifier = func(string, values.TransactionType) (userEntities.UserInfo, error)
 type BanknoteChecker = func(transactionCode string, banknote values.Banknote) error
-type TransactionFinalizer = func(atmSecret []byte, t values.TransactionData) error
+type TransactionFinalizer = func(atmSecret []byte, t values.Transaction) error
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(user auth.User, tType values.TransactionType) (string, time.Time, error) {
@@ -49,7 +49,7 @@ func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 }
 
 func NewTransactionFinalizer(validate validators.TransactionValidator, perform store.TransactionPerformer) TransactionFinalizer {
-	return func(gotAtmSecret []byte, t values.TransactionData) error {
+	return func(gotAtmSecret []byte, t values.Transaction) error {
 		bal, err := validate(gotAtmSecret, t)
 		if err != nil {
 			return err

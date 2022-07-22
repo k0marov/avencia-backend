@@ -20,7 +20,7 @@ type Banknote struct {
 	Money core.Money
 }
 
-type TransactionData struct {
+type Transaction struct {
 	UserId string
 	Money  core.Money
 }
@@ -34,8 +34,8 @@ func NewBanknote(request api.BanknoteCheckRequest) Banknote {
 	}
 }
 
-func NewTransactionData(request api.FinalizeTransactionRequest) TransactionData {
-	return TransactionData{
+func NewTransactionData(request api.FinalizeTransactionRequest) Transaction {
+	return Transaction{
 		UserId: request.UserId,
 		Money: core.Money{
 			Currency: core.Currency(request.Currency),

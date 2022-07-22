@@ -133,7 +133,7 @@ func TestFinalizeTransactionHandler(t *testing.T) {
 	t.Run("should call service and return status code 200 if there is no error", func(t *testing.T) {
 		response := httptest.NewRecorder()
 
-		finalizer := func(secret []byte, trans values.TransactionData) error {
+		finalizer := func(secret []byte, trans values.Transaction) error {
 			if string(secret) == req.ATMSecret && reflect.DeepEqual(trans, transaction) {
 				return nil
 			}
@@ -144,7 +144,7 @@ func TestFinalizeTransactionHandler(t *testing.T) {
 		AssertStatusCode(t, response, http.StatusOK)
 	})
 	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, response *httptest.ResponseRecorder) {
-		finalizer := func([]byte, values.TransactionData) error {
+		finalizer := func([]byte, values.Transaction) error {
 			return err
 		}
 		handlers.NewFinalizeTransactionHandler(finalizer)(response, request)

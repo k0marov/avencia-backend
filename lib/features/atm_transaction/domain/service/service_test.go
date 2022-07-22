@@ -100,7 +100,7 @@ func TestTransactionFinalizer(t *testing.T) {
 	atmSecret := RandomSecret()
 	t.Run("error case - validation throws", func(t *testing.T) {
 		err := RandomError()
-		validate := func(secret []byte, t values.TransactionData) (core.MoneyAmount, error) {
+		validate := func(secret []byte, t values.Transaction) (core.MoneyAmount, error) {
 			if reflect.DeepEqual(secret, atmSecret) && t == transaction {
 				return core.MoneyAmount(0), err
 			}
@@ -112,10 +112,10 @@ func TestTransactionFinalizer(t *testing.T) {
 	t.Run("forward case - return whatever performTransaction returns", func(t *testing.T) {
 		wantErr := RandomError()
 		currentBalance := RandomMoneyAmount()
-		validate := func([]byte, values.TransactionData) (core.MoneyAmount, error) {
+		validate := func([]byte, values.Transaction) (core.MoneyAmount, error) {
 			return currentBalance, nil
 		}
-		performTransaction := func(curBal core.MoneyAmount, trans values.TransactionData) error {
+		performTransaction := func(curBal core.MoneyAmount, trans values.Transaction) error {
 			if curBal == currentBalance && trans == transaction {
 				return wantErr
 			}
