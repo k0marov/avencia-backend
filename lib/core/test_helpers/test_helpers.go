@@ -3,12 +3,14 @@ package test_helpers
 import (
 	"encoding/json"
 	"errors"
+	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
+	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
 	"log"
 	"math"
 	"math/rand"
@@ -114,7 +116,7 @@ func RandomUser() auth.User {
 	return auth.User{Id: RandomId()}
 }
 func RandomUserInfo() entities.UserInfo {
-	return entities.UserInfo{Id: RandomId()}
+	return entities.UserInfo{Id: RandomId(), Wallet: RandomWallet()}
 }
 func RandomTransactionData() values.TransactionData {
 	return values.TransactionData{
@@ -123,11 +125,48 @@ func RandomTransactionData() values.TransactionData {
 	}
 }
 
+func RandomSecret() []byte {
+	return []byte(RandomString())
+}
+
+func RandomWallet() walletEntities.Wallet {
+	return walletEntities.Wallet{}
+}
+
+func RandomCurrency() core.Currency {
+	return core.Currency(RandomString())
+}
+
+func RandomMoneyAmount() core.MoneyAmount {
+	return core.MoneyAmount(RandomFloat())
+}
+
 func RandomMoney() core.Money {
 	return core.Money{
-		Currency: core.Currency(RandomString()),
-		Amount:   core.MoneyAmount(RandomFloat()),
+		Currency: RandomCurrency(),
+		Amount:   RandomMoneyAmount(),
 	}
+}
+
+func RandomBanknoteCheckRequest() api.BanknoteCheckRequest {
+	return api.BanknoteCheckRequest{
+		TransactionCode: RandomString(),
+		Currency:        RandomString(),
+		Amount:          RandomFloat(),
+	}
+}
+
+func RandomFinalizeTransationRequest() api.FinalizeTransactionRequest {
+	return api.FinalizeTransactionRequest{
+		UserId:    RandomString(),
+		ATMSecret: RandomString(),
+		Currency:  RandomString(),
+		Amount:    RandomFloat(),
+	}
+}
+
+func RandomBanknote() values.Banknote {
+	return values.Banknote{Money: RandomMoney()}
 }
 
 func RandomTransactionType() service.TransactionType {

@@ -99,23 +99,16 @@ func TestVerifyCodeHandler(t *testing.T) {
 }
 
 func TestCheckBanknoteHandler(t *testing.T) {
-	transactionCode := RandomString()
-	currency := RandomString()
-	amount := RandomFloat()
-	banknoteRequest := api.BanknoteCheckRequest{
-		TransactionCode: transactionCode,
-		Currency:        currency,
-		Amount:          amount,
-	}
-	banknoteJson, _ := json.Marshal(banknoteRequest)
-	wantBanknoteValue := values.NewBanknote(banknoteRequest)
+	req := RandomBanknoteCheckRequest()
+	banknoteJson, _ := json.Marshal(req)
+	wantBanknoteValue := values.NewBanknote(req)
 	request := http_test_helpers.CreateRequest(bytes.NewReader(banknoteJson))
 
 	t.Run("should call service and return status code 200 if there is no error", func(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		checker := func(code string, banknote values.Banknote) error {
-			if code == transactionCode && banknote == wantBanknoteValue {
+			if code == req.TransactionCode && banknote == wantBanknoteValue {
 				return nil
 			}
 			panic("unexpected")
@@ -133,14 +126,10 @@ func TestCheckBanknoteHandler(t *testing.T) {
 }
 
 func TestFinalizeTransactionHandler(t *testing.T) {
-	transaction := RandomTransactionData()
 	atmSecret := []byte(RandomString())
-	transactionJson, _ := json.Marshal(api.FinalizeTransactionRequest{
-		UserId:    transaction.UserId,
-		ATMSecret: string(atmSecret),
-		Currency:  string(transaction.Money.Currency),
-		Amount:    float64(transaction.Money.Amount),
-	})
+	req := RandomFinalizeTransationRequest()
+	transactionJson, _ := json.Marshal(req)
+	transaction := values.NewTransactionData(req)
 	request := http_test_helpers.CreateRequest(bytes.NewReader(transactionJson))
 
 	t.Run("should call service and return status code 200 if there is no error", func(t *testing.T) {

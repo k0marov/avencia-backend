@@ -120,16 +120,9 @@ func TestUserInfoGetter(t *testing.T) {
 	})
 }
 
-// TODO: add RandomXXX test helpers for all entities and values
-
 func TestBanknoteChecker(t *testing.T) {
 	code := RandomString()
-	banknote := values.Banknote{
-		Money: core.Money{
-			Currency: core.Currency(RandomString()),
-			Amount:   core.MoneyAmount(RandomFloat()),
-		},
-	}
+	banknote := RandomBanknote()
 	t.Run("error case - jwt checking throws", func(t *testing.T) {
 		verificationErr := RandomError()
 		verifyCode := func(string, service.TransactionType) (entities.UserInfo, error) {
@@ -174,7 +167,7 @@ func TestTransactionFinalizer(t *testing.T) {
 func TestTransactionPerformer(t *testing.T) {
 	balance := core.MoneyAmount(150.0)
 	userId := RandomString()
-	currency := core.Currency(RandomString())
+	currency := RandomCurrency()
 
 	balanceGetter := func(user string, curr core.Currency) (core.MoneyAmount, error) {
 		if user == userId && curr == currency {
