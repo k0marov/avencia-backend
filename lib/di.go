@@ -42,7 +42,7 @@ func Initialize() http.Handler {
 	userDeps := atm_transaction.UserDeps{
 		GetUserInfo: userService.NewUserInfoGetter(walletServices.GetWallet, nil),
 	}
-	limitsDeps := atm_transaction.LimitsDeps{CheckLimit: nil}
+	limitsDeps := atm_transaction.LimitsDeps{} // TODO: implement the limits feature
 
 	atmTransactionHandlers := atm_transaction.NewATMTransactionHandlers(conf, fsClient, walletDeps, userDeps, limitsDeps)
 

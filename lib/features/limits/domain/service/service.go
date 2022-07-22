@@ -10,4 +10,7 @@ import (
 // LimitChecker does not update the withdrawn value, see WithdrawnUpdater
 type LimitChecker = func(wantTransaction transValues.TransactionData) error
 type LimitsGetter = func(userId string) (entities.Limits, error)
-type WithdrawnUpdater = func(userId string, currency core.Currency, addValue core.MoneyAmount)
+
+// WithdrawnUpdateGetter computes the new Withdrawn value from a transaction;
+// returns an error if transaction is not a withdrawal, in other words, when the Amount is positive
+type WithdrawnUpdateGetter = func(t transValues.TransactionData) (core.Money, error)

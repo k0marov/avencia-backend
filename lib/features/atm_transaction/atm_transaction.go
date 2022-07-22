@@ -10,6 +10,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/store"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
+	limitsStore "github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
 	userService "github.com/k0marov/avencia-backend/lib/features/user/domain/service"
 	walletService "github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
 	walletStore "github.com/k0marov/avencia-backend/lib/features/wallet/domain/store"
@@ -27,7 +28,9 @@ type UserDeps struct {
 }
 
 type LimitsDeps struct {
-	CheckLimit limitsService.LimitChecker
+	CheckLimit          limitsService.LimitChecker
+	GetUpdatedWithdrawn limitsService.WithdrawnUpdateGetter
+	UpdateWithdrawn     limitsStore.WithdrawnUpdater
 }
 
 func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client, wallet WalletDeps, user UserDeps, limits LimitsDeps) api.ATMTransaction {
@@ -46,7 +49,7 @@ func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client,
 	jwtVerifier := jwt.NewVerifier(jwtSecret)
 
 	// store
-	performTrans := store.NewTransactionPerformer(fsClient, wallet.UpdateBalance)
+	performTrans := store.NewTransactionPerformer(fsClient, wallet.UpdateBalance, limits.GetUpdatedWithdrawn, limits.UpdateWithdrawn)
 
 	// validators
 	codeValidator := validators.NewTransCodeValidator(jwtVerifier)

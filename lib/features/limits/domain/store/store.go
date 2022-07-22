@@ -5,4 +5,4 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 )
 
-type WithdrawnUpdater = func(batch firestore_facade.WriteBatch, userId string, currency core.Currency, newValue core.MoneyAmount)
+type WithdrawnUpdater = func(batch firestore_facade.WriteBatch, userId string, withdrawn core.Money)
