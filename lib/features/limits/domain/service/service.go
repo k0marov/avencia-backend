@@ -58,3 +58,21 @@ func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
 		return nil
 	}
 }
+
+func NewWithdrawnUpdateGetter(getLimits LimitsGetter) WithdrawnUpdateGetter {
+	return func(t transValues.Transaction) (core.Money, error) {
+		if t.Money.Amount > 0 {
+			return core.Money{}, fmt.Errorf("expected withdrawal; got deposit")
+		}
+		limits, err := getLimits(t.UserId)
+		if err != nil {
+			return core.Money{}, fmt.Errorf("getting limits: %w", err)
+		}
+		withdraw := -t.Money.Amount
+		newWithdrawn := limits[t.Money.Currency].Withdrawn + withdraw
+		return core.Money{
+			Currency: t.Money.Currency,
+			Amount:   newWithdrawn,
+		}, nil
+	}
+}

@@ -115,3 +115,61 @@ func TestLimitChecker(t *testing.T) {
 		AssertNoError(t, err)
 	})
 }
+
+func TestWithdrawnUpdateGetter(t *testing.T) {
+	limits := map[core.Currency]values.Limit{
+		"USD": {
+			Withdrawn: 400,
+		},
+	}
+	userId := RandomString()
+
+	t.Run("error case - provided transaction is not a withdrawal", func(t *testing.T) {
+		_, err := service.NewWithdrawnUpdateGetter(nil)(transValues.Transaction{Money: core.Money{Amount: 1000}})
+		AssertSomeError(t, err)
+	})
+
+	getLimits := func(user string) (entities.Limits, error) {
+		return limits, nil
+	}
+	t.Run("error case - getting limits throws", func(t *testing.T) {
+		getLimits := func(user string) (entities.Limits, error) {
+			if user == userId {
+				return nil, RandomError()
+			}
+			panic("unexpected")
+		}
+		_, err := service.NewWithdrawnUpdateGetter(getLimits)(transValues.Transaction{UserId: userId, Money: core.Money{Amount: -1000}})
+		AssertSomeError(t, err)
+	})
+	t.Run("happy case - previous withdrawn value exists", func(t *testing.T) {
+		trans := transValues.Transaction{
+			UserId: userId,
+			Money: core.Money{
+				Currency: "USD",
+				Amount:   -300,
+			},
+		}
+		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getLimits)(trans)
+		AssertNoError(t, err)
+		Assert(t, newWithdrawn, core.Money{
+			Currency: "USD",
+			Amount:   700,
+		}, "returned withdrawn value")
+	})
+	t.Run("happy case - there is no previous withdrawn value", func(t *testing.T) {
+		trans := transValues.Transaction{
+			UserId: userId,
+			Money: core.Money{
+				Currency: "BTC",
+				Amount:   -0.01,
+			},
+		}
+		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getLimits)(trans)
+		AssertNoError(t, err)
+		Assert(t, newWithdrawn, core.Money{
+			Currency: "BTC",
+			Amount:   0.01,
+		}, "returned withdrawn value")
+	})
+}
