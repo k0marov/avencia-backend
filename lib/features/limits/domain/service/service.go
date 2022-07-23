@@ -27,14 +27,15 @@ func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[
 			return entities.Limits{}, fmt.Errorf("getting current withdrawns")
 		}
 		limits := entities.Limits{}
-		for currStr, withdrawn := range withdrawns {
-			curr := core.Currency(currStr)
-			currLimit := limitedCurrencies[curr]
-			if currLimit != 0 && configurable.IsWithdrawLimitRelevant(withdrawn.UpdatedAt) {
-				limits[curr] = values.Limit{
-					Withdrawn: withdrawn.Withdrawn,
-					Max:       currLimit,
-				}
+		for curr, maxLimit := range limitedCurrencies {
+			withdrawn := withdrawns[string(curr)]
+			withdrawnRelevant := core.MoneyAmount(0)
+			if configurable.IsWithdrawLimitRelevant(withdrawn.UpdatedAt) {
+				withdrawnRelevant = withdrawn.Withdrawn
+			}
+			limits[curr] = values.Limit{
+				Withdrawn: withdrawnRelevant,
+				Max:       maxLimit,
 			}
 		}
 		return limits, nil

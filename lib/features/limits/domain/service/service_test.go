@@ -29,6 +29,7 @@ func TestLimitsGetter(t *testing.T) {
 			"RUB": 40000,
 			"USD": 1000,
 			"ETH": 42,
+			"EUR": 1000,
 		}
 		getWithdrawns := func(string) (map[string]values.WithdrawnWithUpdated, error) {
 			return map[string]values.WithdrawnWithUpdated{
@@ -48,6 +49,14 @@ func TestLimitsGetter(t *testing.T) {
 			"USD": {
 				Withdrawn: 499,
 				Max:       1000,
+			},
+			"EUR": {
+				Withdrawn: 0,
+				Max:       1000,
+			},
+			"RUB": {
+				Withdrawn: 0,
+				Max:       40000,
 			},
 		}
 		Assert(t, limits, wantLimits, "returned limits")
