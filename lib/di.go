@@ -6,6 +6,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction"
 	"github.com/k0marov/avencia-backend/lib/features/limits"
+	"github.com/k0marov/avencia-backend/lib/features/user"
 	userService "github.com/k0marov/avencia-backend/lib/features/user/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/wallet"
 	"log"
@@ -51,7 +52,14 @@ func Initialize() http.Handler {
 		UpdateWithdrawn:     limitsServices.UpdateWithdrawn,
 	}
 
-	atmTransactionHandlers := atm_transaction.NewATMTransactionHandlers(conf, fsClient, walletDeps, userDeps, limitsDeps)
+	transHandlers := atm_transaction.NewATMTransactionHandlers(conf, fsClient, walletDeps, userDeps, limitsDeps)
+	userHandlers := user.NewUserHandlersImpl(userDeps.GetUserInfo)
 
-	return api.NewAPIRouter(atmTransactionHandlers, authMiddleware)
+	return api.NewAPIRouter(api.Handlers{
+		GenCode:             transHandlers.GenCode,
+		VerifyCode:          transHandlers.VerifyCode,
+		CheckBanknote:       transHandlers.CheckBanknote,
+		FinalizeTransaction: transHandlers.FinalizeTransaction,
+		GetUserInfo:         userHandlers.GetUserInfo,
+	}, authMiddleware)
 }

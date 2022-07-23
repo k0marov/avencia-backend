@@ -2,7 +2,6 @@ package atm_transaction
 
 import (
 	"cloud.google.com/go/firestore"
-	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/delivery/http/handlers"
@@ -16,6 +15,7 @@ import (
 	walletStore "github.com/k0marov/avencia-backend/lib/features/wallet/domain/store"
 	"io/ioutil"
 	"log"
+	"net/http"
 )
 
 type WalletDeps struct {
@@ -33,7 +33,11 @@ type LimitsDeps struct {
 	UpdateWithdrawn     limitsStore.WithdrawUpdater
 }
 
-func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client, wallet WalletDeps, user UserDeps, limits LimitsDeps) api.ATMTransaction {
+type Handlers struct {
+	GenCode, VerifyCode, CheckBanknote, FinalizeTransaction http.HandlerFunc
+}
+
+func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client, wallet WalletDeps, user UserDeps, limits LimitsDeps) Handlers {
 	// config
 	atmSecret, err := ioutil.ReadFile(config.ATMSecretPath)
 	if err != nil {
@@ -61,7 +65,7 @@ func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client,
 	checkBanknote := service.NewBanknoteChecker(verifyCode)
 	finalizeTransaction := service.NewTransactionFinalizer(transValidator, performTrans)
 	// handlers
-	return api.ATMTransaction{
+	return Handlers{
 		GenCode:             handlers.NewGenerateCodeHandler(genCode),
 		VerifyCode:          handlers.NewVerifyCodeHandler(verifyCode),
 		CheckBanknote:       handlers.NewCheckBanknoteHandler(checkBanknote),
