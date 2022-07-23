@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/firestore v1.6.1
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/k0marov/avencia-api-contract v0.0.0-20220723095845-e75ff997b82d
+	github.com/k0marov/avencia-api-contract v0.0.0-20220723100814-4f4aede3fe22
 	google.golang.org/api v0.88.0
 	google.golang.org/grpc v1.48.0
 )
