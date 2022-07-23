@@ -2,6 +2,7 @@ package lib
 
 import (
 	"context"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction"
@@ -55,11 +56,12 @@ func Initialize() http.Handler {
 	transHandlers := atm_transaction.NewATMTransactionHandlers(conf, fsClient, walletDeps, userDeps, limitsDeps)
 	userHandlers := user.NewUserHandlersImpl(userDeps.GetUserInfo)
 
-	return api.NewAPIRouter(api.Handlers{
+	apiRouter := api.NewAPIRouter(api.Handlers{
 		GenCode:             transHandlers.GenCode,
 		VerifyCode:          transHandlers.VerifyCode,
 		CheckBanknote:       transHandlers.CheckBanknote,
 		FinalizeTransaction: transHandlers.FinalizeTransaction,
 		GetUserInfo:         userHandlers.GetUserInfo,
 	}, authMiddleware)
+	return middleware.Recoverer(apiRouter)
 }
