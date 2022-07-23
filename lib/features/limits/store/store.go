@@ -27,12 +27,15 @@ const withdrawnKey = "withdrawn"
 
 // TODO: somehow simplify this
 func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
-	return func(userId string) (res map[string]values.WithdrawnWithUpdated, err error) {
+	return func(userId string) (map[string]values.WithdrawnWithUpdated, error) {
 		coll := client.Collection(fmt.Sprintf("Withdraws/%s/Withdraws", userId))
 		docs, err := coll.DocumentRefs(context.Background()).GetAll()
 		if err != nil {
 			return map[string]values.WithdrawnWithUpdated{}, fmt.Errorf("fetching a list of withdraws documents %w", err)
 		}
+
+		withdraws := map[string]values.WithdrawnWithUpdated{}
+
 		for _, doc := range docs {
 			snap, err := doc.Get(context.Background())
 			if err != nil {
@@ -43,12 +46,12 @@ func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
 			if !ok {
 				return map[string]values.WithdrawnWithUpdated{}, fmt.Errorf("withdrawn value %v is not a float", withdrawnVal)
 			}
-			res[doc.ID] = values.WithdrawnWithUpdated{
+			withdraws[doc.ID] = values.WithdrawnWithUpdated{
 				Withdrawn: core.MoneyAmount(withdrawn),
 				UpdatedAt: snap.UpdateTime,
 			}
 		}
-		return
+		return withdraws, nil
 	}
 }
 
