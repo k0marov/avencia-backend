@@ -6,4 +6,4 @@ import (
 )
 
 type WalletGetter = func(userId string) (map[string]any, error)
-type BalanceUpdater = func(update firestore_facade.Updater, userId string, currency core.Currency, newBalance core.MoneyAmount)
+type BalanceUpdater = func(update firestore_facade.Updater, userId string, currency core.Currency, newBalance core.MoneyAmount) error

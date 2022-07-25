@@ -38,9 +38,9 @@ func NewWalletGetter(getWalletDoc WalletDocGetter) store.WalletGetter {
 }
 
 func NewBalanceUpdater(getWalletDoc WalletDocGetter) store.BalanceUpdater {
-	return func(upd firestore_facade.Updater, userId string, currency core.Currency, newBalance core.MoneyAmount) {
+	return func(upd firestore_facade.Updater, userId string, currency core.Currency, newBalance core.MoneyAmount) error {
 		doc := getWalletDoc(userId)
 		newValue := map[string]any{string(currency): newBalance.Num()}
-		upd(doc, newValue)
+		return upd(doc, newValue)
 	}
 }
