@@ -38,8 +38,14 @@ func Initialize() http.Handler {
 	if err != nil {
 		log.Fatalf("error while initializing firestore client: %v", err)
 	}
+	fbAuth, err := fbApp.Auth(context.Background())
+	if err != nil {
+		log.Fatalf("erorr while initializing firebase auth: %v", err)
+	}
 
-	authMiddleware := auth.NewAuthMiddleware(fbApp)
+	authMiddleware := auth.NewAuthMiddleware(fbAuth)
+	userFromEmail := auth.NewUserFromEmail(fbAuth)
+
 	walletServices := wallet.NewWalletServicesImpl(fsClient)
 	limitsServices := limits.NewLimitsServicesImpl(fsClient)
 
@@ -59,7 +65,7 @@ func Initialize() http.Handler {
 	transHandlers := atm_transaction.NewATMTransactionHandlers(conf, fsClient, walletDeps, userDeps, limitsDeps)
 	userHandlers := user.NewUserHandlersImpl(userDeps.GetUserInfo)
 
-	transferHandler := transfer.NewTransferHandlerImpl(fsClient, nil, nil) // TODO add userFromEmail and Transact here
+	transferHandler := transfer.NewTransferHandlerImpl(fsClient, userFromEmail, nil) // TODO Transact here
 
 	apiRouter := api.NewAPIRouter(api.Handlers{
 		GenCode:             transHandlers.GenCode,

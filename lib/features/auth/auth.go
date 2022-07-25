@@ -2,9 +2,8 @@ package auth
 
 import (
 	"context"
-	"log"
-
-	firebase "firebase.google.com/go"
+	"firebase.google.com/go/auth"
+	"fmt"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/features/auth/internal"
 )
@@ -12,6 +11,16 @@ import (
 // services
 
 type UserFromEmail = func(email string) (User, error)
+
+func NewUserFromEmail(fbAuth *auth.Client) UserFromEmail {
+	return func(email string) (User, error) {
+		user, err := fbAuth.GetUserByEmail(context.Background(), email)
+		if err != nil {
+			return User{}, fmt.Errorf("getting user from firebase: %w", err)
+		}
+		return User{Id: user.UID}, nil
+	}
+}
 
 // user entity
 
@@ -26,10 +35,6 @@ func AddUserToCtx(user User, ctx context.Context) context.Context {
 
 // middleware
 
-func NewAuthMiddleware(app *firebase.App) core.Middleware {
-	fbAuth, err := app.Auth(context.Background())
-	if err != nil {
-		log.Fatalf("error initializing Firebase Auth: %v", err)
-	}
+func NewAuthMiddleware(fbAuth *auth.Client) core.Middleware {
 	return internal.NewFirebaseAuthMiddleware(fbAuth)
 }
