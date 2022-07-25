@@ -5,12 +5,21 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/config"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction"
-	"github.com/k0marov/avencia-backend/lib/features/limits"
+	"github.com/k0marov/avencia-backend/lib/config/configurable"
+	"github.com/k0marov/avencia-backend/lib/core/batch"
+	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
+	"github.com/k0marov/avencia-backend/lib/core/jwt"
+	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm_transaction/delivery/http/handlers"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
+	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
+	limitsStore "github.com/k0marov/avencia-backend/lib/features/limits/store"
 	"github.com/k0marov/avencia-backend/lib/features/transfer"
-	"github.com/k0marov/avencia-backend/lib/features/user"
+	userHandlers "github.com/k0marov/avencia-backend/lib/features/user/delivery/http/handlers"
 	userService "github.com/k0marov/avencia-backend/lib/features/user/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/wallet"
+	walletService "github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
+	storeImpl "github.com/k0marov/avencia-backend/lib/features/wallet/store"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -28,11 +37,21 @@ func initFirebase(config config.Config) *firebase.App {
 	return fbApp
 }
 
-// TODO: maybe stop using individual DI integrators for every feature, since it is becoming hard to get individual services from each feature
+// TODO: write some integration tests (later)
 
 func Initialize() http.Handler {
 	conf := config.LoadConfig()
+	// ===== CONFIG =====
+	atmSecret, err := ioutil.ReadFile(conf.ATMSecretPath)
+	if err != nil {
+		log.Fatalf("error while reading atm secret: %v", err)
+	}
+	jwtSecret, err := ioutil.ReadFile(conf.JWTSecretPath)
+	if err != nil {
+		log.Fatalf("error while reading jwt secret: %v", err)
+	}
 
+	// ===== FIREBASE =====
 	fbApp := initFirebase(conf)
 	fsClient, err := fbApp.Firestore(context.Background())
 	if err != nil {
@@ -43,36 +62,59 @@ func Initialize() http.Handler {
 		log.Fatalf("erorr while initializing firebase auth: %v", err)
 	}
 
+	// ===== JWT =====
+	jwtIssuer := jwt.NewIssuer(jwtSecret)
+	jwtVerifier := jwt.NewVerifier(jwtSecret)
+
+	// ===== AUTH =====
 	authMiddleware := auth.NewAuthMiddleware(fbAuth)
 	userFromEmail := auth.NewUserFromEmail(fbAuth)
 
-	walletServices := wallet.NewWalletServicesImpl(fsClient)
-	limitsServices := limits.NewLimitsServicesImpl(fsClient)
+	// ===== WALLET =====
+	walletDocGetter := storeImpl.NewWalletDocGetter(firestore_facade.NewDocGetter(fsClient))
+	storeGetWallet := storeImpl.NewWalletGetter(walletDocGetter)
+	updateBalance := storeImpl.NewBalanceUpdater(walletDocGetter)
+	getWallet := walletService.NewWalletGetter(storeGetWallet)
+	getBalance := walletService.NewBalanceGetter(getWallet)
 
-	walletDeps := atm_transaction.WalletDeps{
-		GetBalance:    walletServices.GetBalance,
-		UpdateBalance: walletServices.BalanceUpdater,
-	}
-	userDeps := atm_transaction.UserDeps{
-		GetUserInfo: userService.NewUserInfoGetter(walletServices.GetWallet, limitsServices.GetLimits),
-	}
-	limitsDeps := atm_transaction.LimitsDeps{
-		CheckLimit:          limitsServices.CheckLimit,
-		GetUpdatedWithdrawn: limitsServices.GetWithdrawnUpdate,
-		UpdateWithdrawn:     limitsServices.UpdateWithdrawn,
-	}
+	// ===== LIMITS =====
+	storeGetWithdraws := limitsStore.NewWithdrawsGetter(fsClient)
+	updateWithdrawn := limitsStore.NewWithdrawUpdater(limitsStore.NewWithdrawDocGetter(firestore_facade.NewDocGetter(fsClient)))
+	getLimits := limitsService.NewLimitsGetter(storeGetWithdraws, configurable.LimitedCurrencies)
+	checkLimit := limitsService.NewLimitChecker(getLimits)
+	getUpdatedWithdrawn := limitsService.NewWithdrawnUpdateGetter(getLimits)
 
-	transHandlers := atm_transaction.NewATMTransactionHandlers(conf, fsClient, walletDeps, userDeps, limitsDeps)
-	userHandlers := user.NewUserHandlersImpl(userDeps.GetUserInfo)
+	// ===== USER =====
+	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits)
+	getUserInfoHandler := userHandlers.NewGetUserInfoHandler(getUserInfo)
 
+	// ===== ATM TRANSACTION =====
+	// validators
+	codeValidator := validators.NewTransCodeValidator(jwtVerifier)
+	atmSecretValidator := validators.NewATMSecretValidator(atmSecret)
+	transValidator := validators.NewTransactionValidator(checkLimit, getBalance)
+	// service
+	genCode := service.NewCodeGenerator(jwtIssuer)
+	verifyCode := service.NewCodeVerifier(codeValidator, getUserInfo)
+	checkBanknote := service.NewBanknoteChecker(verifyCode)
+	performTrans := service.NewTransactionPerformer(updateBalance, getUpdatedWithdrawn, updateWithdrawn)
+	finalizeTransaction := service.NewTransactionFinalizer(transValidator, performTrans)
+	atmFinalizeTransaction := service.NewATMTransactionFinalizer(atmSecretValidator, batch.NewWriteRunner(fsClient), finalizeTransaction)
+	// handlers
+	genCodeHandler := atmHandlers.NewGenerateCodeHandler(genCode)
+	verifyCodeHandler := atmHandlers.NewVerifyCodeHandler(verifyCode)
+	checkBanknoteHandler := atmHandlers.NewCheckBanknoteHandler(checkBanknote)
+	atmTransactionHandler := atmHandlers.NewFinalizeTransactionHandler(atmFinalizeTransaction)
+
+	// ===== TRANSFER =====
 	transferHandler := transfer.NewTransferHandlerImpl(fsClient, userFromEmail, nil) // TODO Transact here
 
 	apiRouter := api.NewAPIRouter(api.Handlers{
-		GenCode:             transHandlers.GenCode,
-		VerifyCode:          transHandlers.VerifyCode,
-		CheckBanknote:       transHandlers.CheckBanknote,
-		FinalizeTransaction: transHandlers.FinalizeTransaction,
-		GetUserInfo:         userHandlers.GetUserInfo,
+		GenCode:             genCodeHandler,
+		VerifyCode:          verifyCodeHandler,
+		CheckBanknote:       checkBanknoteHandler,
+		FinalizeTransaction: atmTransactionHandler,
+		GetUserInfo:         getUserInfoHandler,
 		Transfer:            transferHandler,
 	}, authMiddleware)
 	return middleware.Recoverer(apiRouter)

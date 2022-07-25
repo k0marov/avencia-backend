@@ -13,7 +13,7 @@ import (
 // withdrawsDocGetter userId should be non-empty
 type withdrawDocGetter = func(userId string, currency core.Currency) *firestore.DocumentRef
 
-func WithdrawDocGetter(getDoc firestore_facade.DocGetter) withdrawDocGetter {
+func NewWithdrawDocGetter(getDoc firestore_facade.DocGetter) withdrawDocGetter {
 	return func(userId string, currency core.Currency) *firestore.DocumentRef {
 		doc := getDoc(fmt.Sprintf("Withdraws/%s/Withdraws/%s", userId, string(currency)))
 		if doc == nil {
