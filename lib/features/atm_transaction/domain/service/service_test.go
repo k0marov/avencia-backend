@@ -139,25 +139,34 @@ func TestTransactionPerformer(t *testing.T) {
 	curr := RandomCurrency()
 
 	curBalance := core.MoneyAmount(100)
-	t.Run("should compute and update balance in case of deposit", func(t *testing.T) {
-		trans := values.Transaction{
+	t.Run("deposit", func(t *testing.T) {
+		depTrans := values.Transaction{
 			UserId: userId,
 			Money: core.Money{
 				Currency: curr,
 				Amount:   core.MoneyAmount(232.5),
 			},
 		}
-		balanceUpdated := false
-		updBal := func(b firestore_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) {
-			if user == userId && currency == curr && newBal == core.MoneyAmount(332.5) {
-				balanceUpdated = true
-				return
+		t.Run("should compute and update balance in case of deposit", func(t *testing.T) {
+			balanceUpdated := false
+			updBal := func(b firestore_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) error {
+				if user == userId && currency == curr && newBal == core.MoneyAmount(332.5) {
+					balanceUpdated = true
+					return nil
+				}
+				panic("unexpected")
 			}
-			panic("unexpected")
-		}
-		err := service.NewTransactionPerformer(runBatch, updBal, nil, nil)(curBalance, trans)
-		AssertNoError(t, err)
-		Assert(t, balanceUpdated, true, "balance was updated")
+			err := service.NewTransactionPerformer(runBatch, updBal, nil, nil)(curBalance, depTrans)
+			AssertNoError(t, err)
+			Assert(t, balanceUpdated, true, "balance was updated")
+		})
+		t.Run("updating balance throws", func(t *testing.T) {
+			updBal := func(firestore_facade.Updater, string, core.Currency, core.MoneyAmount) error {
+				return RandomError()
+			}
+			err := service.NewTransactionPerformer(runBatch, updBal, nil, nil)(curBalance, depTrans)
+			AssertSomeError(t, err)
+		})
 	})
 	t.Run("withdrawal", func(t *testing.T) {
 		withdrawTrans := values.Transaction{
@@ -184,10 +193,10 @@ func TestTransactionPerformer(t *testing.T) {
 				panic("unexpected")
 			}
 			balanceUpdated := false
-			updBal := func(b firestore_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) {
+			updBal := func(b firestore_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) error {
 				if newBal == core.MoneyAmount(58) {
 					balanceUpdated = true
-					return
+					return nil
 				}
 				panic("unexpected")
 			}
@@ -205,7 +214,7 @@ func TestTransactionPerformer(t *testing.T) {
 		})
 		t.Run("updating withdrawn throws", func(t *testing.T) {
 			getNewWithdrawn := func(values.Transaction) (core.Money, error) {
-				return core.Money{}, RandomError()
+				return core.Money{}, nil
 			}
 			updWithdrawn := func(firestore_facade.Updater, string, core.Money) error {
 				return RandomError()

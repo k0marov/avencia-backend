@@ -74,10 +74,12 @@ func NewTransactionPerformer(runBatch batch.WriteRunner, updBal walletStore.Bala
 				if err != nil {
 					return fmt.Errorf("getting the new 'withdrawn' value: %w", err)
 				}
-				updWithdrawn(u, t.UserId, withdrawn)
+				err = updWithdrawn(u, t.UserId, withdrawn)
+				if err != nil {
+					return fmt.Errorf("updating withdrawn value: %w", err)
+				}
 			}
-			updBal(u, t.UserId, t.Money.Currency, curBal+t.Money.Amount)
-			return nil
+			return updBal(u, t.UserId, t.Money.Currency, curBal+t.Money.Amount)
 		})
 	}
 }
