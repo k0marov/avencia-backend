@@ -22,6 +22,8 @@ const ExpDuration = time.Minute * 10
 type CodeGenerator = func(auth.User, values.TransactionType) (code string, expiresAt time.Time, err error)
 type CodeVerifier = func(string, values.TransactionType) (userEntities.UserInfo, error)
 type BanknoteChecker = func(transactionCode string, banknote values.Banknote) error
+
+type ATMTransactionFinalizer = func(atmSecret []byte, t values.Transaction) error
 type TransactionFinalizer = func(t values.Transaction) error
 type TransactionPerformer = func(curBalance core.MoneyAmount, t values.Transaction) error
 
@@ -55,6 +57,16 @@ func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 	}
 }
 
+func NewATMTransactionFinalizer(validateSecret validators.ATMSecretValidator, finalize TransactionFinalizer) ATMTransactionFinalizer {
+	return func(atmSecret []byte, t values.Transaction) error {
+		err := validateSecret(atmSecret)
+		if err != nil {
+			return err
+		}
+		return finalize(t)
+	}
+}
+
 func NewTransactionFinalizer(validate validators.TransactionValidator, perform TransactionPerformer) TransactionFinalizer {
 	return func(t values.Transaction) error {
 		bal, err := validate(t)
@@ -65,7 +77,7 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform T
 	}
 }
 
-// TODO: please simplify this
+// TODO: please simplify this (move updating withdraw to a separate service)
 func NewTransactionPerformer(runBatch batch.WriteRunner, updBal walletStore.BalanceUpdater, getNewWithdrawn limitsService.WithdrawnUpdateGetter, updWithdrawn limitsStore.WithdrawUpdater) TransactionPerformer {
 	return func(curBal core.MoneyAmount, t values.Transaction) error {
 		return runBatch(func(u firestore_facade.Updater) error {

@@ -63,7 +63,7 @@ func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.Handler
 	}
 }
 
-func NewFinalizeTransactionHandler(finalizeTransaction service.TransactionFinalizer) http.HandlerFunc {
+func NewFinalizeTransactionHandler(finalizeTransaction service.ATMTransactionFinalizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var t api.FinalizeTransactionRequest
 		json.NewDecoder(r.Body).Decode(&t)

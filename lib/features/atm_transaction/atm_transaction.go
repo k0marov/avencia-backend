@@ -54,19 +54,23 @@ func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client,
 
 	// validators
 	codeValidator := validators.NewTransCodeValidator(jwtVerifier)
-	transValidator := validators.NewTransactionValidator(atmSecret, limits.CheckLimit, wallet.GetBalance)
+	atmSecretValidator := validators.NewATMSecretValidator(atmSecret)
+	transValidator := validators.NewTransactionValidator(limits.CheckLimit, wallet.GetBalance)
 
 	// service
 	genCode := service.NewCodeGenerator(jwtIssuer)
 	verifyCode := service.NewCodeVerifier(codeValidator, user.GetUserInfo)
 	checkBanknote := service.NewBanknoteChecker(verifyCode)
+
 	performTrans := service.NewTransactionPerformer(batch.NewWriteRunner(fsClient), wallet.UpdateBalance, limits.GetUpdatedWithdrawn, limits.UpdateWithdrawn)
 	finalizeTransaction := service.NewTransactionFinalizer(transValidator, performTrans)
+	atmFinalizeTransaction := service.NewATMTransactionFinalizer(atmSecretValidator, finalizeTransaction)
+
 	// handlers
 	return Handlers{
 		GenCode:             handlers.NewGenerateCodeHandler(genCode),
 		VerifyCode:          handlers.NewVerifyCodeHandler(verifyCode),
 		CheckBanknote:       handlers.NewCheckBanknoteHandler(checkBanknote),
-		FinalizeTransaction: handlers.NewFinalizeTransactionHandler(finalizeTransaction),
+		FinalizeTransaction: handlers.NewFinalizeTransactionHandler(atmFinalizeTransaction),
 	}
 }

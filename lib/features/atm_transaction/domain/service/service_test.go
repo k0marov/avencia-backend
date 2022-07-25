@@ -97,6 +97,36 @@ func TestBanknoteChecker(t *testing.T) {
 	})
 }
 
+func TestATMTransactionFinalizer(t *testing.T) {
+	transaction := RandomTransactionData()
+	gotAtmSecret := RandomSecret()
+	t.Run("error case - validation throws", func(t *testing.T) {
+		err := RandomError()
+		validate := func(atmSecret []byte) error {
+			if reflect.DeepEqual(atmSecret, gotAtmSecret) {
+				return err
+			}
+			panic("unexpected")
+		}
+		gotErr := service.NewATMTransactionFinalizer(validate, nil)(gotAtmSecret, transaction)
+		AssertError(t, gotErr, err)
+	})
+	t.Run("forward case - forward to TransactionFinalizer", func(t *testing.T) {
+		validate := func([]byte) error {
+			return nil
+		}
+		err := RandomError()
+		finalize := func(gotTrans values.Transaction) error {
+			if gotTrans == transaction {
+				return err
+			}
+			panic("unexpected")
+		}
+		gotErr := service.NewATMTransactionFinalizer(validate, finalize)(gotAtmSecret, transaction)
+		AssertError(t, gotErr, err)
+	})
+}
+
 func TestTransactionFinalizer(t *testing.T) {
 	transaction := RandomTransactionData()
 	t.Run("error case - validation throws", func(t *testing.T) {
