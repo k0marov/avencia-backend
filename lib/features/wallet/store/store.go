@@ -14,9 +14,9 @@ import (
 // WalletDocGetter the passed in userId shouldn't be empty
 type WalletDocGetter = func(userId string) *firestore.DocumentRef
 
-func NewWalletDocGetter(client firestore_facade.Simple) WalletDocGetter {
+func NewWalletDocGetter(getDoc firestore_facade.DocGetter) WalletDocGetter {
 	return func(userId string) *firestore.DocumentRef {
-		doc := client.Doc("Wallets/" + userId)
+		doc := getDoc("Wallets/" + userId)
 		if doc == nil {
 			panic("getting document ref for user's wallet returned nil. Probably userId is empty.")
 		}
@@ -38,9 +38,9 @@ func NewWalletGetter(getWalletDoc WalletDocGetter) store.WalletGetter {
 }
 
 func NewBalanceUpdater(getWalletDoc WalletDocGetter) store.BalanceUpdater {
-	return func(batch firestore_facade.WriteBatch, userId string, currency core.Currency, newBalance core.MoneyAmount) {
+	return func(upd firestore_facade.Updater, userId string, currency core.Currency, newBalance core.MoneyAmount) {
 		doc := getWalletDoc(userId)
 		newValue := map[string]any{string(currency): newBalance.Num()}
-		batch.Set(doc, newValue, firestore.MergeAll)
+		upd(doc, newValue)
 	}
 }

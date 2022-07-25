@@ -5,6 +5,8 @@ import (
 	"context"
 )
 
+// TODO: add tests for the store layers thanks to the new facades
+
 type DocGetter = func(path string) *firestore.DocumentRef
 
 func NewDocGetter(client *firestore.Client) DocGetter {
