@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core/core_errors"
+	atmService "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"github.com/k0marov/avencia-backend/lib/features/transfer/domain/values"
 )
@@ -13,9 +14,16 @@ type Transferer = func(values.RawTransfer) error
 // transferConverter error may be a ClientError
 type transferConverter = func(values.RawTransfer) (values.Transfer, error)
 
-func NewTransferer(convert transferConverter) Transferer {
-	return func(t values.RawTransfer) error {
-		panic("unimplemented")
+func NewTransferer(convert transferConverter, transact atmService.TransactionFinalizer) Transferer {
+	return func(raw values.RawTransfer) error {
+		if raw.Money.Amount < 0 {
+			return client_errors.NegativeTransferAmount
+		}
+		_, err := convert(raw)
+		if err != nil {
+			return fmt.Errorf("while converting raw transfer data to a transfer: %w", err)
+		}
+		return nil
 	}
 }
 

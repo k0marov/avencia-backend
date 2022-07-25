@@ -155,7 +155,7 @@ func TestTransactionFinalizer(t *testing.T) {
 	})
 	t.Run("forward case - return whatever performTransaction returns", func(t *testing.T) {
 		wantErr := RandomError()
-		currentBalance := RandomMoneyAmount()
+		currentBalance := RandomPosMoneyAmount()
 		validate := func(values.Transaction) (core.MoneyAmount, error) {
 			return currentBalance, nil
 		}
@@ -214,7 +214,7 @@ func TestTransactionPerformer(t *testing.T) {
 			},
 		}
 		t.Run("should additionally compute and update withdrawn in case of withdrawal", func(t *testing.T) {
-			newWithdrawn := RandomMoney()
+			newWithdrawn := RandomPositiveMoney()
 			getNewWithdrawn := func(transaction values.Transaction) (core.Money, error) {
 				if transaction == withdrawTrans {
 					return newWithdrawn, nil

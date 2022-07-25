@@ -10,13 +10,46 @@ import (
 	"testing"
 )
 
-// TODO: add checking if Money.Amount is negative to Transferer, otherwise everyone will be able to transfer money to their account from other users :)
+// TODO: add checking if Money.Amount is negative in Transferer, otherwise everyone will be able to transfer money to their account from other users :)
+
+func TestTransferer(t *testing.T) {
+	tRaw := RandomRawTransfer()
+	//transf := RandomTransfer()
+	t.Run("error case - money.amount is negative", func(t *testing.T) {
+		tRaw := values.RawTransfer{
+			FromId:  RandomString(),
+			ToEmail: RandomString(),
+			Money:   RandomNegativeMoney(),
+		}
+		err := service.NewTransferer(nil, nil)(tRaw)
+		AssertError(t, err, client_errors.NegativeTransferAmount)
+	})
+	t.Run("error case - converting transfer throws", func(t *testing.T) {
+		convert := func(gotTransf values.RawTransfer) (values.Transfer, error) {
+			if gotTransf == tRaw {
+				return values.Transfer{}, RandomError()
+			}
+			panic("unexpected")
+		}
+		err := service.NewTransferer(convert, nil)(tRaw)
+		AssertSomeError(t, err)
+	})
+	t.Run("making withdraw from caller transaction fails", func(t *testing.T) {
+
+	})
+	t.Run("making deposit to recepient transaction fails", func(t *testing.T) {
+
+	})
+	t.Run("happy case", func(t *testing.T) {
+
+	})
+}
 
 func TestTransferConverter(t *testing.T) {
 	rawTrans := values.RawTransfer{
 		FromId:  RandomString(),
 		ToEmail: RandomString(),
-		Money:   RandomMoney(),
+		Money:   RandomPositiveMoney(),
 	}
 	user := RandomUser()
 

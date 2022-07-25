@@ -6,10 +6,11 @@ import (
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
+	transValues "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	limitsEntities "github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	limitsValues "github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
+	transferValues "github.com/k0marov/avencia-backend/lib/features/transfer/domain/values"
 	userEntities "github.com/k0marov/avencia-backend/lib/features/user/domain/entities"
 	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
 	"log"
@@ -22,6 +23,8 @@ import (
 	"testing"
 	"time"
 )
+
+// TODO: refactor this mess
 
 var randGen *rand.Rand
 
@@ -113,16 +116,32 @@ func TimeAlmostEqual(t1, t2 time.Time) bool {
 	return math.Abs(t1.Sub(t2).Minutes()) < 1
 }
 
+func RandomTransfer() transferValues.Transfer {
+	return transferValues.Transfer{
+		FromId: RandomString(),
+		ToId:   RandomString(),
+		Money:  RandomPositiveMoney(),
+	}
+}
+
+func RandomRawTransfer() transferValues.RawTransfer {
+	return transferValues.RawTransfer{
+		FromId:  RandomString(),
+		ToEmail: RandomString(),
+		Money:   RandomPositiveMoney(),
+	}
+}
+
 func RandomUser() auth.User {
 	return auth.User{Id: RandomId()}
 }
 func RandomUserInfo() userEntities.UserInfo {
 	return userEntities.UserInfo{Id: RandomId(), Wallet: RandomWallet(), Limits: RandomLimits()}
 }
-func RandomTransactionData() values.Transaction {
-	return values.Transaction{
+func RandomTransactionData() transValues.Transaction {
+	return transValues.Transaction{
 		UserId: RandomString(),
-		Money:  RandomMoney(),
+		Money:  RandomPositiveMoney(),
 	}
 }
 
@@ -138,14 +157,23 @@ func RandomCurrency() core.Currency {
 	return core.Currency(RandomString())
 }
 
-func RandomMoneyAmount() core.MoneyAmount {
+func RandomPosMoneyAmount() core.MoneyAmount {
 	return core.MoneyAmount(RandomFloat())
 }
+func RandomNegMoneyAmount() core.MoneyAmount {
+	return core.MoneyAmount(-RandomFloat())
+}
 
-func RandomMoney() core.Money {
+func RandomPositiveMoney() core.Money {
 	return core.Money{
 		Currency: RandomCurrency(),
-		Amount:   RandomMoneyAmount(),
+		Amount:   RandomPosMoneyAmount(),
+	}
+}
+func RandomNegativeMoney() core.Money {
+	return core.Money{
+		Currency: RandomCurrency(),
+		Amount:   RandomNegMoneyAmount(),
 	}
 }
 
@@ -172,20 +200,20 @@ func RandomLimits() limitsEntities.Limits {
 
 func RandomLimit() limitsValues.Limit {
 	return limitsValues.Limit{
-		Withdrawn: RandomMoneyAmount(),
-		Max:       RandomMoneyAmount(),
+		Withdrawn: RandomPosMoneyAmount(),
+		Max:       RandomPosMoneyAmount(),
 	}
 }
 
-func RandomBanknote() values.Banknote {
-	return values.Banknote{Money: RandomMoney()}
+func RandomBanknote() transValues.Banknote {
+	return transValues.Banknote{Money: RandomPositiveMoney()}
 }
 
-func RandomTransactionType() values.TransactionType {
+func RandomTransactionType() transValues.TransactionType {
 	if RandomBool() {
-		return values.Deposit
+		return transValues.Deposit
 	} else {
-		return values.Withdrawal
+		return transValues.Withdrawal
 	}
 }
 
