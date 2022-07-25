@@ -25,7 +25,7 @@ type BanknoteChecker = func(transactionCode string, banknote values.Banknote) er
 
 type ATMTransactionFinalizer = func(atmSecret []byte, t values.Transaction) error
 type TransactionFinalizer = func(u firestore_facade.BatchUpdater, t values.Transaction) error
-type TransactionPerformer = func(u firestore_facade.BatchUpdater, curBalance core.MoneyAmount, t values.Transaction) error
+type transactionPerformer = func(u firestore_facade.BatchUpdater, curBalance core.MoneyAmount, t values.Transaction) error
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(user auth.User, tType values.TransactionType) (string, time.Time, error) {
@@ -69,7 +69,7 @@ func NewATMTransactionFinalizer(validateSecret validators.ATMSecretValidator, ru
 	}
 }
 
-func NewTransactionFinalizer(validate validators.TransactionValidator, perform TransactionPerformer) TransactionFinalizer {
+func NewTransactionFinalizer(validate validators.TransactionValidator, perform transactionPerformer) TransactionFinalizer {
 	return func(u firestore_facade.BatchUpdater, t values.Transaction) error {
 		bal, err := validate(t)
 		if err != nil {
@@ -80,7 +80,7 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform T
 }
 
 // TODO: please simplify this (move updating withdraw to a separate service)
-func NewTransactionPerformer(updBal walletStore.BalanceUpdater, getNewWithdrawn limitsService.WithdrawnUpdateGetter, updWithdrawn limitsStore.WithdrawUpdater) TransactionPerformer {
+func NewTransactionPerformer(updBal walletStore.BalanceUpdater, getNewWithdrawn limitsService.WithdrawnUpdateGetter, updWithdrawn limitsStore.WithdrawUpdater) transactionPerformer {
 	return func(u firestore_facade.BatchUpdater, curBal core.MoneyAmount, t values.Transaction) error {
 		if t.Money.Amount < 0 {
 			withdrawn, err := getNewWithdrawn(t)
