@@ -7,7 +7,7 @@ require (
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/k0marov/avencia-api-contract v0.0.0-20220725082529-cf41763a8641
+	github.com/k0marov/avencia-api-contract v0.0.0-20220725092937-bbbc2391798c
 	google.golang.org/api v0.88.0
 	google.golang.org/grpc v1.48.0
 )
