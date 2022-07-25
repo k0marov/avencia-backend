@@ -17,7 +17,10 @@ func NewDocGetter(client *firestore.Client) DocGetter {
 
 type Updater = func(doc *firestore.DocumentRef, data map[string]any) error
 
-func NewBatchUpdater(batch *firestore.WriteBatch) Updater {
+// BatchUpdater is used to show that a method wants to execute its actions only in a batch
+type BatchUpdater Updater
+
+func NewBatchUpdater(batch *firestore.WriteBatch) BatchUpdater {
 	return func(doc *firestore.DocumentRef, data map[string]any) error {
 		batch.Set(doc, data, firestore.MergeAll)
 		return nil

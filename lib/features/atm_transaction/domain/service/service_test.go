@@ -1,17 +1,23 @@
 package service_test
 
 import (
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
+	"github.com/k0marov/avencia-backend/lib/features/auth"
+	"testing"
+	"time"
+)
+
+// TODO: since this file becomes kinda big, create a separate feature "transactions" and move all ATM-independent stuff in there
+// TODO: pluralize all feature names
+
+import (
 	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
-	"github.com/k0marov/avencia-backend/lib/features/auth"
 	userEntities "github.com/k0marov/avencia-backend/lib/features/user/domain/entities"
 	"reflect"
-	"testing"
-	"time"
 )
 
 func TestCodeGenerator(t *testing.T) {
@@ -100,6 +106,12 @@ func TestBanknoteChecker(t *testing.T) {
 func TestATMTransactionFinalizer(t *testing.T) {
 	transaction := RandomTransactionData()
 	gotAtmSecret := RandomSecret()
+	// TODO: remove this callback hell
+	stubRunBatch := func(f func(firestore_facade.BatchUpdater) error) error {
+		return f(func(*firestore.DocumentRef, map[string]any) error {
+			return nil
+		})
+	}
 	t.Run("error case - validation throws", func(t *testing.T) {
 		err := RandomError()
 		validate := func(atmSecret []byte) error {
@@ -108,7 +120,7 @@ func TestATMTransactionFinalizer(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		gotErr := service.NewATMTransactionFinalizer(validate, nil)(gotAtmSecret, transaction)
+		gotErr := service.NewATMTransactionFinalizer(validate, nil, nil)(gotAtmSecret, transaction)
 		AssertError(t, gotErr, err)
 	})
 	t.Run("forward case - forward to TransactionFinalizer", func(t *testing.T) {
@@ -116,18 +128,19 @@ func TestATMTransactionFinalizer(t *testing.T) {
 			return nil
 		}
 		err := RandomError()
-		finalize := func(gotTrans values.Transaction) error {
+		finalize := func(u firestore_facade.BatchUpdater, gotTrans values.Transaction) error {
 			if gotTrans == transaction {
 				return err
 			}
 			panic("unexpected")
 		}
-		gotErr := service.NewATMTransactionFinalizer(validate, finalize)(gotAtmSecret, transaction)
+		gotErr := service.NewATMTransactionFinalizer(validate, stubRunBatch, finalize)(gotAtmSecret, transaction)
 		AssertError(t, gotErr, err)
 	})
 }
 
 func TestTransactionFinalizer(t *testing.T) {
+	batchUpd := func(*firestore.DocumentRef, map[string]any) error { return nil }
 	transaction := RandomTransactionData()
 	t.Run("error case - validation throws", func(t *testing.T) {
 		err := RandomError()
@@ -137,7 +150,7 @@ func TestTransactionFinalizer(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		gotErr := service.NewTransactionFinalizer(validate, nil)(transaction)
+		gotErr := service.NewTransactionFinalizer(validate, nil)(batchUpd, transaction)
 		AssertError(t, gotErr, err)
 	})
 	t.Run("forward case - return whatever performTransaction returns", func(t *testing.T) {
@@ -146,24 +159,19 @@ func TestTransactionFinalizer(t *testing.T) {
 		validate := func(values.Transaction) (core.MoneyAmount, error) {
 			return currentBalance, nil
 		}
-		performTransaction := func(curBal core.MoneyAmount, trans values.Transaction) error {
+		performTransaction := func(u firestore_facade.BatchUpdater, curBal core.MoneyAmount, trans values.Transaction) error {
 			if curBal == currentBalance && trans == transaction {
 				return wantErr
 			}
 			panic("unexpected")
 		}
-		err := service.NewTransactionFinalizer(validate, performTransaction)(transaction)
+		err := service.NewTransactionFinalizer(validate, performTransaction)(batchUpd, transaction)
 		AssertError(t, err, wantErr)
 	})
 }
 
 func TestTransactionPerformer(t *testing.T) {
-	batchUpdater := func(*firestore.DocumentRef, map[string]any) error { return nil }
-	runBatch := func(f func(u firestore_facade.Updater) error) error {
-		err := f(batchUpdater)
-		return err
-	}
-
+	batchUpd := func(*firestore.DocumentRef, map[string]any) error { return nil }
 	userId := RandomString()
 	curr := RandomCurrency()
 
@@ -185,7 +193,7 @@ func TestTransactionPerformer(t *testing.T) {
 				}
 				panic("unexpected")
 			}
-			err := service.NewTransactionPerformer(runBatch, updBal, nil, nil)(curBalance, depTrans)
+			err := service.NewTransactionPerformer(updBal, nil, nil)(batchUpd, curBalance, depTrans)
 			AssertNoError(t, err)
 			Assert(t, balanceUpdated, true, "balance was updated")
 		})
@@ -193,7 +201,7 @@ func TestTransactionPerformer(t *testing.T) {
 			updBal := func(firestore_facade.Updater, string, core.Currency, core.MoneyAmount) error {
 				return RandomError()
 			}
-			err := service.NewTransactionPerformer(runBatch, updBal, nil, nil)(curBalance, depTrans)
+			err := service.NewTransactionPerformer(updBal, nil, nil)(batchUpd, curBalance, depTrans)
 			AssertSomeError(t, err)
 		})
 	})
@@ -229,7 +237,7 @@ func TestTransactionPerformer(t *testing.T) {
 				}
 				panic("unexpected")
 			}
-			err := service.NewTransactionPerformer(runBatch, updBal, getNewWithdrawn, updWithdrawn)(curBalance, withdrawTrans)
+			err := service.NewTransactionPerformer(updBal, getNewWithdrawn, updWithdrawn)(batchUpd, curBalance, withdrawTrans)
 			AssertNoError(t, err)
 			Assert(t, balanceUpdated, true, "balance was updated")
 			Assert(t, withdrawnUpdated, true, "withdrawn was updated")
@@ -238,7 +246,7 @@ func TestTransactionPerformer(t *testing.T) {
 			getNewWithdrawn := func(values.Transaction) (core.Money, error) {
 				return core.Money{}, RandomError()
 			}
-			err := service.NewTransactionPerformer(runBatch, nil, getNewWithdrawn, nil)(curBalance, withdrawTrans)
+			err := service.NewTransactionPerformer(nil, getNewWithdrawn, nil)(batchUpd, curBalance, withdrawTrans)
 			AssertSomeError(t, err)
 		})
 		t.Run("updating withdrawn throws", func(t *testing.T) {
@@ -248,16 +256,8 @@ func TestTransactionPerformer(t *testing.T) {
 			updWithdrawn := func(firestore_facade.Updater, string, core.Money) error {
 				return RandomError()
 			}
-			err := service.NewTransactionPerformer(runBatch, nil, getNewWithdrawn, updWithdrawn)(curBalance, withdrawTrans)
+			err := service.NewTransactionPerformer(nil, getNewWithdrawn, updWithdrawn)(batchUpd, curBalance, withdrawTrans)
 			AssertSomeError(t, err)
 		})
-	})
-	t.Run("should return result of the batchUpdater write", func(t *testing.T) {
-		err := RandomError()
-		runBatch := func(func(batch firestore_facade.Updater) error) error {
-			return err
-		}
-		gotErr := service.NewTransactionPerformer(runBatch, nil, nil, nil)(RandomMoneyAmount(), RandomTransactionData())
-		AssertError(t, gotErr, err)
 	})
 }

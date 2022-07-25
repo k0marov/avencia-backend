@@ -24,8 +24,8 @@ type CodeVerifier = func(string, values.TransactionType) (userEntities.UserInfo,
 type BanknoteChecker = func(transactionCode string, banknote values.Banknote) error
 
 type ATMTransactionFinalizer = func(atmSecret []byte, t values.Transaction) error
-type TransactionFinalizer = func(t values.Transaction) error
-type TransactionPerformer = func(curBalance core.MoneyAmount, t values.Transaction) error
+type TransactionFinalizer = func(u firestore_facade.BatchUpdater, t values.Transaction) error
+type TransactionPerformer = func(u firestore_facade.BatchUpdater, curBalance core.MoneyAmount, t values.Transaction) error
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(user auth.User, tType values.TransactionType) (string, time.Time, error) {
@@ -57,41 +57,41 @@ func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 	}
 }
 
-func NewATMTransactionFinalizer(validateSecret validators.ATMSecretValidator, finalize TransactionFinalizer) ATMTransactionFinalizer {
+func NewATMTransactionFinalizer(validateSecret validators.ATMSecretValidator, runBatch batch.WriteRunner, finalize TransactionFinalizer) ATMTransactionFinalizer {
 	return func(atmSecret []byte, t values.Transaction) error {
 		err := validateSecret(atmSecret)
 		if err != nil {
 			return err
 		}
-		return finalize(t)
+		return runBatch(func(u firestore_facade.BatchUpdater) error {
+			return finalize(u, t)
+		})
 	}
 }
 
 func NewTransactionFinalizer(validate validators.TransactionValidator, perform TransactionPerformer) TransactionFinalizer {
-	return func(t values.Transaction) error {
+	return func(u firestore_facade.BatchUpdater, t values.Transaction) error {
 		bal, err := validate(t)
 		if err != nil {
 			return err
 		}
-		return perform(bal, t)
+		return perform(u, bal, t)
 	}
 }
 
 // TODO: please simplify this (move updating withdraw to a separate service)
-func NewTransactionPerformer(runBatch batch.WriteRunner, updBal walletStore.BalanceUpdater, getNewWithdrawn limitsService.WithdrawnUpdateGetter, updWithdrawn limitsStore.WithdrawUpdater) TransactionPerformer {
-	return func(curBal core.MoneyAmount, t values.Transaction) error {
-		return runBatch(func(u firestore_facade.Updater) error {
-			if t.Money.Amount < 0 {
-				withdrawn, err := getNewWithdrawn(t)
-				if err != nil {
-					return fmt.Errorf("getting the new 'withdrawn' value: %w", err)
-				}
-				err = updWithdrawn(u, t.UserId, withdrawn)
-				if err != nil {
-					return fmt.Errorf("updating withdrawn value: %w", err)
-				}
+func NewTransactionPerformer(updBal walletStore.BalanceUpdater, getNewWithdrawn limitsService.WithdrawnUpdateGetter, updWithdrawn limitsStore.WithdrawUpdater) TransactionPerformer {
+	return func(u firestore_facade.BatchUpdater, curBal core.MoneyAmount, t values.Transaction) error {
+		if t.Money.Amount < 0 {
+			withdrawn, err := getNewWithdrawn(t)
+			if err != nil {
+				return fmt.Errorf("getting the new 'withdrawn' value: %w", err)
 			}
-			return updBal(u, t.UserId, t.Money.Currency, curBal+t.Money.Amount)
-		})
+			err = updWithdrawn(u, t.UserId, withdrawn)
+			if err != nil {
+				return fmt.Errorf("updating withdrawn value: %w", err)
+			}
+		}
+		return updBal(u, t.UserId, t.Money.Currency, curBal+t.Money.Amount)
 	}
 }

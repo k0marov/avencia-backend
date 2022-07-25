@@ -7,10 +7,10 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 )
 
-type WriteRunner = func(func(batch firestore_facade.Updater) error) error
+type WriteRunner = func(func(batch firestore_facade.BatchUpdater) error) error
 
 func NewWriteRunner(client *firestore.Client) WriteRunner {
-	return func(perform func(batch firestore_facade.Updater) error) error {
+	return func(perform func(batch firestore_facade.BatchUpdater) error) error {
 		batch := client.Batch()
 		err := perform(firestore_facade.NewBatchUpdater(batch))
 		if err != nil {
