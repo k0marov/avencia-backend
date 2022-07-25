@@ -2,17 +2,29 @@ package firestore_facade
 
 import (
 	"cloud.google.com/go/firestore"
+	"context"
 )
 
-// TODO: make an actual facade that simplifies things
+type DocGetter = func(path string) *firestore.DocumentRef
 
-// Simple this interface is used instead of full firestore.Client since interfaces should be lean
-type Simple interface {
-	Doc(string) *firestore.DocumentRef
-	Batch() *firestore.WriteBatch
+func NewDocGetter(client *firestore.Client) DocGetter {
+	return func(path string) *firestore.DocumentRef {
+		return client.Doc(path)
+	}
 }
 
-// WriteBatch *firestore.WriteBatch implements this
-type WriteBatch interface {
-	Set(dr *firestore.DocumentRef, data interface{}, opts ...firestore.SetOption) *firestore.WriteBatch
+type Updater = func(doc *firestore.DocumentRef, data map[string]any) error
+
+func NewBatchUpdater(batch *firestore.WriteBatch) Updater {
+	return func(doc *firestore.DocumentRef, data map[string]any) error {
+		batch.Set(doc, data, firestore.MergeAll)
+		return nil
+	}
+}
+
+func NewSimpleUpdater() Updater {
+	return func(doc *firestore.DocumentRef, data map[string]any) error {
+		_, err := doc.Set(context.Background(), data, firestore.MergeAll)
+		return err
+	}
 }
