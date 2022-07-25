@@ -9,6 +9,8 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core"
 )
 
+// TODO: a transfer feature, which takes in an email (for now, later change to phone number) of the user to which you want to transfer funds.
+
 func NewFirebaseAuthMiddleware(authClient *auth.Client) core.Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -1,5 +1,6 @@
 package core
 
+// TODO: limit available currencies
 type Currency string     // string for now
 type MoneyAmount float64 // float64 for now
 
