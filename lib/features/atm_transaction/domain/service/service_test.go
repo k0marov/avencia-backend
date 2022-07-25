@@ -99,22 +99,21 @@ func TestBanknoteChecker(t *testing.T) {
 
 func TestTransactionFinalizer(t *testing.T) {
 	transaction := RandomTransactionData()
-	atmSecret := RandomSecret()
 	t.Run("error case - validation throws", func(t *testing.T) {
 		err := RandomError()
-		validate := func(secret []byte, t values.Transaction) (core.MoneyAmount, error) {
-			if reflect.DeepEqual(secret, atmSecret) && t == transaction {
+		validate := func(t values.Transaction) (core.MoneyAmount, error) {
+			if t == transaction {
 				return core.MoneyAmount(0), err
 			}
 			panic("unexpected")
 		}
-		gotErr := service.NewTransactionFinalizer(validate, nil)(atmSecret, transaction)
+		gotErr := service.NewTransactionFinalizer(validate, nil)(transaction)
 		AssertError(t, gotErr, err)
 	})
 	t.Run("forward case - return whatever performTransaction returns", func(t *testing.T) {
 		wantErr := RandomError()
 		currentBalance := RandomMoneyAmount()
-		validate := func([]byte, values.Transaction) (core.MoneyAmount, error) {
+		validate := func(values.Transaction) (core.MoneyAmount, error) {
 			return currentBalance, nil
 		}
 		performTransaction := func(curBal core.MoneyAmount, trans values.Transaction) error {
@@ -123,7 +122,7 @@ func TestTransactionFinalizer(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		err := service.NewTransactionFinalizer(validate, performTransaction)(atmSecret, transaction)
+		err := service.NewTransactionFinalizer(validate, performTransaction)(transaction)
 		AssertError(t, err, wantErr)
 	})
 }

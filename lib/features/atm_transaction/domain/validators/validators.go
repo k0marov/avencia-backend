@@ -16,7 +16,10 @@ import (
 type TransCodeValidator = func(code string, wantType values.TransactionType) (userId string, err error)
 
 // TransactionValidator err can be a ClientError
-type TransactionValidator = func(gotAtmSecret []byte, t values.Transaction) (curBalance core.MoneyAmount, err error)
+type TransactionValidator = func(t values.Transaction) (curBalance core.MoneyAmount, err error)
+
+// ATMSecretValidator err can be a ClientError
+type ATMSecretValidator = func(gotAtmSecret []byte) error
 
 func NewTransCodeValidator(verifyJWT jwt.Verifier) TransCodeValidator {
 	return func(code string, wantType values.TransactionType) (string, error) {
@@ -35,11 +38,17 @@ func NewTransCodeValidator(verifyJWT jwt.Verifier) TransCodeValidator {
 	}
 }
 
-func NewTransactionValidator(atmSecret []byte, checkLimit limitsService.LimitChecker, getBalance walletService.BalanceGetter) TransactionValidator {
-	return func(gotSecret []byte, t values.Transaction) (curBalance core.MoneyAmount, err error) {
-		if subtle.ConstantTimeCompare(gotSecret, atmSecret) == 0 {
-			return core.MoneyAmount(0), client_errors.InvalidATMSecret
+func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
+	return func(gotAtmSecret []byte) error {
+		if subtle.ConstantTimeCompare(gotAtmSecret, trueATMSecret) == 0 {
+			return client_errors.InvalidATMSecret
 		}
+		return nil
+	}
+}
+
+func NewTransactionValidator(checkLimit limitsService.LimitChecker, getBalance walletService.BalanceGetter) TransactionValidator {
+	return func(t values.Transaction) (curBalance core.MoneyAmount, err error) {
 		if err := checkLimit(t); err != nil {
 			return core.MoneyAmount(0), err
 		}

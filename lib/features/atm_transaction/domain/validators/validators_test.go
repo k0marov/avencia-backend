@@ -51,8 +51,28 @@ func TestTransCodeValidator(t *testing.T) {
 	})
 }
 
+func TestATMSecretValidator(t *testing.T) {
+	trueATMSecret := RandomSecret()
+	validator := validators.NewATMSecretValidator(trueATMSecret)
+	cases := []struct {
+		got []byte
+		res error
+	}{
+		{trueATMSecret, nil},
+		{RandomSecret(), client_errors.InvalidATMSecret},
+		{[]byte(""), client_errors.InvalidATMSecret},
+		{[]byte("as;dfk"), client_errors.InvalidATMSecret},
+	}
+
+	for _, tt := range cases {
+		t.Run(string(tt.got), func(t *testing.T) {
+			Assert(t, validator(tt.got), tt.res, "validator result result")
+		})
+	}
+
+}
+
 func TestTransactionValidator(t *testing.T) {
-	rightAtmSecret := RandomSecret()
 	curBalance := core.MoneyAmount(100.0)
 	trans := values.Transaction{
 		UserId: RandomString(),
@@ -61,10 +81,6 @@ func TestTransactionValidator(t *testing.T) {
 			Amount:   core.MoneyAmount(50.0),
 		},
 	}
-	t.Run("error case - atm secret is invalid", func(t *testing.T) {
-		_, err := validators.NewTransactionValidator(rightAtmSecret, nil, nil)(RandomSecret(), trans)
-		AssertError(t, err, client_errors.InvalidATMSecret)
-	})
 	checkLimit := func(t values.Transaction) error {
 		return nil
 	}
@@ -76,14 +92,14 @@ func TestTransactionValidator(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		_, gotErr := validators.NewTransactionValidator(rightAtmSecret, checkLimit, nil)(rightAtmSecret, trans)
+		_, gotErr := validators.NewTransactionValidator(checkLimit, nil)(trans)
 		AssertError(t, gotErr, err)
 	})
 	t.Run("error case - getting balance throws", func(t *testing.T) {
 		getBalance := func(string, core.Currency) (core.MoneyAmount, error) {
 			return core.MoneyAmount(0), RandomError()
 		}
-		_, err := validators.NewTransactionValidator(rightAtmSecret, checkLimit, getBalance)(rightAtmSecret, trans)
+		_, err := validators.NewTransactionValidator(checkLimit, getBalance)(trans)
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - insufficient funds", func(t *testing.T) {
@@ -95,7 +111,7 @@ func TestTransactionValidator(t *testing.T) {
 				Amount: core.MoneyAmount(-50.0),
 			},
 		}
-		_, err := validators.NewTransactionValidator(rightAtmSecret, checkLimit, getBalance)(rightAtmSecret, trans)
+		_, err := validators.NewTransactionValidator(checkLimit, getBalance)(trans)
 		AssertError(t, err, client_errors.InsufficientFunds)
 	})
 	t.Run("happy case", func(t *testing.T) {
@@ -105,7 +121,7 @@ func TestTransactionValidator(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		bal, err := validators.NewTransactionValidator(rightAtmSecret, checkLimit, getBalance)(rightAtmSecret, trans)
+		bal, err := validators.NewTransactionValidator(checkLimit, getBalance)(trans)
 		AssertNoError(t, err)
 		Assert(t, bal, curBalance, "returned current balance")
 	})
