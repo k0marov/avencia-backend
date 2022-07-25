@@ -11,7 +11,7 @@ import (
 
 // services
 
-type UserFromEmail = func(email string) User
+type UserFromEmail = func(email string) (User, error)
 
 // user entity
 

@@ -5,8 +5,9 @@ go 1.18
 require (
 	cloud.google.com/go/firestore v1.6.1
 	firebase.google.com/go v3.13.0+incompatible
+	github.com/go-chi/chi/v5 v5.0.7
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/k0marov/avencia-api-contract v0.0.0-20220723100814-4f4aede3fe22
+	github.com/k0marov/avencia-api-contract v0.0.0-20220725064956-3f8c68dc7262
 	google.golang.org/api v0.88.0
 	google.golang.org/grpc v1.48.0
 )
@@ -16,7 +17,6 @@ require (
 	cloud.google.com/go/compute v1.7.0 // indirect
 	cloud.google.com/go/iam v0.3.0 // indirect
 	cloud.google.com/go/storage v1.24.0 // indirect
-	github.com/go-chi/chi/v5 v5.0.7 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
