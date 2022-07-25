@@ -132,6 +132,14 @@ func RandomRawTransfer() transferValues.RawTransfer {
 	}
 }
 
+func RandomTransferRequest() api.TransferRequest {
+	return api.TransferRequest{
+		RecipientIdentifier: RandomString(),
+		Currency:            RandomString(),
+		Amount:              RandomFloat(),
+	}
+}
+
 func RandomUser() auth.User {
 	return auth.User{Id: RandomId()}
 }
