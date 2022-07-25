@@ -1,13 +1,19 @@
 package service
 
 import (
+	"fmt"
+	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/batch"
+	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/store"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
+	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
+	limitsStore "github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
 	userEntities "github.com/k0marov/avencia-backend/lib/features/user/domain/entities"
 	userService "github.com/k0marov/avencia-backend/lib/features/user/domain/service"
+	walletStore "github.com/k0marov/avencia-backend/lib/features/wallet/domain/store"
 	"time"
 )
 
@@ -17,6 +23,7 @@ type CodeGenerator = func(auth.User, values.TransactionType) (code string, expir
 type CodeVerifier = func(string, values.TransactionType) (userEntities.UserInfo, error)
 type BanknoteChecker = func(transactionCode string, banknote values.Banknote) error
 type TransactionFinalizer = func(atmSecret []byte, t values.Transaction) error
+type TransactionPerformer = func(curBalance core.MoneyAmount, t values.Transaction) error
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(user auth.User, tType values.TransactionType) (string, time.Time, error) {
@@ -48,12 +55,28 @@ func NewBanknoteChecker(verifyCode CodeVerifier) BanknoteChecker {
 	}
 }
 
-func NewTransactionFinalizer(validate validators.TransactionValidator, perform store.TransactionPerformer) TransactionFinalizer {
+func NewTransactionFinalizer(validate validators.TransactionValidator, perform TransactionPerformer) TransactionFinalizer {
 	return func(gotAtmSecret []byte, t values.Transaction) error {
 		bal, err := validate(gotAtmSecret, t)
 		if err != nil {
 			return err
 		}
 		return perform(bal, t)
+	}
+}
+
+func NewTransactionPerformer(runBatch batch.WriteRunner, updBal walletStore.BalanceUpdater, getNewWithdrawn limitsService.WithdrawnUpdateGetter, updWithdrawn limitsStore.WithdrawUpdater) TransactionPerformer {
+	return func(curBal core.MoneyAmount, t values.Transaction) error {
+		return runBatch(func(b firestore_facade.WriteBatch) error {
+			if t.Money.Amount < 0 {
+				withdrawn, err := getNewWithdrawn(t)
+				if err != nil {
+					return fmt.Errorf("getting the new 'withdrawn' value: %w", err)
+				}
+				updWithdrawn(b, t.UserId, withdrawn)
+			}
+			updBal(b, t.UserId, t.Money.Currency, curBal+t.Money.Amount)
+			return nil
+		})
 	}
 }

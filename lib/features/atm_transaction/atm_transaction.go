@@ -3,11 +3,11 @@ package atm_transaction
 import (
 	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/config"
+	"github.com/k0marov/avencia-backend/lib/core/batch"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/delivery/http/handlers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/store"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	limitsStore "github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
 	userService "github.com/k0marov/avencia-backend/lib/features/user/domain/service"
@@ -52,9 +52,6 @@ func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client,
 	jwtIssuer := jwt.NewIssuer(jwtSecret)
 	jwtVerifier := jwt.NewVerifier(jwtSecret)
 
-	// store
-	performTrans := store.NewTransactionPerformer(fsClient, wallet.UpdateBalance, limits.GetUpdatedWithdrawn, limits.UpdateWithdrawn)
-
 	// validators
 	codeValidator := validators.NewTransCodeValidator(jwtVerifier)
 	transValidator := validators.NewTransactionValidator(atmSecret, limits.CheckLimit, wallet.GetBalance)
@@ -63,6 +60,7 @@ func NewATMTransactionHandlers(config config.Config, fsClient *firestore.Client,
 	genCode := service.NewCodeGenerator(jwtIssuer)
 	verifyCode := service.NewCodeVerifier(codeValidator, user.GetUserInfo)
 	checkBanknote := service.NewBanknoteChecker(verifyCode)
+	performTrans := service.NewTransactionPerformer(batch.NewWriteRunner(fsClient), wallet.UpdateBalance, limits.GetUpdatedWithdrawn, limits.UpdateWithdrawn)
 	finalizeTransaction := service.NewTransactionFinalizer(transValidator, performTrans)
 	// handlers
 	return Handlers{

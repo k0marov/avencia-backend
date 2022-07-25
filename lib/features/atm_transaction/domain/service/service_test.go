@@ -1,7 +1,9 @@
 package service_test
 
 import (
+	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
@@ -123,5 +125,99 @@ func TestTransactionFinalizer(t *testing.T) {
 		}
 		err := service.NewTransactionFinalizer(validate, performTransaction)(atmSecret, transaction)
 		AssertError(t, err, wantErr)
+	})
+}
+
+type StubBatch struct {
+}
+
+func (s *StubBatch) Set(dr *firestore.DocumentRef, data interface{}, opts ...firestore.SetOption) *firestore.WriteBatch {
+	return &firestore.WriteBatch{}
+}
+
+func TestTransactionPerformer(t *testing.T) {
+	batch := &StubBatch{}
+	runBatch := func(f func(b firestore_facade.WriteBatch) error) error {
+		err := f(batch)
+		return err
+	}
+
+	userId := RandomString()
+	curr := RandomCurrency()
+
+	curBalance := core.MoneyAmount(100)
+	t.Run("should compute and update balance in case of deposit", func(t *testing.T) {
+		trans := values.Transaction{
+			UserId: userId,
+			Money: core.Money{
+				Currency: curr,
+				Amount:   core.MoneyAmount(232.5),
+			},
+		}
+		balanceUpdated := false
+		updBal := func(b firestore_facade.WriteBatch, user string, currency core.Currency, newBal core.MoneyAmount) {
+			if b == batch && user == userId && currency == curr && newBal == core.MoneyAmount(332.5) {
+				balanceUpdated = true
+				return
+			}
+			panic("unexpected")
+		}
+		err := service.NewTransactionPerformer(runBatch, updBal, nil, nil)(curBalance, trans)
+		AssertNoError(t, err)
+		Assert(t, balanceUpdated, true, "balance was updated")
+	})
+	t.Run("withdrawal", func(t *testing.T) {
+		withdrawTrans := values.Transaction{
+			UserId: userId,
+			Money: core.Money{
+				Currency: curr,
+				Amount:   core.MoneyAmount(-42),
+			},
+		}
+		t.Run("should additionally compute and update withdrawn in case of withdrawal", func(t *testing.T) {
+			newWithdrawn := RandomMoney()
+			getNewWithdrawn := func(transaction values.Transaction) (core.Money, error) {
+				if transaction == withdrawTrans {
+					return newWithdrawn, nil
+				}
+				panic("unexpected")
+			}
+			withdrawnUpdated := false
+			updWithdrawn := func(b firestore_facade.WriteBatch, user string, value core.Money) {
+				if b == batch && user == userId && value == newWithdrawn {
+					withdrawnUpdated = true
+					return
+				}
+				panic("unexpected")
+			}
+			balanceUpdated := false
+			updBal := func(b firestore_facade.WriteBatch, user string, currency core.Currency, newBal core.MoneyAmount) {
+				if newBal == core.MoneyAmount(58) {
+					balanceUpdated = true
+					return
+				}
+				panic("unexpected")
+			}
+			err := service.NewTransactionPerformer(runBatch, updBal, getNewWithdrawn, updWithdrawn)(curBalance, withdrawTrans)
+			AssertNoError(t, err)
+			Assert(t, balanceUpdated, true, "balance was updated")
+			Assert(t, withdrawnUpdated, true, "withdrawn was updated")
+		})
+		t.Run("getting new withdrawn value throws", func(t *testing.T) {
+			getNewWithdrawn := func(values.Transaction) (core.Money, error) {
+				return core.Money{}, RandomError()
+			}
+			err := service.NewTransactionPerformer(runBatch, nil, getNewWithdrawn, nil)(curBalance, withdrawTrans)
+			AssertSomeError(t, err)
+		})
+
+	})
+	t.Run("should return result of the batch write", func(t *testing.T) {
+		err := RandomError()
+		runBatch := func(func(batch firestore_facade.WriteBatch) error) error {
+			return err
+		}
+		gotErr := service.NewTransactionPerformer(runBatch, nil, nil, nil)(RandomMoneyAmount(), RandomTransactionData())
+		AssertError(t, gotErr, err)
 	})
 }
