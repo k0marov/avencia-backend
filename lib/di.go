@@ -7,6 +7,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction"
 	"github.com/k0marov/avencia-backend/lib/features/limits"
+	"github.com/k0marov/avencia-backend/lib/features/transfer"
 	"github.com/k0marov/avencia-backend/lib/features/user"
 	userService "github.com/k0marov/avencia-backend/lib/features/user/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/wallet"
@@ -26,6 +27,8 @@ func initFirebase(config config.Config) *firebase.App {
 	}
 	return fbApp
 }
+
+// TODO: maybe stop using individual DI integrators for every feature, since it is becoming hard to get individual services from each feature
 
 func Initialize() http.Handler {
 	conf := config.LoadConfig()
@@ -56,12 +59,15 @@ func Initialize() http.Handler {
 	transHandlers := atm_transaction.NewATMTransactionHandlers(conf, fsClient, walletDeps, userDeps, limitsDeps)
 	userHandlers := user.NewUserHandlersImpl(userDeps.GetUserInfo)
 
+	transferHandler := transfer.NewTransferHandlerImpl(fsClient, nil, nil) // TODO add userFromEmail and Transact here
+
 	apiRouter := api.NewAPIRouter(api.Handlers{
 		GenCode:             transHandlers.GenCode,
 		VerifyCode:          transHandlers.VerifyCode,
 		CheckBanknote:       transHandlers.CheckBanknote,
 		FinalizeTransaction: transHandlers.FinalizeTransaction,
 		GetUserInfo:         userHandlers.GetUserInfo,
+		Transfer:            transferHandler,
 	}, authMiddleware)
 	return middleware.Recoverer(apiRouter)
 }
