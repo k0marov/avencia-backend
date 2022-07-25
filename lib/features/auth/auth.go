@@ -9,6 +9,12 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/auth/internal"
 )
 
+// services
+
+type UserFromEmail = func(email string) User
+
+// user entity
+
 type User = internal.User
 
 func UserFromCtx(ctx context.Context) (User, error) {
@@ -17,6 +23,8 @@ func UserFromCtx(ctx context.Context) (User, error) {
 func AddUserToCtx(user User, ctx context.Context) context.Context {
 	return internal.AddUserToCtx(user, ctx)
 }
+
+// middleware
 
 func NewAuthMiddleware(app *firebase.App) core.Middleware {
 	fbAuth, err := app.Auth(context.Background())
