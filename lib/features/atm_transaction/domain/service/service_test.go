@@ -128,17 +128,10 @@ func TestTransactionFinalizer(t *testing.T) {
 	})
 }
 
-type StubBatch struct {
-}
-
-func (s *StubBatch) Set(dr *firestore.DocumentRef, data interface{}, opts ...firestore.SetOption) *firestore.WriteBatch {
-	return &firestore.WriteBatch{}
-}
-
 func TestTransactionPerformer(t *testing.T) {
-	batch := &StubBatch{}
-	runBatch := func(f func(b firestore_facade.WriteBatch) error) error {
-		err := f(batch)
+	batchUpdater := func(*firestore.DocumentRef, map[string]any) error { return nil }
+	runBatch := func(f func(u firestore_facade.Updater) error) error {
+		err := f(batchUpdater)
 		return err
 	}
 
@@ -155,8 +148,8 @@ func TestTransactionPerformer(t *testing.T) {
 			},
 		}
 		balanceUpdated := false
-		updBal := func(b firestore_facade.WriteBatch, user string, currency core.Currency, newBal core.MoneyAmount) {
-			if b == batch && user == userId && currency == curr && newBal == core.MoneyAmount(332.5) {
+		updBal := func(b firestore_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) {
+			if user == userId && currency == curr && newBal == core.MoneyAmount(332.5) {
 				balanceUpdated = true
 				return
 			}
@@ -183,15 +176,15 @@ func TestTransactionPerformer(t *testing.T) {
 				panic("unexpected")
 			}
 			withdrawnUpdated := false
-			updWithdrawn := func(b firestore_facade.WriteBatch, user string, value core.Money) {
-				if b == batch && user == userId && value == newWithdrawn {
+			updWithdrawn := func(b firestore_facade.Updater, user string, value core.Money) error {
+				if user == userId && value == newWithdrawn {
 					withdrawnUpdated = true
-					return
+					return nil
 				}
 				panic("unexpected")
 			}
 			balanceUpdated := false
-			updBal := func(b firestore_facade.WriteBatch, user string, currency core.Currency, newBal core.MoneyAmount) {
+			updBal := func(b firestore_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) {
 				if newBal == core.MoneyAmount(58) {
 					balanceUpdated = true
 					return
@@ -210,11 +203,20 @@ func TestTransactionPerformer(t *testing.T) {
 			err := service.NewTransactionPerformer(runBatch, nil, getNewWithdrawn, nil)(curBalance, withdrawTrans)
 			AssertSomeError(t, err)
 		})
-
+		t.Run("updating withdrawn throws", func(t *testing.T) {
+			getNewWithdrawn := func(values.Transaction) (core.Money, error) {
+				return core.Money{}, RandomError()
+			}
+			updWithdrawn := func(firestore_facade.Updater, string, core.Money) error {
+				return RandomError()
+			}
+			err := service.NewTransactionPerformer(runBatch, nil, getNewWithdrawn, updWithdrawn)(curBalance, withdrawTrans)
+			AssertSomeError(t, err)
+		})
 	})
-	t.Run("should return result of the batch write", func(t *testing.T) {
+	t.Run("should return result of the batchUpdater write", func(t *testing.T) {
 		err := RandomError()
-		runBatch := func(func(batch firestore_facade.WriteBatch) error) error {
+		runBatch := func(func(batch firestore_facade.Updater) error) error {
 			return err
 		}
 		gotErr := service.NewTransactionPerformer(runBatch, nil, nil, nil)(RandomMoneyAmount(), RandomTransactionData())

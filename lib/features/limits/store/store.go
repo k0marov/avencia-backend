@@ -13,9 +13,9 @@ import (
 // withdrawsDocGetter userId should be non-empty
 type withdrawDocGetter = func(userId string, currency core.Currency) *firestore.DocumentRef
 
-func NewWithdrawsDocGetter(client firestore_facade.Simple) withdrawDocGetter {
+func WithdrawDocGetter(getDoc firestore_facade.DocGetter) withdrawDocGetter {
 	return func(userId string, currency core.Currency) *firestore.DocumentRef {
-		doc := client.Doc(fmt.Sprintf("Withdraws/%s/Withdraws/%s", userId, string(currency)))
+		doc := getDoc(fmt.Sprintf("Withdraws/%s/Withdraws/%s", userId, string(currency)))
 		if doc == nil {
 			panic("getting document ref for user's withdraws returned nil. Probably userId is empty.")
 		}
@@ -56,8 +56,8 @@ func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
 }
 
 func NewWithdrawUpdater(getDoc withdrawDocGetter) store.WithdrawUpdater {
-	return func(batch firestore_facade.WriteBatch, userId string, withdrawn core.Money) {
+	return func(update firestore_facade.Updater, userId string, withdrawn core.Money) error {
 		doc := getDoc(userId, withdrawn.Currency)
-		batch.Set(doc, map[string]any{withdrawnKey: withdrawn.Amount}, firestore.MergeAll)
+		return update(doc, map[string]any{withdrawnKey: withdrawn.Amount})
 	}
 }

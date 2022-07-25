@@ -3,6 +3,7 @@ package limits
 import (
 	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
+	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
 	storeImpl "github.com/k0marov/avencia-backend/lib/features/limits/store"
@@ -17,7 +18,7 @@ type LimitsServices struct {
 
 func NewLimitsServicesImpl(fsClient *firestore.Client) LimitsServices {
 	storeGetWithdraws := storeImpl.NewWithdrawsGetter(fsClient)
-	updateWithdrawn := storeImpl.NewWithdrawUpdater(storeImpl.NewWithdrawsDocGetter(fsClient))
+	updateWithdrawn := storeImpl.NewWithdrawUpdater(storeImpl.WithdrawDocGetter(firestore_facade.NewDocGetter(fsClient)))
 
 	getLimits := service.NewLimitsGetter(storeGetWithdraws, configurable.LimitedCurrencies)
 	return LimitsServices{

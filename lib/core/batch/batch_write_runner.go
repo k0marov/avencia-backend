@@ -1,17 +1,18 @@
 package batch
 
 import (
+	"cloud.google.com/go/firestore"
 	"context"
 	"fmt"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 )
 
-type WriteRunner = func(func(batch firestore_facade.WriteBatch) error) error
+type WriteRunner = func(func(batch firestore_facade.Updater) error) error
 
-func NewWriteRunner(client firestore_facade.Simple) WriteRunner {
-	return func(perform func(batch firestore_facade.WriteBatch) error) error {
+func NewWriteRunner(client *firestore.Client) WriteRunner {
+	return func(perform func(batch firestore_facade.Updater) error) error {
 		batch := client.Batch()
-		err := perform(batch)
+		err := perform(firestore_facade.NewBatchUpdater(batch))
 		if err != nil {
 			return fmt.Errorf("performing (not committing) a batch write: %w", err)
 		}

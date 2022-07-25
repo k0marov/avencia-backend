@@ -65,17 +65,18 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform T
 	}
 }
 
+// TODO: please simplify this
 func NewTransactionPerformer(runBatch batch.WriteRunner, updBal walletStore.BalanceUpdater, getNewWithdrawn limitsService.WithdrawnUpdateGetter, updWithdrawn limitsStore.WithdrawUpdater) TransactionPerformer {
 	return func(curBal core.MoneyAmount, t values.Transaction) error {
-		return runBatch(func(b firestore_facade.WriteBatch) error {
+		return runBatch(func(u firestore_facade.Updater) error {
 			if t.Money.Amount < 0 {
 				withdrawn, err := getNewWithdrawn(t)
 				if err != nil {
 					return fmt.Errorf("getting the new 'withdrawn' value: %w", err)
 				}
-				updWithdrawn(b, t.UserId, withdrawn)
+				updWithdrawn(u, t.UserId, withdrawn)
 			}
-			updBal(b, t.UserId, t.Money.Currency, curBal+t.Money.Amount)
+			updBal(u, t.UserId, t.Money.Currency, curBal+t.Money.Amount)
 			return nil
 		})
 	}
