@@ -40,7 +40,7 @@ func NewTransferer(convert transferConverter, runBatch batch.WriteRunner, transa
 			}
 			err = transact(u, withdrawTrans)
 			if err != nil {
-				return fmt.Errorf("withdrawing money from caller: %w", err)
+				return err
 			}
 			// deposit money to recipient
 			depositTrans := transValues.Transaction{
@@ -52,7 +52,7 @@ func NewTransferer(convert transferConverter, runBatch batch.WriteRunner, transa
 			}
 			err = transact(u, depositTrans)
 			if err != nil {
-				return fmt.Errorf("depositing money to recipeint: %w", err)
+				return err
 			}
 			return nil
 		})
