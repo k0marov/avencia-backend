@@ -24,7 +24,7 @@ func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[
 	return func(userId string) (entities.Limits, error) {
 		withdrawns, err := getWithdrawns(userId)
 		if err != nil {
-			return entities.Limits{}, fmt.Errorf("getting current withdrawns")
+			return entities.Limits{}, fmt.Errorf("getting current withdrawns: %w", err)
 		}
 		limits := entities.Limits{}
 		for curr, maxLimit := range limitedCurrencies {
