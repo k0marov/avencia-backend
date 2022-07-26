@@ -29,7 +29,7 @@ func NewBanknote(request api.BanknoteCheckRequest) Banknote {
 	return Banknote{
 		Money: core.Money{
 			Currency: core.Currency(request.Currency),
-			Amount:   core.MoneyAmount(request.Amount),
+			Amount:   core.NewMoneyAmount(request.Amount),
 		},
 	}
 }
@@ -39,7 +39,7 @@ func NewTransactionData(request api.FinalizeTransactionRequest) Transaction {
 		UserId: request.UserId,
 		Money: core.Money{
 			Currency: core.Currency(request.Currency),
-			Amount:   core.MoneyAmount(request.Amount),
+			Amount:   core.NewMoneyAmount(request.Amount),
 		},
 	}
 }

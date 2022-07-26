@@ -44,7 +44,7 @@ func AssertStatusCode(t testing.TB, got *httptest.ResponseRecorder, want int) {
 func Assert[T any](t testing.TB, got, want T, description string) bool {
 	t.Helper()
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("%s is not right:\ngot '%v',\nwant '%v'", description, got, want)
+		t.Errorf("%s is not right:\ngot '%+v',\nwant '%+v'", description, got, want)
 		return false
 	}
 	return true
@@ -166,10 +166,10 @@ func RandomCurrency() core.Currency {
 }
 
 func RandomPosMoneyAmount() core.MoneyAmount {
-	return core.MoneyAmount(RandomFloat())
+	return core.NewMoneyAmount(RandomFloat())
 }
 func RandomNegMoneyAmount() core.MoneyAmount {
-	return core.MoneyAmount(-RandomFloat())
+	return core.NewMoneyAmount(-RandomFloat())
 }
 
 func RandomPositiveMoney() core.Money {

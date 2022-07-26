@@ -24,7 +24,7 @@ func NewRawTransfer(user auth.User, req api.TransferRequest) RawTransfer {
 		ToEmail: req.RecipientIdentifier,
 		Money: core.Money{
 			Currency: core.Currency(req.Currency),
-			Amount:   core.MoneyAmount(req.Amount),
+			Amount:   core.NewMoneyAmount(req.Amount),
 		},
 	}
 }

@@ -13,6 +13,8 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/transfer/domain/values"
 )
 
+// TODO: ban transfers to yourself
+
 type Transferer = func(values.RawTransfer) error
 
 // transferConverter error may be a ClientError
@@ -21,7 +23,7 @@ type transferConverter = func(values.RawTransfer) (values.Transfer, error)
 // TODO: try to simplify
 func NewTransferer(convert transferConverter, runBatch batch.WriteRunner, transact atmService.TransactionFinalizer) Transferer {
 	return func(raw values.RawTransfer) error {
-		if raw.Money.Amount < 0 {
+		if raw.Money.Amount.IsNeg() {
 			return client_errors.NegativeTransferAmount
 		}
 		t, err := convert(raw)
@@ -35,7 +37,7 @@ func NewTransferer(convert transferConverter, runBatch batch.WriteRunner, transa
 				UserId: t.FromId,
 				Money: core.Money{
 					Currency: t.Money.Currency,
-					Amount:   -t.Money.Amount,
+					Amount:   t.Money.Amount.Neg(),
 				},
 			}
 			err = transact(u, withdrawTrans)

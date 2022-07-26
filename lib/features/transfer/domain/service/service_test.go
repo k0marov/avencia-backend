@@ -11,6 +11,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"github.com/k0marov/avencia-backend/lib/features/transfer/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transfer/domain/values"
+	"reflect"
 	"testing"
 )
 
@@ -31,7 +32,7 @@ func TestTransferer(t *testing.T) {
 	}
 	t.Run("error case - converting transfer throws", func(t *testing.T) {
 		convert := func(gotTransf values.RawTransfer) (values.Transfer, error) {
-			if gotTransf == tRaw {
+			if reflect.DeepEqual(gotTransf, tRaw) {
 				return values.Transfer{}, RandomError()
 			}
 			panic("unexpected")
@@ -51,7 +52,7 @@ func TestTransferer(t *testing.T) {
 		UserId: transf.FromId,
 		Money: core.Money{
 			Currency: transf.Money.Currency,
-			Amount:   -transf.Money.Amount,
+			Amount:   transf.Money.Amount.Neg(),
 		},
 	}
 	depositTrans := transValues.Transaction{
@@ -66,7 +67,7 @@ func TestTransferer(t *testing.T) {
 
 	t.Run("error case - withdrawing from caller fails", func(t *testing.T) {
 		transact := func(u firestore_facade.BatchUpdater, t transValues.Transaction) error {
-			if t == withdrawTrans {
+			if reflect.DeepEqual(t, withdrawTrans) {
 				return RandomError()
 			}
 			return nil
@@ -76,7 +77,7 @@ func TestTransferer(t *testing.T) {
 	})
 	t.Run("error case - depositing to recipient fails", func(t *testing.T) {
 		transact := func(u firestore_facade.BatchUpdater, t transValues.Transaction) error {
-			if t == depositTrans {
+			if reflect.DeepEqual(t, depositTrans) {
 				return RandomError()
 			}
 			return nil

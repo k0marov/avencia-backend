@@ -29,7 +29,7 @@ func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[
 		limits := entities.Limits{}
 		for curr, maxLimit := range limitedCurrencies {
 			withdrawn := withdrawns[string(curr)]
-			withdrawnRelevant := core.MoneyAmount(0)
+			withdrawnRelevant := core.NewMoneyAmount(0)
 			if configurable.IsWithdrawLimitRelevant(withdrawn.UpdatedAt) {
 				withdrawnRelevant = withdrawn.Withdrawn
 			}
@@ -44,16 +44,16 @@ func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[
 
 func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
 	return func(t transValues.Transaction) error {
-		if t.Money.Amount > 0 { // it's a deposit
+		if t.Money.Amount.IsPos() { // it's a deposit
 			return nil
 		}
-		withdraw := -t.Money.Amount
+		withdraw := t.Money.Amount.Neg()
 		limits, err := getLimits(t.UserId)
 		if err != nil {
 			return fmt.Errorf("while getting user's limits: %w", err)
 		}
 		limit := limits[t.Money.Currency]
-		if limit.Max != 0 && limit.Withdrawn+withdraw > limit.Max {
+		if limit.Max.IsSet() && limit.Withdrawn.Add(withdraw).IsBigger(limit.Max) {
 			return client_errors.WithdrawLimitExceeded
 		}
 		return nil
@@ -62,15 +62,15 @@ func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
 
 func NewWithdrawnUpdateGetter(getLimits LimitsGetter) WithdrawnUpdateGetter {
 	return func(t transValues.Transaction) (core.Money, error) {
-		if t.Money.Amount > 0 {
+		if t.Money.Amount.IsPos() {
 			return core.Money{}, fmt.Errorf("expected withdrawal; got deposit")
 		}
 		limits, err := getLimits(t.UserId)
 		if err != nil {
 			return core.Money{}, fmt.Errorf("getting limits: %w", err)
 		}
-		withdraw := -t.Money.Amount
-		newWithdrawn := limits[t.Money.Currency].Withdrawn + withdraw
+		withdraw := t.Money.Amount.Neg()
+		newWithdrawn := limits[t.Money.Currency].Withdrawn.Add(withdraw)
 		return core.Money{
 			Currency: t.Money.Currency,
 			Amount:   newWithdrawn,

@@ -24,7 +24,7 @@ func NewWalletGetter(getWallet store.WalletGetter) WalletGetter {
 			if !ok {
 				return entities.Wallet{}, fmt.Errorf("balance %v for currency %v is not a float", bal, curr)
 			}
-			wallet[core.Currency(curr)] = core.MoneyAmount(balFl)
+			wallet[core.Currency(curr)] = core.NewMoneyAmount(balFl)
 		}
 		return wallet, nil
 	}
@@ -34,8 +34,12 @@ func NewBalanceGetter(getWallet WalletGetter) BalanceGetter {
 	return func(userId string, currency core.Currency) (core.MoneyAmount, error) {
 		wallet, err := getWallet(userId)
 		if err != nil {
-			return 0, fmt.Errorf("getting wallet to later extract balance: %w", err)
+			return core.NewMoneyAmount(0), fmt.Errorf("getting wallet to later extract balance: %w", err)
 		}
-		return wallet[currency], nil
+		bal := wallet[currency]
+		if !bal.IsSet() {
+			return core.NewMoneyAmount(0), nil
+		}
+		return bal, nil
 	}
 }

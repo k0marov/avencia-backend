@@ -107,7 +107,7 @@ func TestCheckBanknoteHandler(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		checker := func(code string, banknote values.Banknote) error {
-			if code == req.TransactionCode && banknote == wantBanknoteValue {
+			if code == req.TransactionCode && reflect.DeepEqual(banknote, wantBanknoteValue) {
 				return nil
 			}
 			panic("unexpected")

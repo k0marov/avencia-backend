@@ -26,7 +26,7 @@ func TestWalletGetter(t *testing.T) {
 	})
 	t.Run("happy case", func(t *testing.T) {
 		storedWallet := map[string]any{"USD": 400.0, "RUB": 42000.0, "BTC": 0.001}
-		wallet := map[core.Currency]core.MoneyAmount{"USD": 400.0, "RUB": 42000.0, "BTC": 0.001}
+		wallet := map[core.Currency]core.MoneyAmount{"USD": core.NewMoneyAmount(400.0), "RUB": core.NewMoneyAmount(42000.0), "BTC": core.NewMoneyAmount(0.001)}
 		getWallet := func(user string) (map[string]any, error) {
 			if user == userId {
 				return storedWallet, nil
@@ -58,15 +58,15 @@ func TestBalanceGetter(t *testing.T) {
 		}
 		balance, err := service.NewBalanceGetter(getWallet)(userId, RandomCurrency())
 		AssertNoError(t, err)
-		Assert(t, balance, 0, "returned balance")
+		Assert(t, balance, core.NewMoneyAmount(0), "returned balance")
 	})
 	t.Run("should return the value from wallet", func(t *testing.T) {
-		wallet := entities.Wallet{"RUB": 4000, "USD": 300}
+		wallet := entities.Wallet{"RUB": core.NewMoneyAmount(4000), "USD": core.NewMoneyAmount(300)}
 		getWallet := func(string) (entities.Wallet, error) {
 			return wallet, nil
 		}
 		balance, err := service.NewBalanceGetter(getWallet)(userId, "USD")
 		AssertNoError(t, err)
-		Assert(t, balance, core.MoneyAmount(300), "returned balance")
+		Assert(t, balance, core.NewMoneyAmount(300), "returned balance")
 	})
 }

@@ -50,15 +50,15 @@ func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
 func NewTransactionValidator(checkLimit limitsService.LimitChecker, getBalance walletService.BalanceGetter) TransactionValidator {
 	return func(t values.Transaction) (curBalance core.MoneyAmount, err error) {
 		if err := checkLimit(t); err != nil {
-			return core.MoneyAmount(0), err
+			return core.NewMoneyAmount(0), err
 		}
 		bal, err := getBalance(t.UserId, t.Money.Currency)
 		if err != nil {
-			return core.MoneyAmount(0), fmt.Errorf("getting current balance: %w", err)
+			return core.NewMoneyAmount(0), fmt.Errorf("getting current balance: %w", err)
 		}
-		if t.Money.Amount < 0 {
+		if t.Money.Amount.IsNeg() {
 			if bal.Num() < math.Abs(t.Money.Amount.Num()) {
-				return core.MoneyAmount(0), client_errors.InsufficientFunds
+				return core.NewMoneyAmount(0), client_errors.InsufficientFunds
 			}
 		}
 		return bal, nil

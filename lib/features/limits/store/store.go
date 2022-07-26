@@ -47,7 +47,7 @@ func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
 				return map[string]values.WithdrawnWithUpdated{}, fmt.Errorf("withdrawn value %v is not a float", withdrawnVal)
 			}
 			withdraws[doc.ID] = values.WithdrawnWithUpdated{
-				Withdrawn: core.MoneyAmount(withdrawn),
+				Withdrawn: core.NewMoneyAmount(withdrawn),
 				UpdatedAt: snap.UpdateTime,
 			}
 		}

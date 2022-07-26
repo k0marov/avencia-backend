@@ -82,7 +82,7 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform t
 // TODO: please simplify this (move updating withdraw to a separate service)
 func NewTransactionPerformer(updBal walletStore.BalanceUpdater, getNewWithdrawn limitsService.WithdrawnUpdateGetter, updWithdrawn limitsStore.WithdrawUpdater) transactionPerformer {
 	return func(u firestore_facade.BatchUpdater, curBal core.MoneyAmount, t values.Transaction) error {
-		if t.Money.Amount < 0 {
+		if t.Money.Amount.IsNeg() {
 			withdrawn, err := getNewWithdrawn(t)
 			if err != nil {
 				return fmt.Errorf("getting the new 'withdrawn' value: %w", err)
@@ -92,6 +92,6 @@ func NewTransactionPerformer(updBal walletStore.BalanceUpdater, getNewWithdrawn 
 				return fmt.Errorf("updating withdrawn value: %w", err)
 			}
 		}
-		return updBal(u, t.UserId, t.Money.Currency, curBal+t.Money.Amount)
+		return updBal(u, t.UserId, t.Money.Currency, curBal.Add(t.Money.Amount))
 	}
 }

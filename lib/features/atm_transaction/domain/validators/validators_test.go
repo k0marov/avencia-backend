@@ -6,6 +6,7 @@ import (
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
+	"reflect"
 	"testing"
 )
 
@@ -73,12 +74,12 @@ func TestATMSecretValidator(t *testing.T) {
 }
 
 func TestTransactionValidator(t *testing.T) {
-	curBalance := core.MoneyAmount(100.0)
+	curBalance := core.NewMoneyAmount(100.0)
 	trans := values.Transaction{
 		UserId: RandomString(),
 		Money: core.Money{
 			Currency: RandomCurrency(),
-			Amount:   core.MoneyAmount(50.0),
+			Amount:   core.NewMoneyAmount(50.0),
 		},
 	}
 	checkLimit := func(t values.Transaction) error {
@@ -87,7 +88,7 @@ func TestTransactionValidator(t *testing.T) {
 	t.Run("error case - limit checker throws", func(t *testing.T) {
 		err := RandomError()
 		checkLimit := func(t values.Transaction) error {
-			if t == trans {
+			if reflect.DeepEqual(t, trans) {
 				return err
 			}
 			panic("unexpected")
@@ -97,18 +98,18 @@ func TestTransactionValidator(t *testing.T) {
 	})
 	t.Run("error case - getting balance throws", func(t *testing.T) {
 		getBalance := func(string, core.Currency) (core.MoneyAmount, error) {
-			return core.MoneyAmount(0), RandomError()
+			return core.NewMoneyAmount(0), RandomError()
 		}
 		_, err := validators.NewTransactionValidator(checkLimit, getBalance)(trans)
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - insufficient funds", func(t *testing.T) {
 		getBalance := func(string, core.Currency) (core.MoneyAmount, error) {
-			return core.MoneyAmount(30.0), nil
+			return core.NewMoneyAmount(30.0), nil
 		}
 		trans := values.Transaction{
 			Money: core.Money{
-				Amount: core.MoneyAmount(-50.0),
+				Amount: core.NewMoneyAmount(-50.0),
 			},
 		}
 		_, err := validators.NewTransactionValidator(checkLimit, getBalance)(trans)

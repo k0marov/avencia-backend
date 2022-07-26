@@ -10,8 +10,8 @@ import (
 // These are values that are currently configurable here but may be moved to the config file
 
 var LimitedCurrencies = map[core.Currency]core.MoneyAmount{
-	"USD": 1000,
-	"RUB": 50000, // mainly for tests
+	"USD": core.NewMoneyAmount(1000),
+	"RUB": core.NewMoneyAmount(50000), // mainly for tests
 }
 
 func IsWithdrawLimitRelevant(withdrawnAt time.Time) bool {

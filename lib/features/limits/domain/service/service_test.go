@@ -26,37 +26,37 @@ func TestLimitsGetter(t *testing.T) {
 	})
 	t.Run("happy case", func(t *testing.T) {
 		limitedCurrencies := map[core.Currency]core.MoneyAmount{
-			"RUB": 40000,
-			"USD": 1000,
-			"ETH": 42,
-			"EUR": 1000,
+			"RUB": core.NewMoneyAmount(40000),
+			"USD": core.NewMoneyAmount(1000),
+			"ETH": core.NewMoneyAmount(42),
+			"EUR": core.NewMoneyAmount(1000),
 		}
 		getWithdrawns := func(string) (map[string]values.WithdrawnWithUpdated, error) {
 			return map[string]values.WithdrawnWithUpdated{
-				"BTC": {Withdrawn: 0.001, UpdatedAt: time.Now()},                                  // not in limited currencies
-				"RUB": {Withdrawn: 10000, UpdatedAt: time.Date(1999, 0, 0, 0, 0, 0, 0, time.UTC)}, // more than a year ago
-				"ETH": {Withdrawn: 41, UpdatedAt: time.Now().Add(-10 * time.Hour)},
-				"USD": {Withdrawn: 499, UpdatedAt: time.Now()},
+				"BTC": {Withdrawn: core.NewMoneyAmount(0.001), UpdatedAt: time.Now()},                                  // not in limited currencies
+				"RUB": {Withdrawn: core.NewMoneyAmount(10000), UpdatedAt: time.Date(1999, 0, 0, 0, 0, 0, 0, time.UTC)}, // more than a year ago
+				"ETH": {Withdrawn: core.NewMoneyAmount(41), UpdatedAt: time.Now().Add(-10 * time.Hour)},
+				"USD": {Withdrawn: core.NewMoneyAmount(499), UpdatedAt: time.Now()},
 			}, nil
 		}
 		limits, err := service.NewLimitsGetter(getWithdrawns, limitedCurrencies)(user)
 		AssertNoError(t, err)
 		wantLimits := map[core.Currency]values.Limit{
 			"ETH": {
-				Withdrawn: 41,
-				Max:       42,
+				Withdrawn: core.NewMoneyAmount(41),
+				Max:       core.NewMoneyAmount(42),
 			},
 			"USD": {
-				Withdrawn: 499,
-				Max:       1000,
+				Withdrawn: core.NewMoneyAmount(499),
+				Max:       core.NewMoneyAmount(1000),
 			},
 			"EUR": {
-				Withdrawn: 0,
-				Max:       1000,
+				Withdrawn: core.NewMoneyAmount(0),
+				Max:       core.NewMoneyAmount(1000),
 			},
 			"RUB": {
-				Withdrawn: 0,
-				Max:       40000,
+				Withdrawn: core.NewMoneyAmount(0),
+				Max:       core.NewMoneyAmount(40000),
 			},
 		}
 		Assert(t, limits, wantLimits, "returned limits")
@@ -66,12 +66,12 @@ func TestLimitsGetter(t *testing.T) {
 func TestLimitChecker(t *testing.T) {
 	limits := entities.Limits{
 		"USD": values.Limit{
-			Withdrawn: 500,
-			Max:       600,
+			Withdrawn: core.NewMoneyAmount(500),
+			Max:       core.NewMoneyAmount(600),
 		},
 		"RUB": values.Limit{
-			Withdrawn: 400,
-			Max:       10000,
+			Withdrawn: core.NewMoneyAmount(400),
+			Max:       core.NewMoneyAmount(10000),
 		},
 	}
 	user := RandomString()
@@ -87,7 +87,7 @@ func TestLimitChecker(t *testing.T) {
 		getLimits := func(string) (entities.Limits, error) {
 			return nil, RandomError()
 		}
-		err := service.NewLimitChecker(getLimits)(transValues.Transaction{})
+		err := service.NewLimitChecker(getLimits)(transValues.Transaction{Money: RandomNegativeMoney()})
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - limit exceeded", func(t *testing.T) {
@@ -95,7 +95,7 @@ func TestLimitChecker(t *testing.T) {
 			UserId: user,
 			Money: core.Money{
 				Currency: "USD",
-				Amount:   -200,
+				Amount:   core.NewMoneyAmount(-200),
 			},
 		}
 		err := service.NewLimitChecker(getLimits)(trans)
@@ -106,7 +106,7 @@ func TestLimitChecker(t *testing.T) {
 			UserId: user,
 			Money: core.Money{
 				Currency: "RUB",
-				Amount:   -1000,
+				Amount:   core.NewMoneyAmount(-1000),
 			},
 		}
 		err := service.NewLimitChecker(getLimits)(trans)
@@ -117,7 +117,7 @@ func TestLimitChecker(t *testing.T) {
 			UserId: user,
 			Money: core.Money{
 				Currency: "USD",
-				Amount:   1000,
+				Amount:   core.NewMoneyAmount(1000),
 			},
 		}
 		err := service.NewLimitChecker(getLimits)(trans)
@@ -128,13 +128,13 @@ func TestLimitChecker(t *testing.T) {
 func TestWithdrawnUpdateGetter(t *testing.T) {
 	limits := map[core.Currency]values.Limit{
 		"USD": {
-			Withdrawn: 400,
+			Withdrawn: core.NewMoneyAmount(400),
 		},
 	}
 	userId := RandomString()
 
 	t.Run("error case - provided transaction is not a withdrawal", func(t *testing.T) {
-		_, err := service.NewWithdrawnUpdateGetter(nil)(transValues.Transaction{Money: core.Money{Amount: 1000}})
+		_, err := service.NewWithdrawnUpdateGetter(nil)(transValues.Transaction{Money: core.Money{Amount: core.NewMoneyAmount(1000)}})
 		AssertSomeError(t, err)
 	})
 
@@ -148,7 +148,7 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		_, err := service.NewWithdrawnUpdateGetter(getLimits)(transValues.Transaction{UserId: userId, Money: core.Money{Amount: -1000}})
+		_, err := service.NewWithdrawnUpdateGetter(getLimits)(transValues.Transaction{UserId: userId, Money: core.Money{Amount: core.NewMoneyAmount(-1000)}})
 		AssertSomeError(t, err)
 	})
 	t.Run("happy case - previous withdrawn value exists", func(t *testing.T) {
@@ -156,14 +156,14 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 			UserId: userId,
 			Money: core.Money{
 				Currency: "USD",
-				Amount:   -300,
+				Amount:   core.NewMoneyAmount(-300),
 			},
 		}
 		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getLimits)(trans)
 		AssertNoError(t, err)
 		Assert(t, newWithdrawn, core.Money{
 			Currency: "USD",
-			Amount:   700,
+			Amount:   core.NewMoneyAmount(700),
 		}, "returned withdrawn value")
 	})
 	t.Run("happy case - there is no previous withdrawn value", func(t *testing.T) {
@@ -171,14 +171,14 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 			UserId: userId,
 			Money: core.Money{
 				Currency: "BTC",
-				Amount:   -0.01,
+				Amount:   core.NewMoneyAmount(-0.01),
 			},
 		}
 		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getLimits)(trans)
 		AssertNoError(t, err)
 		Assert(t, newWithdrawn, core.Money{
 			Currency: "BTC",
-			Amount:   0.01,
+			Amount:   core.NewMoneyAmount(0.01),
 		}, "returned withdrawn value")
 	})
 }

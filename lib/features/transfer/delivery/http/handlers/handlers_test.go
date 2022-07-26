@@ -9,6 +9,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/transfer/domain/values"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -22,7 +23,7 @@ func TestNewTransferHandler(t *testing.T) {
 		response := httptest.NewRecorder()
 		transfered := false
 		transferer := func(rawTransfer values.RawTransfer) error {
-			if rawTransfer == values.NewRawTransfer(user, transferReq) {
+			if reflect.DeepEqual(rawTransfer, values.NewRawTransfer(user, transferReq)) {
 				transfered = true
 				return nil
 			}

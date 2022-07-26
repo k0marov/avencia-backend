@@ -1,12 +1,7 @@
 package core
 
 // TODO: limit available currencies
-type Currency string     // string for now
-type MoneyAmount float64 // float64 for now
-
-func (ma MoneyAmount) Num() float64 {
-	return float64(ma)
-}
+type Currency string // string for now
 
 type Money struct {
 	Currency Currency
