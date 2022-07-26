@@ -107,7 +107,7 @@ func Initialize() http.Handler {
 	atmTransactionHandler := atmHandlers.NewFinalizeTransactionHandler(atmFinalizeTransaction)
 
 	// ===== TRANSFER =====
-	transferHandler := transfer.NewTransferHandlerImpl(fsClient, userFromEmail, nil) // TODO Transact here
+	transferHandler := transfer.NewTransferHandlerImpl(fsClient, userFromEmail, finalizeTransaction)
 
 	apiRouter := api.NewAPIRouter(api.Handlers{
 		GenCode:             genCodeHandler,
