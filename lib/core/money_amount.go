@@ -1,13 +1,15 @@
 package core
 
-import "math/big"
+import (
+	"github.com/shopspring/decimal"
+)
 
 type MoneyAmount struct {
-	num big.Float
+	num decimal.Decimal
 }
 
 func NewMoneyAmount(num float64) MoneyAmount {
-	return MoneyAmount{num: *big.NewFloat(num)}
+	return MoneyAmount{num: decimal.NewFromFloat(num)}
 }
 
 func (a MoneyAmount) Num() float64 {
@@ -16,15 +18,15 @@ func (a MoneyAmount) Num() float64 {
 }
 
 func (a MoneyAmount) Neg() MoneyAmount {
-	return MoneyAmount{*big.NewFloat(0).Neg(&a.num)}
+	return MoneyAmount{a.num.Neg()}
 }
 
 func (a MoneyAmount) Add(b MoneyAmount) MoneyAmount {
-	return MoneyAmount{num: *big.NewFloat(0).Add(&a.num, &b.num)}
+	return MoneyAmount{num: a.num.Add(b.num)}
 }
 
 func (a MoneyAmount) Sub(b MoneyAmount) MoneyAmount {
-	return MoneyAmount{num: *big.NewFloat(0).Sub(&a.num, &b.num)}
+	return MoneyAmount{num: a.num.Sub(b.num)}
 }
 
 func (a MoneyAmount) IsSet() bool {
@@ -41,11 +43,11 @@ func (a MoneyAmount) IsNeg() bool {
 }
 
 func (a MoneyAmount) IsBigger(b MoneyAmount) bool {
-	return a.num.Cmp(&b.num) == 1
+	return a.num.Cmp(b.num) == 1
 }
 func (a MoneyAmount) IsLess(b MoneyAmount) bool {
-	return a.num.Cmp(&b.num) == -1
+	return a.num.Cmp(b.num) == -1
 }
 func (a MoneyAmount) IsEqual(b MoneyAmount) bool {
-	return a.num.Cmp(&b.num) == 0
+	return a.num.Cmp(b.num) == 0
 }

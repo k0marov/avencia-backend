@@ -8,6 +8,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/k0marov/avencia-api-contract v0.0.0-20220725094607-d720ecd419f7
+	github.com/shopspring/decimal v1.3.1
 	google.golang.org/api v0.88.0
 	google.golang.org/grpc v1.48.0
 )
