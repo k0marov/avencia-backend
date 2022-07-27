@@ -9,6 +9,8 @@ import (
 
 type WriteRunner = func(func(batch firestore_facade.BatchUpdater) error) error
 
+// TODO: refactor the core directory
+
 // TODO: add a rethrow function which will just forward the error if it is a client error
 
 func NewWriteRunner(client *firestore.Client) WriteRunner {
