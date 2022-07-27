@@ -24,6 +24,10 @@ import (
 func TestCodeGenerator(t *testing.T) {
 	tUser := auth.User{Id: RandomId()}
 	tType := RandomTransactionType()
+	newCode := values.NewCode{
+		TransType: tType,
+		User:      tUser,
+	}
 
 	wantClaims := map[string]any{
 		values.UserIdClaim:          tUser.Id,
@@ -40,26 +44,28 @@ func TestCodeGenerator(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		gotToken, expireAt, gotErr := service.NewCodeGenerator(issueJwt)(tUser, tType)
-		Assert(t, TimeAlmostEqual(expireAt, wantExpireAt), true, "the expiration time is Now + ExpDuration")
+		gotCode, gotErr := service.NewCodeGenerator(issueJwt)(newCode)
+		Assert(t, TimeAlmostEqual(gotCode.ExpiresAt, wantExpireAt), true, "the expiration time is Now + ExpDuration")
 		AssertError(t, gotErr, err)
-		Assert(t, gotToken, token, "returned token")
+		Assert(t, gotCode.Code, token, "returned token")
 
 	})
 }
 
 func TestCodeVerifier(t *testing.T) {
-	tCode := RandomString()
-	tType := RandomTransactionType()
+	tCodeForCheck := values.CodeForCheck{
+		Code:      RandomString(),
+		TransType: RandomTransactionType(),
+	}
 	t.Run("error case - validating the code throws, should rethrow it", func(t *testing.T) {
 		err := RandomError()
 		codeValidator := func(code string, transType values.TransactionType) (string, error) {
-			if code == tCode && transType == tType {
+			if code == tCodeForCheck.Code && transType == tCodeForCheck.TransType {
 				return "", err
 			}
 			panic("unexpected")
 		}
-		_, gotErr := service.NewCodeVerifier(codeValidator, nil)(tCode, tType)
+		_, gotErr := service.NewCodeVerifier(codeValidator, nil)(tCodeForCheck)
 		AssertError(t, gotErr, err)
 	})
 	t.Run("happy case - should forward to userInfoGetter", func(t *testing.T) {
@@ -74,7 +80,7 @@ func TestCodeVerifier(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		gotUserInfo, err := service.NewCodeVerifier(codeValidator, userInfoGetter)(tCode, tType)
+		gotUserInfo, err := service.NewCodeVerifier(codeValidator, userInfoGetter)(tCodeForCheck)
 		AssertError(t, err, tErr)
 		Assert(t, gotUserInfo, tUserInfo, "returned user info")
 	})
@@ -82,31 +88,32 @@ func TestCodeVerifier(t *testing.T) {
 }
 
 func TestBanknoteChecker(t *testing.T) {
-	code := RandomString()
 	banknote := RandomBanknote()
 	t.Run("error case - jwt checking throws", func(t *testing.T) {
 		verificationErr := RandomError()
-		verifyCode := func(string, values.TransactionType) (userEntities.UserInfo, error) {
+		verifyCode := func(values.CodeForCheck) (userEntities.UserInfo, error) {
 			return userEntities.UserInfo{}, verificationErr
 		}
-		err := service.NewBanknoteChecker(verifyCode)(code, banknote)
+		err := service.NewBanknoteChecker(verifyCode)(banknote)
 		AssertError(t, err, verificationErr)
 	})
 	t.Run("happy case - jwt checking does not throw", func(t *testing.T) {
-		verifyCode := func(gotCode string, tType values.TransactionType) (userEntities.UserInfo, error) {
-			if gotCode == code && tType == values.Deposit {
+		verifyCode := func(codeForCheck values.CodeForCheck) (userEntities.UserInfo, error) {
+			if codeForCheck.Code == banknote.TransCode && codeForCheck.TransType == values.Deposit {
 				return userEntities.UserInfo{}, nil
 			}
 			panic("unexpected")
 		}
-		err := service.NewBanknoteChecker(verifyCode)(code, banknote)
+		err := service.NewBanknoteChecker(verifyCode)(banknote)
 		AssertNoError(t, err)
 	})
 }
 
 func TestATMTransactionFinalizer(t *testing.T) {
-	transaction := RandomTransactionData()
-	gotAtmSecret := RandomSecret()
+	atmTrans := values.ATMTransaction{
+		ATMSecret: RandomSecret(),
+		Trans:     RandomTransactionData(),
+	}
 	// TODO: remove this callback hell
 	stubRunBatch := func(f func(firestore_facade.BatchUpdater) error) error {
 		return f(func(*firestore.DocumentRef, map[string]any) error {
@@ -116,12 +123,12 @@ func TestATMTransactionFinalizer(t *testing.T) {
 	t.Run("error case - validation throws", func(t *testing.T) {
 		err := RandomError()
 		validate := func(atmSecret []byte) error {
-			if reflect.DeepEqual(atmSecret, gotAtmSecret) {
+			if reflect.DeepEqual(atmSecret, atmTrans.ATMSecret) {
 				return err
 			}
 			panic("unexpected")
 		}
-		gotErr := service.NewATMTransactionFinalizer(validate, nil, nil)(gotAtmSecret, transaction)
+		gotErr := service.NewATMTransactionFinalizer(validate, nil, nil)(atmTrans)
 		AssertError(t, gotErr, err)
 	})
 	t.Run("forward case - forward to TransactionFinalizer", func(t *testing.T) {
@@ -130,12 +137,12 @@ func TestATMTransactionFinalizer(t *testing.T) {
 		}
 		err := RandomError()
 		finalize := func(u firestore_facade.BatchUpdater, gotTrans values.Transaction) error {
-			if reflect.DeepEqual(gotTrans, transaction) {
+			if gotTrans == atmTrans.Trans {
 				return err
 			}
 			panic("unexpected")
 		}
-		gotErr := service.NewATMTransactionFinalizer(validate, stubRunBatch, finalize)(gotAtmSecret, transaction)
+		gotErr := service.NewATMTransactionFinalizer(validate, stubRunBatch, finalize)(atmTrans)
 		AssertError(t, gotErr, err)
 	})
 }
