@@ -10,45 +10,55 @@ import (
 	"testing"
 )
 
-// TODO: maybe refactor into a table test
 func TestTransCodeValidator(t *testing.T) {
 	tCode := RandomString()
 	tType := RandomTransactionType()
 	t.Run("error case - token is invalid", func(t *testing.T) {
-		jwtVerifier := func(string) (map[string]any, error) {
-			return nil, RandomError()
-		}
-		_, err := validators.NewTransCodeValidator(jwtVerifier)(tCode, tType)
-		AssertError(t, err, client_errors.InvalidCode)
-	})
-	t.Run("error case - token has an incorrect transaction_type claim", func(t *testing.T) {
-		jwtVerifier := func(string) (map[string]any, error) {
-			return map[string]any{values.UserIdClaim: "4242", values.TransactionTypeClaim: "random"}, nil
-		}
-		_, err := validators.NewTransCodeValidator(jwtVerifier)(tCode, tType)
-		AssertError(t, err, client_errors.InvalidTransactionType)
-	})
-	t.Run("error case - claims are invalid (e.g. user id is not a string)", func(t *testing.T) {
-		jwtVerifier := func(string) (map[string]any, error) {
-			return map[string]any{values.UserIdClaim: 42, values.TransactionTypeClaim: string(tType)}, nil
-		}
-		_, err := validators.NewTransCodeValidator(jwtVerifier)(tCode, tType)
-		AssertError(t, err, client_errors.InvalidCode)
-	})
-	t.Run("happy case", func(t *testing.T) {
-		userId := RandomString()
-		tClaims := map[string]any{values.UserIdClaim: userId, values.TransactionTypeClaim: string(tType)}
-
 		jwtVerifier := func(token string) (map[string]any, error) {
 			if token == tCode {
-				return tClaims, nil
+				return nil, RandomError()
 			}
 			panic("unexpected")
 		}
+		_, err := validators.NewTransCodeValidator(jwtVerifier)(tCode, tType)
+		AssertError(t, err, client_errors.InvalidCode)
+	})
+	t.Run("table test for claims", func(t *testing.T) {
+		userId := RandomString()
+		tCases := []struct {
+			name    string
+			claims  map[string]any
+			wantErr error
+		}{
+			{
+				"incorrect transction_type claim",
+				map[string]any{values.UserIdClaim: "4242", values.TransactionTypeClaim: "random"},
+				client_errors.InvalidTransactionType,
+			},
+			{
+				"claims have invalid types",
+				map[string]any{values.UserIdClaim: 42, values.TransactionTypeClaim: string(tType)},
+				client_errors.InvalidCode,
+			},
+			{
+				"happy case",
+				map[string]any{values.UserIdClaim: userId, values.TransactionTypeClaim: string(tType)},
+				nil,
+			},
+		}
+		for _, tt := range tCases {
+			t.Run(tt.name, func(t *testing.T) {
+				jwtVerifier := func(token string) (map[string]any, error) {
+					return tt.claims, nil
+				}
 
-		gotUserId, err := validators.NewTransCodeValidator(jwtVerifier)(tCode, tType)
-		AssertNoError(t, err)
-		Assert(t, gotUserId, userId, "returned user id")
+				gotUserId, err := validators.NewTransCodeValidator(jwtVerifier)(tCode, tType)
+				AssertError(t, err, tt.wantErr)
+				if tt.wantErr == nil {
+					Assert(t, gotUserId, userId, "returned user id")
+				}
+			})
+		}
 	})
 }
 
