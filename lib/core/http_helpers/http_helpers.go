@@ -14,7 +14,7 @@ func setJsonHeader(w http.ResponseWriter) {
 
 func WriteJson(w http.ResponseWriter, obj any) {
 	setJsonHeader(w)
-	json.NewEncoder(w).Encode(obj)
+	json.NewEncoder(w).Encode(obj) // TODO: handle this error
 }
 
 func GetUserOrAddUnauthorized(w http.ResponseWriter, r *http.Request) (auth.User, bool) {
