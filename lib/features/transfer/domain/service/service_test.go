@@ -23,7 +23,7 @@ func TestTransferer(t *testing.T) {
 	}
 	t.Run("error case - converting transfer throws", func(t *testing.T) {
 		convert := func(gotTransf values.RawTransfer) (values.Transfer, error) {
-			if reflect.DeepEqual(gotTransf, tRaw) {
+			if gotTransf == tRaw {
 				return values.Transfer{}, RandomError()
 			}
 			panic("unexpected")
@@ -82,7 +82,7 @@ func TestTransferer(t *testing.T) {
 	})
 	t.Run("error case - depositing to recipient fails", func(t *testing.T) {
 		transact := func(u firestore_facade.BatchUpdater, t transValues.Transaction) error {
-			if reflect.DeepEqual(t, depositTrans) {
+			if t == depositTrans {
 				return RandomError()
 			}
 			return nil

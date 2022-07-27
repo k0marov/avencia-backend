@@ -11,8 +11,6 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
 )
 
-// TODO: remove unnecessary reflect.DeepEqual(...) from some tests, since Decimals can be compared
-
 // withdrawsDocGetter userId should be non-empty
 type withdrawDocGetter = func(userId string, currency core.Currency) *firestore.DocumentRef
 

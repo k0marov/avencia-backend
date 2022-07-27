@@ -153,7 +153,7 @@ func TestTransactionFinalizer(t *testing.T) {
 	t.Run("error case - validation throws", func(t *testing.T) {
 		err := RandomError()
 		validate := func(t values.Transaction) (core.MoneyAmount, error) {
-			if reflect.DeepEqual(t, transaction) {
+			if t == transaction {
 				return core.NewMoneyAmount(0), err
 			}
 			panic("unexpected")
@@ -168,7 +168,7 @@ func TestTransactionFinalizer(t *testing.T) {
 			return currentBalance, nil
 		}
 		performTransaction := func(u firestore_facade.BatchUpdater, curBal core.MoneyAmount, trans values.Transaction) error {
-			if reflect.DeepEqual(curBal, currentBalance) && reflect.DeepEqual(trans, transaction) {
+			if curBal == currentBalance && trans == transaction {
 				return wantErr
 			}
 			panic("unexpected")
@@ -224,14 +224,14 @@ func TestTransactionPerformer(t *testing.T) {
 		t.Run("should additionally compute and update withdrawn in case of withdrawal", func(t *testing.T) {
 			newWithdrawn := RandomPositiveMoney()
 			getNewWithdrawn := func(transaction values.Transaction) (core.Money, error) {
-				if reflect.DeepEqual(transaction, withdrawTrans) {
+				if transaction == withdrawTrans {
 					return newWithdrawn, nil
 				}
 				panic("unexpected")
 			}
 			withdrawnUpdated := false
 			updWithdrawn := func(b firestore_facade.Updater, user string, value core.Money) error {
-				if user == userId && reflect.DeepEqual(value, newWithdrawn) {
+				if user == userId && value == newWithdrawn {
 					withdrawnUpdated = true
 					return nil
 				}

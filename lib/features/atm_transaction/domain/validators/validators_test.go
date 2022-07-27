@@ -6,7 +6,6 @@ import (
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
-	"reflect"
 	"testing"
 )
 
@@ -98,7 +97,7 @@ func TestTransactionValidator(t *testing.T) {
 	t.Run("error case - limit checker throws", func(t *testing.T) {
 		err := RandomError()
 		checkLimit := func(t values.Transaction) error {
-			if reflect.DeepEqual(t, trans) {
+			if t == trans {
 				return err
 			}
 			panic("unexpected")
