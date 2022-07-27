@@ -24,13 +24,16 @@ func NewGenerateCodeHandler(generate service.CodeGenerator) http.HandlerFunc {
 			http_helpers.ThrowClientError(w, client_errors.TransactionTypeNotProvided)
 			return
 		}
-		code, expiresAt, err := generate(user, values.TransactionType(transactionType))
+		code, err := generate(values.NewCode{
+			TransType: values.TransactionType(transactionType),
+			User:      user,
+		})
 		if err != nil {
 			http_helpers.HandleServiceError(w, err)
 			return
 		}
 		log.Printf("generated code %v for user %v", code, user.Id)
-		http_helpers.WriteJson(w, api.CodeResponse{TransactionCode: code, ExpiresAt: expiresAt.Unix()})
+		http_helpers.WriteJson(w, api.CodeResponse{TransactionCode: code.Code, ExpiresAt: code.ExpiresAt.Unix()})
 	}
 }
 
@@ -43,7 +46,10 @@ func NewVerifyCodeHandler(verify service.CodeVerifier) http.HandlerFunc {
 		}
 		var code api.CodeRequest
 		json.NewDecoder(r.Body).Decode(&code)
-		userInfo, err := verify(code.TransactionCode, values.TransactionType(transactionType))
+		userInfo, err := verify(values.CodeForCheck{
+			Code:      code.TransactionCode,
+			TransType: values.TransactionType(transactionType),
+		})
 		if err != nil {
 			http_helpers.HandleServiceError(w, err)
 			return
@@ -53,27 +59,17 @@ func NewVerifyCodeHandler(verify service.CodeVerifier) http.HandlerFunc {
 }
 
 func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var banknoteRequest api.BanknoteCheckRequest
-		json.NewDecoder(r.Body).Decode(&banknoteRequest)
-
-		err := checkBanknote(banknoteRequest.TransactionCode, apiRequests.BanknoteDecoder(banknoteRequest))
-		if err != nil {
-			http_helpers.HandleServiceError(w, err)
-			return
-		}
-	}
+	return http_helpers.NewHandler(
+		apiRequests.BanknoteDecoder,
+		http_helpers.NoResponseService(checkBanknote),
+		http_helpers.NoResponseConverter,
+	)
 }
 
 func NewFinalizeTransactionHandler(finalizeTransaction service.ATMTransactionFinalizer) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var t api.FinalizeTransactionRequest
-		json.NewDecoder(r.Body).Decode(&t)
-
-		err := finalizeTransaction([]byte(t.ATMSecret), apiRequests.TransactionDecoder(t))
-		if err != nil {
-			http_helpers.HandleServiceError(w, err)
-			return
-		}
-	}
+	return http_helpers.NewHandler(
+		apiRequests.TransactionDecoder,
+		http_helpers.NoResponseService(finalizeTransaction),
+		http_helpers.NoResponseConverter,
+	)
 }

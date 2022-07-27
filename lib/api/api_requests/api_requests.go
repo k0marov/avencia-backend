@@ -10,6 +10,7 @@ import (
 
 func BanknoteDecoder(request api.BanknoteCheckRequest) atmValues.Banknote {
 	return atmValues.Banknote{
+		TransCode: request.TransactionCode,
 		Money: core.Money{
 			Currency: core.Currency(request.Currency),
 			Amount:   core.NewMoneyAmount(request.Amount),
@@ -17,12 +18,15 @@ func BanknoteDecoder(request api.BanknoteCheckRequest) atmValues.Banknote {
 	}
 }
 
-func TransactionDecoder(request api.FinalizeTransactionRequest) atmValues.Transaction {
-	return atmValues.Transaction{
-		UserId: request.UserId,
-		Money: core.Money{
-			Currency: core.Currency(request.Currency),
-			Amount:   core.NewMoneyAmount(request.Amount),
+func TransactionDecoder(request api.FinalizeTransactionRequest) atmValues.ATMTransaction {
+	return atmValues.ATMTransaction{
+		ATMSecret: []byte(request.ATMSecret),
+		Trans: atmValues.Transaction{
+			UserId: request.UserId,
+			Money: core.Money{
+				Currency: core.Currency(request.Currency),
+				Amount:   core.NewMoneyAmount(request.Amount),
+			},
 		},
 	}
 }
