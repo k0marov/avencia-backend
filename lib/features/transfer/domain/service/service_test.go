@@ -18,15 +18,6 @@ import (
 func TestTransferer(t *testing.T) {
 	tRaw := RandomRawTransfer()
 	transf := RandomTransfer()
-	t.Run("error case - money.amount is negative", func(t *testing.T) {
-		tRaw := values.RawTransfer{
-			FromId:  RandomString(),
-			ToEmail: RandomString(),
-			Money:   RandomNegativeMoney(),
-		}
-		err := service.NewTransferer(nil, nil, nil)(tRaw)
-		AssertError(t, err, client_errors.NegativeTransferAmount)
-	})
 	convert := func(values.RawTransfer) (values.Transfer, error) {
 		return transf, nil
 	}
@@ -37,8 +28,22 @@ func TestTransferer(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		err := service.NewTransferer(convert, nil, nil)(tRaw)
+		err := service.NewTransferer(convert, nil, nil, nil)(tRaw)
 		AssertSomeError(t, err)
+	})
+	validate := func(transfer values.Transfer) error {
+		return nil
+	}
+	t.Run("error case - validating transfer throws", func(t *testing.T) {
+		err := RandomError()
+		validate := func(transfer values.Transfer) error {
+			if transfer == transf {
+				return err
+			}
+			panic("unexpected")
+		}
+		gotErr := service.NewTransferer(convert, validate, nil, nil)(tRaw)
+		AssertError(t, gotErr, err)
 	})
 
 	// TODO: simplify this callback hell
@@ -72,7 +77,7 @@ func TestTransferer(t *testing.T) {
 			}
 			return nil
 		}
-		err := service.NewTransferer(convert, runBatch, transact)(tRaw)
+		err := service.NewTransferer(convert, validate, runBatch, transact)(tRaw)
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - depositing to recipient fails", func(t *testing.T) {
@@ -82,11 +87,11 @@ func TestTransferer(t *testing.T) {
 			}
 			return nil
 		}
-		err := service.NewTransferer(convert, runBatch, transact)(tRaw)
+		err := service.NewTransferer(convert, validate, runBatch, transact)(tRaw)
 		AssertSomeError(t, err)
 	})
 	t.Run("happy case", func(t *testing.T) {
-		err := service.NewTransferer(convert, runBatch, transact)(tRaw)
+		err := service.NewTransferer(convert, validate, runBatch, transact)(tRaw)
 		AssertNoError(t, err)
 	})
 }
@@ -128,5 +133,39 @@ func TestTransferConverter(t *testing.T) {
 			Money:  rawTrans.Money,
 		}
 		Assert(t, gotTrans, want, "converted transfer")
+	})
+}
+
+func TestTransferValidator(t *testing.T) {
+	t.Run("error case - money.amount is negative", func(t *testing.T) {
+		trans := values.Transfer{
+			FromId: RandomString(),
+			ToId:   RandomString(),
+			Money:  RandomNegativeMoney(),
+		}
+		err := service.NewTransferValidator()(trans)
+		AssertError(t, err, client_errors.NegativeTransferAmount)
+	})
+	t.Run("error case - transfering to yourself", func(t *testing.T) {
+		user := RandomId()
+		trans := values.Transfer{
+			FromId: user,
+			ToId:   user,
+			Money:  RandomPositiveMoney(),
+		}
+		err := service.NewTransferValidator()(trans)
+		AssertError(t, err, client_errors.TransferingToYourself)
+	})
+	t.Run("error case - transfering 0", func(t *testing.T) {
+		trans := values.Transfer{
+			FromId: RandomString(),
+			ToId:   RandomString(),
+			Money: core.Money{
+				Currency: RandomCurrency(),
+				Amount:   core.NewMoneyAmount(0),
+			},
+		}
+		err := service.NewTransferValidator()(trans)
+		AssertError(t, err, client_errors.TransferingZero)
 	})
 }

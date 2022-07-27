@@ -203,6 +203,8 @@ github.com/k0marov/avencia-api-contract v0.0.0-20220725094607-d720ecd419f7 h1:R4
 github.com/k0marov/avencia-api-contract v0.0.0-20220725094607-d720ecd419f7/go.mod h1:Ct5IThuqV7uAGFvVirsrCvEMSeMKrb1vQSv7AGPjaME=
 github.com/k0marov/avencia-api-contract v0.0.0-20220727103732-b0c2f0831ba5 h1:CJPBShihaeI4PjxHKPNugljkGfoCfB3oa2wMLS6DKhc=
 github.com/k0marov/avencia-api-contract v0.0.0-20220727103732-b0c2f0831ba5/go.mod h1:Ct5IThuqV7uAGFvVirsrCvEMSeMKrb1vQSv7AGPjaME=
+github.com/k0marov/avencia-api-contract v0.0.0-20220727105444-ad81547e9e03 h1:Rn+sdbKzCAQbmlPNNb8xJqtHL8k1bofN0/A0e9z9WhE=
+github.com/k0marov/avencia-api-contract v0.0.0-20220727105444-ad81547e9e03/go.mod h1:Ct5IThuqV7uAGFvVirsrCvEMSeMKrb1vQSv7AGPjaME=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=

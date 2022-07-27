@@ -12,7 +12,7 @@ import (
 
 func NewTransferHandlerImpl(fsClient *firestore.Client, userFromEmail auth.UserFromEmail, transact atmService.TransactionFinalizer) http.HandlerFunc {
 	converter := service.NewTransferConverter(userFromEmail)
-	transfer := service.NewTransferer(converter, batch.NewWriteRunner(fsClient), transact)
+	transfer := service.NewTransferer(converter, service.NewTransferValidator(), batch.NewWriteRunner(fsClient), transact)
 
 	return handlers.NewTransferHandler(transfer)
 }
