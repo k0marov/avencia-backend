@@ -2,10 +2,18 @@ package apiResponses
 
 import (
 	"github.com/k0marov/avencia-api-contract/api"
+	atmValues "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	limitsEntities "github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	userEntities "github.com/k0marov/avencia-backend/lib/features/user/domain/entities"
 	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
 )
+
+func TransCodeEncoder(code atmValues.GeneratedCode) api.CodeResponse {
+	return api.CodeResponse{
+		TransactionCode: code.Code,
+		ExpiresAt:       code.ExpiresAt.UTC().Unix(),
+	}
+}
 
 func UserInfoEncoder(u userEntities.UserInfo) api.UserInfoResponse {
 	return api.UserInfoResponse{

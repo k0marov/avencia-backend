@@ -7,6 +7,8 @@ import (
 	"net/url"
 )
 
+type NoJSONRequest struct{}
+
 type NoResponse struct{}
 type NoAPIResponse struct{}
 

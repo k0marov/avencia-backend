@@ -2,7 +2,9 @@ package apiRequests
 
 import (
 	"github.com/k0marov/avencia-api-contract/api"
+	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/http_helpers"
 	atmValues "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	transferValues "github.com/k0marov/avencia-backend/lib/features/transfer/domain/values"
@@ -32,7 +34,7 @@ func ATMTransactionDecoder(_ url.Values, request api.FinalizeTransactionRequest)
 	}, nil
 }
 
-func TransferDecoder(user auth.User, _ url.Values, req api.TransferRequest) transferValues.RawTransfer {
+func TransferDecoder(user auth.User, _ url.Values, req api.TransferRequest) (transferValues.RawTransfer, error) {
 	return transferValues.RawTransfer{
 		FromId:  user.Id,
 		ToEmail: req.RecipientIdentifier,
@@ -40,5 +42,27 @@ func TransferDecoder(user auth.User, _ url.Values, req api.TransferRequest) tran
 			Currency: core.Currency(req.Currency),
 			Amount:   core.NewMoneyAmount(req.Amount),
 		},
+	}, nil
+}
+
+func NewCodeDecoder(user auth.User, query url.Values, _ http_helpers.NoJSONRequest) (atmValues.NewCode, error) {
+	transactionType := query.Get(api.TransactionTypeQueryArg)
+	if transactionType == "" {
+		return atmValues.NewCode{}, client_errors.TransactionTypeNotProvided
 	}
+	return atmValues.NewCode{
+		TransType: atmValues.TransactionType(transactionType),
+		User:      user,
+	}, nil
+}
+
+func CodeForCheckDecoder(query url.Values, req api.CodeRequest) (atmValues.CodeForCheck, error) {
+	transactionType := query.Get(api.TransactionTypeQueryArg)
+	if transactionType == "" {
+		return atmValues.CodeForCheck{}, client_errors.TransactionTypeNotProvided
+	}
+	return atmValues.CodeForCheck{
+		Code:      req.TransactionCode,
+		TransType: atmValues.TransactionType(transactionType),
+	}, nil
 }
