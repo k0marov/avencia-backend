@@ -2,10 +2,10 @@ package apiResponses
 
 import (
 	"github.com/k0marov/avencia-api-contract/api"
-	atmValues "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
+	atmValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	limitsEntities "github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
-	userEntities "github.com/k0marov/avencia-backend/lib/features/user/domain/entities"
-	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
+	userEntities "github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
+	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallets/domain/entities"
 )
 
 func TransCodeEncoder(code atmValues.GeneratedCode) api.CodeResponse {

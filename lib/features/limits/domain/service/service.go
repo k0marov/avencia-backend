@@ -6,7 +6,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	transValues "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
+	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
@@ -51,7 +51,7 @@ func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
 		withdraw := t.Money.Amount.Neg()
 		limits, err := getLimits(t.UserId)
 		if err != nil {
-			return core_err.Rethrow("while getting user's limits", err)
+			return core_err.Rethrow("while getting users's limits", err)
 		}
 		limit := limits[t.Money.Currency]
 		if limit.Max.IsSet() && limit.Withdrawn.Add(withdraw).IsBigger(limit.Max) {

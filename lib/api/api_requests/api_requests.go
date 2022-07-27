@@ -5,9 +5,9 @@ import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/http_helpers"
-	atmValues "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
+	atmValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
-	transferValues "github.com/k0marov/avencia-backend/lib/features/transfer/domain/values"
+	transferValues "github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
 	"net/url"
 )
 

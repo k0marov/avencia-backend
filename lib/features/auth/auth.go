@@ -16,13 +16,13 @@ func NewUserFromEmail(fbAuth *auth.Client) UserFromEmail {
 	return func(email string) (User, error) {
 		user, err := fbAuth.GetUserByEmail(context.Background(), email)
 		if err != nil {
-			return User{}, core_err.Rethrow("getting user from firebase", err)
+			return User{}, core_err.Rethrow("getting users from firebase", err)
 		}
 		return User{Id: user.UID}, nil
 	}
 }
 
-// user entity
+// users entity
 
 type User = internal.User
 

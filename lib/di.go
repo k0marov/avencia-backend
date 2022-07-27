@@ -9,16 +9,16 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/batch"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
-	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm_transaction/delivery/http/handlers"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
+	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/handlers"
+	"github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	limitsStore "github.com/k0marov/avencia-backend/lib/features/limits/store"
-	"github.com/k0marov/avencia-backend/lib/features/transfer"
-	userHandlers "github.com/k0marov/avencia-backend/lib/features/user/delivery/http/handlers"
-	userService "github.com/k0marov/avencia-backend/lib/features/user/domain/service"
-	walletService "github.com/k0marov/avencia-backend/lib/features/wallet/domain/service"
-	storeImpl "github.com/k0marov/avencia-backend/lib/features/wallet/store"
+	"github.com/k0marov/avencia-backend/lib/features/transfers"
+	userHandlers "github.com/k0marov/avencia-backend/lib/features/users/delivery/http/handlers"
+	userService "github.com/k0marov/avencia-backend/lib/features/users/domain/service"
+	walletService "github.com/k0marov/avencia-backend/lib/features/wallets/domain/service"
+	storeImpl "github.com/k0marov/avencia-backend/lib/features/wallets/store"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -107,7 +107,7 @@ func Initialize() http.Handler {
 	atmTransactionHandler := atmHandlers.NewFinalizeTransactionHandler(atmFinalizeTransaction)
 
 	// ===== TRANSFER =====
-	transferHandler := transfer.NewTransferHandlerImpl(fsClient, userFromEmail, finalizeTransaction)
+	transferHandler := transfers.NewTransferHandlerImpl(fsClient, userFromEmail, finalizeTransaction)
 
 	apiRouter := api.NewAPIRouter(api.Handlers{
 		GenCode:             genCodeHandler,

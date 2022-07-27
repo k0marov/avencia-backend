@@ -18,7 +18,7 @@ func NewWithdrawDocGetter(getDoc firestore_facade.DocGetter) withdrawDocGetter {
 	return func(userId string, currency core.Currency) *firestore.DocumentRef {
 		doc := getDoc(fmt.Sprintf("Withdraws/%s/Withdraws/%s", userId, string(currency)))
 		if doc == nil {
-			panic("getting document ref for user's withdraws returned nil. Probably userId is empty.")
+			panic("getting document ref for users's withdraws returned nil. Probably userId is empty.")
 		}
 		return doc
 	}
