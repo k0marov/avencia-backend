@@ -5,6 +5,7 @@ import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
@@ -24,7 +25,7 @@ func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[
 	return func(userId string) (entities.Limits, error) {
 		withdrawns, err := getWithdrawns(userId)
 		if err != nil {
-			return entities.Limits{}, fmt.Errorf("getting current withdrawns: %w", err)
+			return entities.Limits{}, core_err.Rethrow("getting current withdrawns", err)
 		}
 		limits := entities.Limits{}
 		for curr, maxLimit := range limitedCurrencies {
@@ -50,7 +51,7 @@ func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
 		withdraw := t.Money.Amount.Neg()
 		limits, err := getLimits(t.UserId)
 		if err != nil {
-			return fmt.Errorf("while getting user's limits: %w", err)
+			return core_err.Rethrow("while getting user's limits", err)
 		}
 		limit := limits[t.Money.Currency]
 		if limit.Max.IsSet() && limit.Withdrawn.Add(withdraw).IsBigger(limit.Max) {
@@ -67,7 +68,7 @@ func NewWithdrawnUpdateGetter(getLimits LimitsGetter) WithdrawnUpdateGetter {
 		}
 		limits, err := getLimits(t.UserId)
 		if err != nil {
-			return core.Money{}, fmt.Errorf("getting limits: %w", err)
+			return core.Money{}, core_err.Rethrow("getting limits", err)
 		}
 		withdraw := t.Money.Amount.Neg()
 		newWithdrawn := limits[t.Money.Currency].Withdrawn.Add(withdraw)

@@ -1,10 +1,10 @@
 package service
 
 import (
-	"fmt"
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/batch"
+	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/validators"
@@ -89,11 +89,11 @@ func NewTransactionPerformer(updBal walletStore.BalanceUpdater, getNewWithdrawn 
 		if t.Money.Amount.IsNeg() {
 			withdrawn, err := getNewWithdrawn(t)
 			if err != nil {
-				return fmt.Errorf("getting the new 'withdrawn' value: %w", err)
+				return core_err.Rethrow("getting the new 'withdrawn' value", err)
 			}
 			err = updWithdrawn(u, t.UserId, withdrawn)
 			if err != nil {
-				return fmt.Errorf("updating withdrawn value: %w", err)
+				return core_err.Rethrow("updating withdrawn value", err)
 			}
 		}
 		return updBal(u, t.UserId, t.Money.Currency, curBal.Add(t.Money.Amount))

@@ -1,11 +1,10 @@
 package service
 
 import (
-	"fmt"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/batch"
-	"github.com/k0marov/avencia-backend/lib/core/core_errors"
+	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	atmService "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
@@ -26,7 +25,7 @@ func NewTransferer(convert transferConverter, validate transferValidator, runBat
 	return func(raw values.RawTransfer) error {
 		t, err := convert(raw)
 		if err != nil {
-			return fmt.Errorf("converting raw transfer data to a transfer: %w", err)
+			return core_err.Rethrow("converting raw transfer data to a transfer", err)
 		}
 		err = validate(t)
 		if err != nil {
@@ -65,11 +64,11 @@ func NewTransferer(convert transferConverter, validate transferValidator, runBat
 func NewTransferConverter(userFromEmail auth.UserFromEmail) transferConverter {
 	return func(t values.RawTransfer) (values.Transfer, error) {
 		user, err := userFromEmail(t.ToEmail)
-		if err == core_errors.ErrNotFound {
+		if err == core_err.ErrNotFound {
 			return values.Transfer{}, client_errors.NotFound
 		}
 		if err != nil {
-			return values.Transfer{}, fmt.Errorf("while getting transfer recepient from its email: %w", err)
+			return values.Transfer{}, core_err.Rethrow("while getting transfer recepient from its email", err)
 		}
 		return values.Transfer{
 			FromId: t.FromId,

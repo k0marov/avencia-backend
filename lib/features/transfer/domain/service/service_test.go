@@ -4,7 +4,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/core_errors"
+	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
@@ -112,7 +112,7 @@ func TestTransferConverter(t *testing.T) {
 	}
 	t.Run("error case - auth getter throws ErrNotFound", func(t *testing.T) {
 		userFromEmail := func(string) (auth.User, error) {
-			return auth.User{}, core_errors.ErrNotFound
+			return auth.User{}, core_err.ErrNotFound
 		}
 		_, err := service.NewTransferConverter(userFromEmail)(rawTrans)
 		AssertError(t, err, client_errors.NotFound)

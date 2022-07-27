@@ -3,8 +3,8 @@ package store
 import (
 	"cloud.google.com/go/firestore"
 	"context"
-	"fmt"
 	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	"github.com/k0marov/avencia-backend/lib/features/wallet/domain/store"
 	"google.golang.org/grpc/codes"
@@ -31,7 +31,7 @@ func NewWalletGetter(getWalletDoc WalletDocGetter) store.WalletGetter {
 			return map[string]any{}, nil
 		}
 		if err != nil {
-			return nil, fmt.Errorf("while getting user's wallet document: %w", err)
+			return nil, core_err.Rethrow("while getting user's wallet document", err)
 		}
 		return wallet.Data(), nil
 	}

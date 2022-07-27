@@ -3,8 +3,8 @@ package auth
 import (
 	"context"
 	"firebase.google.com/go/auth"
-	"fmt"
 	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/features/auth/internal"
 )
 
@@ -16,7 +16,7 @@ func NewUserFromEmail(fbAuth *auth.Client) UserFromEmail {
 	return func(email string) (User, error) {
 		user, err := fbAuth.GetUserByEmail(context.Background(), email)
 		if err != nil {
-			return User{}, fmt.Errorf("getting user from firebase: %w", err)
+			return User{}, core_err.Rethrow("getting user from firebase", err)
 		}
 		return User{Id: user.UID}, nil
 	}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
@@ -41,7 +42,7 @@ func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
 		for _, doc := range docs {
 			snap, err := doc.Get(context.Background())
 			if err != nil {
-				return map[string]values.WithdrawnWithUpdated{}, fmt.Errorf("fetching a withdraw document: %w", err)
+				return map[string]values.WithdrawnWithUpdated{}, core_err.Rethrow("fetching a withdraw document", err)
 			}
 			withdrawnVal := snap.Data()[withdrawnKey]
 			withdrawn, ok := withdrawnVal.(float64)

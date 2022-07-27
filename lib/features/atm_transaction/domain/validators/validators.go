@@ -2,9 +2,9 @@ package validators
 
 import (
 	"crypto/subtle"
-	"fmt"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
@@ -54,7 +54,7 @@ func NewTransactionValidator(checkLimit limitsService.LimitChecker, getBalance w
 		}
 		bal, err := getBalance(t.UserId, t.Money.Currency)
 		if err != nil {
-			return core.NewMoneyAmount(0), fmt.Errorf("getting current balance: %w", err)
+			return core.NewMoneyAmount(0), core_err.Rethrow("getting current balance", err)
 		}
 		if t.Money.Amount.IsNeg() {
 			if bal.Num() < math.Abs(t.Money.Amount.Num()) {

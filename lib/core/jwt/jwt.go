@@ -3,6 +3,7 @@ package jwt
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt"
+	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"time"
 )
 
@@ -28,7 +29,7 @@ func NewVerifier(jwtSecret []byte) Verifier {
 			return jwtSecret, nil
 		})
 		if err != nil {
-			return make(map[string]any), fmt.Errorf("while parsing a token: %w", err)
+			return make(map[string]any), core_err.Rethrow("while parsing a token", err)
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {

@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/features/wallet/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/wallet/domain/store"
 )
@@ -16,7 +17,7 @@ func NewWalletGetter(getWallet store.WalletGetter) WalletGetter {
 	return func(userId string) (entities.Wallet, error) {
 		storedWallet, err := getWallet(userId)
 		if err != nil {
-			return entities.Wallet{}, fmt.Errorf("getting wallet from store: %w", err)
+			return entities.Wallet{}, core_err.Rethrow("getting wallet from store", err)
 		}
 		wallet := map[core.Currency]core.MoneyAmount{}
 		for curr, bal := range storedWallet {
@@ -34,7 +35,7 @@ func NewBalanceGetter(getWallet WalletGetter) BalanceGetter {
 	return func(userId string, currency core.Currency) (core.MoneyAmount, error) {
 		wallet, err := getWallet(userId)
 		if err != nil {
-			return core.NewMoneyAmount(0), fmt.Errorf("getting wallet to later extract balance: %w", err)
+			return core.NewMoneyAmount(0), core_err.Rethrow("getting wallet to later extract balance", err)
 		}
 		bal := wallet[currency]
 		if !bal.IsSet() {
