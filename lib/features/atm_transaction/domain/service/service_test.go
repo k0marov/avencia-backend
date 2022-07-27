@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
@@ -28,7 +29,7 @@ func TestCodeGenerator(t *testing.T) {
 		values.UserIdClaim:          tUser.Id,
 		values.TransactionTypeClaim: tType,
 	}
-	wantExpireAt := time.Now().UTC().Add(service.ExpDuration)
+	wantExpireAt := time.Now().UTC().Add(configurable.TransactionExpDuration)
 
 	t.Run("forward test", func(t *testing.T) {
 		token := RandomString()

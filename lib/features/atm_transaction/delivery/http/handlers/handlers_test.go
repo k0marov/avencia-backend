@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
+	apiRequests "github.com/k0marov/avencia-backend/lib/api/api_requests"
+	apiResponses "github.com/k0marov/avencia-backend/lib/api/api_responses"
 	"github.com/k0marov/avencia-backend/lib/core/http_test_helpers"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/delivery/http/handlers"
@@ -86,7 +88,7 @@ func TestVerifyCodeHandler(t *testing.T) {
 		response := httptest.NewRecorder()
 		handlers.NewVerifyCodeHandler(verify)(response, request)
 
-		AssertJSONData(t, response, api.VerifiedCodeResponse{UserInfo: userInfo.ToResponse()})
+		AssertJSONData(t, response, api.VerifiedCodeResponse{UserInfo: apiResponses.UserInfoEncoder(userInfo)})
 	})
 	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, response *httptest.ResponseRecorder) {
 		verify := func(string, values.TransactionType) (entities.UserInfo, error) {
@@ -100,7 +102,7 @@ func TestVerifyCodeHandler(t *testing.T) {
 func TestCheckBanknoteHandler(t *testing.T) {
 	req := RandomBanknoteCheckRequest()
 	banknoteJson, _ := json.Marshal(req)
-	wantBanknoteValue := values.NewBanknote(req)
+	wantBanknoteValue := apiRequests.BanknoteDecoder(req)
 	request := http_test_helpers.CreateRequest(bytes.NewReader(banknoteJson))
 
 	t.Run("should call service and return status code 200 if there is no error", func(t *testing.T) {
@@ -127,7 +129,7 @@ func TestCheckBanknoteHandler(t *testing.T) {
 func TestFinalizeTransactionHandler(t *testing.T) {
 	req := RandomFinalizeTransationRequest()
 	transactionJson, _ := json.Marshal(req)
-	transaction := values.NewTransactionData(req)
+	transaction := apiRequests.TransactionDecoder(req)
 	request := http_test_helpers.CreateRequest(bytes.NewReader(transactionJson))
 
 	t.Run("should call service and return status code 200 if there is no error", func(t *testing.T) {

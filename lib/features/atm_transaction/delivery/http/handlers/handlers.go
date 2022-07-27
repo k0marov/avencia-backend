@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
+	apiRequests "github.com/k0marov/avencia-backend/lib/api/api_requests"
+	apiResponses "github.com/k0marov/avencia-backend/lib/api/api_responses"
 	"github.com/k0marov/avencia-backend/lib/core/http_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
@@ -46,7 +48,7 @@ func NewVerifyCodeHandler(verify service.CodeVerifier) http.HandlerFunc {
 			http_helpers.HandleServiceError(w, err)
 			return
 		}
-		http_helpers.WriteJson(w, api.VerifiedCodeResponse{UserInfo: userInfo.ToResponse()})
+		http_helpers.WriteJson(w, api.VerifiedCodeResponse{UserInfo: apiResponses.UserInfoEncoder(userInfo)})
 	}
 }
 
@@ -55,7 +57,7 @@ func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.Handler
 		var banknoteRequest api.BanknoteCheckRequest
 		json.NewDecoder(r.Body).Decode(&banknoteRequest)
 
-		err := checkBanknote(banknoteRequest.TransactionCode, values.NewBanknote(banknoteRequest))
+		err := checkBanknote(banknoteRequest.TransactionCode, apiRequests.BanknoteDecoder(banknoteRequest))
 		if err != nil {
 			http_helpers.HandleServiceError(w, err)
 			return
@@ -68,7 +70,7 @@ func NewFinalizeTransactionHandler(finalizeTransaction service.ATMTransactionFin
 		var t api.FinalizeTransactionRequest
 		json.NewDecoder(r.Body).Decode(&t)
 
-		err := finalizeTransaction([]byte(t.ATMSecret), values.NewTransactionData(t))
+		err := finalizeTransaction([]byte(t.ATMSecret), apiRequests.TransactionDecoder(t))
 		if err != nil {
 			http_helpers.HandleServiceError(w, err)
 			return

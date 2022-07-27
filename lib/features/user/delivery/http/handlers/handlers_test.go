@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	apiResponses "github.com/k0marov/avencia-backend/lib/api/api_responses"
 	"github.com/k0marov/avencia-backend/lib/core/http_test_helpers"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/user/delivery/http/handlers"
@@ -29,7 +30,7 @@ func TestGetUserInfoHandler(t *testing.T) {
 		response := httptest.NewRecorder()
 		handlers.NewGetUserInfoHandler(generate)(response, requestWithUser)
 
-		AssertJSONData(t, response, userInfo.ToResponse())
+		AssertJSONData(t, response, apiResponses.UserInfoEncoder(userInfo))
 	})
 	http_test_helpers.BaseTestServiceErrorHandling(t, func(err error, w *httptest.ResponseRecorder) {
 		generate := func(string) (entities.UserInfo, error) {

@@ -6,6 +6,16 @@ import (
 	"net/http"
 )
 
+type NoResponse struct{}
+type NoAPIResponse struct{}
+
+func NoResponseConverter(NoResponse) NoAPIResponse { return NoAPIResponse{} }
+func NoResponseService[Request any](service func(Request) error) func(Request) (NoResponse, error) {
+	return func(request Request) (NoResponse, error) {
+		return NoResponse{}, service(request)
+	}
+}
+
 func NewAuthenticatedHandler[APIRequest any, Request any, Response any, APIResponse any](
 	convertReq func(auth.User, APIRequest) Request,
 	service func(Request) (Response, error),

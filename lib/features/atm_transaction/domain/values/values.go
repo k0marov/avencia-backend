@@ -1,7 +1,6 @@
 package values
 
 import (
-	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/core"
 )
 
@@ -23,23 +22,4 @@ type Banknote struct {
 type Transaction struct {
 	UserId string
 	Money  core.Money
-}
-
-func NewBanknote(request api.BanknoteCheckRequest) Banknote {
-	return Banknote{
-		Money: core.Money{
-			Currency: core.Currency(request.Currency),
-			Amount:   core.NewMoneyAmount(request.Amount),
-		},
-	}
-}
-
-func NewTransactionData(request api.FinalizeTransactionRequest) Transaction {
-	return Transaction{
-		UserId: request.UserId,
-		Money: core.Money{
-			Currency: core.Currency(request.Currency),
-			Amount:   core.NewMoneyAmount(request.Amount),
-		},
-	}
 }

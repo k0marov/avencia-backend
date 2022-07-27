@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"bytes"
 	"encoding/json"
+	apiRequests "github.com/k0marov/avencia-backend/lib/api/api_requests"
 	"github.com/k0marov/avencia-backend/lib/core/http_test_helpers"
 	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/transfer/delivery/http/handlers"
@@ -23,7 +24,7 @@ func TestNewTransferHandler(t *testing.T) {
 		response := httptest.NewRecorder()
 		transfered := false
 		transferer := func(rawTransfer values.RawTransfer) error {
-			if reflect.DeepEqual(rawTransfer, values.NewRawTransfer(user, transferReq)) {
+			if reflect.DeepEqual(rawTransfer, apiRequests.TransferDecoder(user, transferReq)) {
 				transfered = true
 				return nil
 			}
