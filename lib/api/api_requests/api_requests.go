@@ -6,19 +6,20 @@ import (
 	atmValues "github.com/k0marov/avencia-backend/lib/features/atm_transaction/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	transferValues "github.com/k0marov/avencia-backend/lib/features/transfer/domain/values"
+	"net/url"
 )
 
-func BanknoteDecoder(request api.BanknoteCheckRequest) atmValues.Banknote {
+func BanknoteDecoder(_ url.Values, request api.BanknoteCheckRequest) (atmValues.Banknote, error) {
 	return atmValues.Banknote{
 		TransCode: request.TransactionCode,
 		Money: core.Money{
 			Currency: core.Currency(request.Currency),
 			Amount:   core.NewMoneyAmount(request.Amount),
 		},
-	}
+	}, nil
 }
 
-func TransactionDecoder(request api.FinalizeTransactionRequest) atmValues.ATMTransaction {
+func ATMTransactionDecoder(_ url.Values, request api.FinalizeTransactionRequest) (atmValues.ATMTransaction, error) {
 	return atmValues.ATMTransaction{
 		ATMSecret: []byte(request.ATMSecret),
 		Trans: atmValues.Transaction{
@@ -28,10 +29,10 @@ func TransactionDecoder(request api.FinalizeTransactionRequest) atmValues.ATMTra
 				Amount:   core.NewMoneyAmount(request.Amount),
 			},
 		},
-	}
+	}, nil
 }
 
-func TransferDecoder(user auth.User, req api.TransferRequest) transferValues.RawTransfer {
+func TransferDecoder(user auth.User, _ url.Values, req api.TransferRequest) transferValues.RawTransfer {
 	return transferValues.RawTransfer{
 		FromId:  user.Id,
 		ToEmail: req.RecipientIdentifier,

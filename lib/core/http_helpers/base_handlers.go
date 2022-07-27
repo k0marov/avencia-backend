@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"net/http"
+	"net/url"
 )
 
 type NoResponse struct{}
@@ -17,7 +18,7 @@ func NoResponseService[Request any](service func(Request) error) func(Request) (
 }
 
 func NewAuthenticatedHandler[APIRequest any, Request any, Response any, APIResponse any](
-	convertReq func(auth.User, APIRequest) Request,
+	convertReq func(auth.User, url.Values, APIRequest) (Request, error),
 	service func(Request) (Response, error),
 	convertResp func(Response) APIResponse,
 ) http.HandlerFunc {
@@ -29,9 +30,14 @@ func NewAuthenticatedHandler[APIRequest any, Request any, Response any, APIRespo
 		var req APIRequest
 		json.NewDecoder(r.Body).Decode(&req) // TODO: handle this error
 
-		resp, err := service(convertReq(user, req))
+		fullReq, err := convertReq(user, r.URL.Query(), req)
 		if err != nil {
-			HandleServiceError(w, err)
+			ThrowHTTPError(w, err)
+			return
+		}
+		resp, err := service(fullReq)
+		if err != nil {
+			ThrowHTTPError(w, err)
 			return
 		}
 		WriteJson(w, convertResp(resp))
@@ -39,17 +45,21 @@ func NewAuthenticatedHandler[APIRequest any, Request any, Response any, APIRespo
 }
 
 func NewHandler[APIRequest any, Request any, Response any, APIResponse any](
-	convertReq func(APIRequest) Request,
+	convertReq func(url.Values, APIRequest) (Request, error),
 	service func(Request) (Response, error),
 	convertResp func(Response) APIResponse,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req APIRequest
 		json.NewDecoder(r.Body).Decode(&req) // TODO: handle this error
-
-		resp, err := service(convertReq(req))
+		fullReq, err := convertReq(r.URL.Query(), req)
 		if err != nil {
-			HandleServiceError(w, err)
+			ThrowHTTPError(w, err)
+			return
+		}
+		resp, err := service(fullReq)
+		if err != nil {
+			ThrowHTTPError(w, err)
 			return
 		}
 		WriteJson(w, convertResp(resp))

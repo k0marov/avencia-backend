@@ -26,7 +26,7 @@ func GetUserOrAddUnauthorized(w http.ResponseWriter, r *http.Request) (auth.User
 	return authUser, true
 }
 
-func HandleServiceError(w http.ResponseWriter, err error) {
+func ThrowHTTPError(w http.ResponseWriter, err error) {
 	clientError, isClientError := err.(client_errors.ClientError)
 	if isClientError {
 		ThrowClientError(w, clientError)

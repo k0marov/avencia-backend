@@ -29,7 +29,7 @@ func NewGenerateCodeHandler(generate service.CodeGenerator) http.HandlerFunc {
 			User:      user,
 		})
 		if err != nil {
-			http_helpers.HandleServiceError(w, err)
+			http_helpers.ThrowHTTPError(w, err)
 			return
 		}
 		log.Printf("generated code %v for user %v", code, user.Id)
@@ -51,7 +51,7 @@ func NewVerifyCodeHandler(verify service.CodeVerifier) http.HandlerFunc {
 			TransType: values.TransactionType(transactionType),
 		})
 		if err != nil {
-			http_helpers.HandleServiceError(w, err)
+			http_helpers.ThrowHTTPError(w, err)
 			return
 		}
 		http_helpers.WriteJson(w, api.VerifiedCodeResponse{UserInfo: apiResponses.UserInfoEncoder(userInfo)})
@@ -68,7 +68,7 @@ func NewCheckBanknoteHandler(checkBanknote service.BanknoteChecker) http.Handler
 
 func NewFinalizeTransactionHandler(finalizeTransaction service.ATMTransactionFinalizer) http.HandlerFunc {
 	return http_helpers.NewHandler(
-		apiRequests.TransactionDecoder,
+		apiRequests.ATMTransactionDecoder,
 		http_helpers.NoResponseService(finalizeTransaction),
 		http_helpers.NoResponseConverter,
 	)
