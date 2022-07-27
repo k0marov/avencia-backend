@@ -5,9 +5,7 @@ import (
 	"time"
 )
 
-// TODO: move other useful configurables to this package
-
-// These are values that are currently configurable here but may be moved to the config file
+const TransactionExpDuration = time.Minute * 10
 
 var LimitedCurrencies = map[core.Currency]core.MoneyAmount{
 	"USD": core.NewMoneyAmount(1000),
@@ -16,5 +14,5 @@ var LimitedCurrencies = map[core.Currency]core.MoneyAmount{
 
 func IsWithdrawLimitRelevant(withdrawnAt time.Time) bool {
 	currentYear := time.Now().Year()
-	return withdrawnAt.After(time.Date(currentYear, 0, 0, 0, 0, 0, 0, time.UTC))
+	return withdrawnAt.Year() == currentYear
 }

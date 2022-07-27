@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/batch"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
@@ -17,8 +18,6 @@ import (
 	"time"
 )
 
-const ExpDuration = time.Minute * 10
-
 type CodeGenerator = func(auth.User, values.TransactionType) (code string, expiresAt time.Time, err error)
 type CodeVerifier = func(string, values.TransactionType) (userEntities.UserInfo, error)
 type BanknoteChecker = func(transactionCode string, banknote values.Banknote) error
@@ -33,7 +32,7 @@ func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 			values.UserIdClaim:          user.Id,
 			values.TransactionTypeClaim: tType,
 		}
-		expireAt := time.Now().UTC().Add(ExpDuration)
+		expireAt := time.Now().UTC().Add(configurable.TransactionExpDuration)
 		code, err := issueJWT(claims, expireAt)
 		return code, expireAt, err
 	}
