@@ -2,6 +2,7 @@ package http_helpers
 
 import (
 	"encoding/json"
+	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"net/http"
 	"net/url"
@@ -30,7 +31,11 @@ func NewAuthenticatedHandler[APIRequest any, Request any, Response any, APIRespo
 			return
 		}
 		var req APIRequest
-		json.NewDecoder(r.Body).Decode(&req) // TODO: handle this error
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			ThrowHTTPError(w, client_errors.InvalidJSON)
+			return
+		}
 
 		fullReq, err := convertReq(user, r.URL.Query(), req)
 		if err != nil {
@@ -53,7 +58,12 @@ func NewHandler[APIRequest any, Request any, Response any, APIResponse any](
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req APIRequest
-		json.NewDecoder(r.Body).Decode(&req) // TODO: handle this error
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			ThrowHTTPError(w, client_errors.InvalidJSON)
+			return
+		}
+
 		fullReq, err := convertReq(r.URL.Query(), req)
 		if err != nil {
 			ThrowHTTPError(w, err)
