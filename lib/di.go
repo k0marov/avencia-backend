@@ -10,10 +10,12 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade/batch"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/handlers"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
+	atmService "github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
+	atmValidators "github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	limitsStore "github.com/k0marov/avencia-backend/lib/features/limits/store"
+	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
+	tValidators "github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/transfers"
 	userHandlers "github.com/k0marov/avencia-backend/lib/features/users/delivery/http/handlers"
 	userService "github.com/k0marov/avencia-backend/lib/features/users/domain/service"
@@ -70,7 +72,7 @@ func Initialize() http.Handler {
 	authMiddleware := auth.NewAuthMiddleware(fbAuth)
 	userFromEmail := auth.NewUserFromEmail(fbAuth)
 
-	// ===== WALLET =====
+	// ===== WALLETS =====
 	walletDocGetter := storeImpl.NewWalletDocGetter(firestore_facade.NewDocGetter(fsClient))
 	storeGetWallet := storeImpl.NewWalletGetter(walletDocGetter)
 	updateBalance := storeImpl.NewBalanceUpdater(walletDocGetter)
@@ -85,29 +87,31 @@ func Initialize() http.Handler {
 	getUpdatedWithdrawn := limitsService.NewWithdrawnUpdateGetter(getLimits)
 	updateWithdrawn := limitsService.NewWithdrawUpdater(getUpdatedWithdrawn, storeUpdateWithdrawn)
 
-	// ===== USER =====
+	// ===== USERS =====
 	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits)
 	getUserInfoHandler := userHandlers.NewGetUserInfoHandler(getUserInfo)
 
-	// ===== ATM TRANSACTION =====
-	// validators
-	codeValidator := validators.NewTransCodeValidator(jwtVerifier)
-	atmSecretValidator := validators.NewATMSecretValidator(atmSecret)
-	transValidator := validators.NewTransactionValidator(checkLimit, getBalance)
+	// ===== TRANSACTIONS =====
+	transValidator := tValidators.NewTransactionValidator(checkLimit, getBalance)
+	performTrans := tService.NewTransactionPerformer(updateBalance, updateWithdrawn)
+	finalizeTransaction := tService.NewTransactionFinalizer(transValidator, performTrans)
+
+	// ===== ATM =====
+	// atmValidators
+	codeValidator := atmValidators.NewTransCodeValidator(jwtVerifier)
+	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
 	// service
-	genCode := service.NewCodeGenerator(jwtIssuer)
-	verifyCode := service.NewCodeVerifier(codeValidator, getUserInfo)
-	checkBanknote := service.NewBanknoteChecker(verifyCode)
-	performTrans := service.NewTransactionPerformer(updateBalance, updateWithdrawn)
-	finalizeTransaction := service.NewTransactionFinalizer(transValidator, performTrans)
-	atmFinalizeTransaction := service.NewATMTransactionFinalizer(atmSecretValidator, batch.NewWriteRunner(fsClient), finalizeTransaction)
+	genCode := atmService.NewCodeGenerator(jwtIssuer)
+	verifyCode := atmService.NewCodeVerifier(codeValidator, getUserInfo)
+	checkBanknote := atmService.NewBanknoteChecker(verifyCode)
+	atmFinalizeTransaction := atmService.NewATMTransactionFinalizer(atmSecretValidator, batch.NewWriteRunner(fsClient), finalizeTransaction)
 	// handlers
 	genCodeHandler := atmHandlers.NewGenerateCodeHandler(genCode)
 	verifyCodeHandler := atmHandlers.NewVerifyCodeHandler(verifyCode)
 	checkBanknoteHandler := atmHandlers.NewCheckBanknoteHandler(checkBanknote)
 	atmTransactionHandler := atmHandlers.NewFinalizeTransactionHandler(atmFinalizeTransaction)
 
-	// ===== TRANSFER =====
+	// ===== TRANSFERS =====
 	transferHandler := transfers.NewTransferHandlerImpl(fsClient, userFromEmail, finalizeTransaction)
 
 	apiRouter := api.NewAPIRouter(api.Handlers{
