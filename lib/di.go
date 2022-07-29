@@ -16,7 +16,9 @@ import (
 	limitsStore "github.com/k0marov/avencia-backend/lib/features/limits/store"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
 	tValidators "github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
-	"github.com/k0marov/avencia-backend/lib/features/transfers"
+	transHandlers "github.com/k0marov/avencia-backend/lib/features/transfers/delivery/http/handlers"
+	transService "github.com/k0marov/avencia-backend/lib/features/transfers/domain/service"
+	transValidators "github.com/k0marov/avencia-backend/lib/features/transfers/domain/validators"
 	userHandlers "github.com/k0marov/avencia-backend/lib/features/users/delivery/http/handlers"
 	userService "github.com/k0marov/avencia-backend/lib/features/users/domain/service"
 	walletService "github.com/k0marov/avencia-backend/lib/features/wallets/domain/service"
@@ -64,6 +66,9 @@ func Initialize() http.Handler {
 		log.Fatalf("erorr while initializing firebase auth: %v", err)
 	}
 
+	// ===== FIRESTORE =====
+	runBatch := batch.NewWriteRunner(fsClient)
+
 	// ===== JWT =====
 	jwtIssuer := jwt.NewIssuer(jwtSecret)
 	jwtVerifier := jwt.NewVerifier(jwtSecret)
@@ -97,22 +102,24 @@ func Initialize() http.Handler {
 	finalizeTransaction := tService.NewTransactionFinalizer(transValidator, performTrans)
 
 	// ===== ATM =====
-	// atmValidators
 	codeValidator := atmValidators.NewTransCodeValidator(jwtVerifier)
 	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
-	// service
+
 	genCode := atmService.NewCodeGenerator(jwtIssuer)
 	verifyCode := atmService.NewCodeVerifier(codeValidator, getUserInfo)
 	checkBanknote := atmService.NewBanknoteChecker(verifyCode)
-	atmFinalizeTransaction := atmService.NewATMTransactionFinalizer(atmSecretValidator, batch.NewWriteRunner(fsClient), finalizeTransaction)
-	// handlers
+	atmFinalizeTransaction := atmService.NewATMTransactionFinalizer(atmSecretValidator, runBatch, finalizeTransaction)
+
 	genCodeHandler := atmHandlers.NewGenerateCodeHandler(genCode)
 	verifyCodeHandler := atmHandlers.NewVerifyCodeHandler(verifyCode)
 	checkBanknoteHandler := atmHandlers.NewCheckBanknoteHandler(checkBanknote)
 	atmTransactionHandler := atmHandlers.NewFinalizeTransactionHandler(atmFinalizeTransaction)
 
 	// ===== TRANSFERS =====
-	transferHandler := transfers.NewTransferHandlerImpl(fsClient, userFromEmail, finalizeTransaction)
+	convert := transService.NewTransferConverter(userFromEmail)
+	validate := transValidators.NewTransferValidator()
+	transfer := transService.NewTransferer(convert, validate, runBatch, finalizeTransaction)
+	transferHandler := transHandlers.NewTransferHandler(transfer)
 
 	apiRouter := api.NewAPIRouter(api.Handlers{
 		GenCode:             genCodeHandler,

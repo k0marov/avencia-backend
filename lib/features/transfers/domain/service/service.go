@@ -9,6 +9,7 @@ import (
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
 )
 
@@ -17,12 +18,9 @@ type Transferer = func(values.RawTransfer) error
 // transferConverter error may be a ClientError
 type transferConverter = func(values.RawTransfer) (values.Transfer, error)
 
-// transferValidator error may be a ClientError
-type transferValidator = func(values.Transfer) error
-
 // TODO: try to simplify
 
-func NewTransferer(convert transferConverter, validate transferValidator, runBatch batch.WriteRunner, transact tService.TransactionFinalizer) Transferer {
+func NewTransferer(convert transferConverter, validate validators.TransferValidator, runBatch batch.WriteRunner, transact tService.TransactionFinalizer) Transferer {
 	return func(raw values.RawTransfer) error {
 		t, err := convert(raw)
 		if err != nil {
@@ -76,21 +74,5 @@ func NewTransferConverter(userFromEmail auth.UserFromEmail) transferConverter {
 			ToId:   user.Id,
 			Money:  t.Money,
 		}, nil
-	}
-}
-
-func NewTransferValidator() transferValidator {
-	return func(t values.Transfer) error {
-		if t.Money.Amount.IsNeg() {
-			return client_errors.NegativeTransferAmount
-		}
-		if t.Money.Amount.IsEqual(core.NewMoneyAmount(0)) {
-			return client_errors.TransferingZero
-		}
-		if t.ToId == t.FromId {
-			return client_errors.TransferingToYourself
-
-		}
-		return nil
 	}
 }

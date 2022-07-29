@@ -135,37 +135,3 @@ func TestTransferConverter(t *testing.T) {
 		Assert(t, gotTrans, want, "converted transfers")
 	})
 }
-
-func TestTransferValidator(t *testing.T) {
-	t.Run("error case - money.amount is negative", func(t *testing.T) {
-		trans := values.Transfer{
-			FromId: RandomString(),
-			ToId:   RandomString(),
-			Money:  RandomNegativeMoney(),
-		}
-		err := service.NewTransferValidator()(trans)
-		AssertError(t, err, client_errors.NegativeTransferAmount)
-	})
-	t.Run("error case - transfering to yourself", func(t *testing.T) {
-		user := RandomId()
-		trans := values.Transfer{
-			FromId: user,
-			ToId:   user,
-			Money:  RandomPositiveMoney(),
-		}
-		err := service.NewTransferValidator()(trans)
-		AssertError(t, err, client_errors.TransferingToYourself)
-	})
-	t.Run("error case - transfering 0", func(t *testing.T) {
-		trans := values.Transfer{
-			FromId: RandomString(),
-			ToId:   RandomString(),
-			Money: core.Money{
-				Currency: RandomCurrency(),
-				Amount:   core.NewMoneyAmount(0),
-			},
-		}
-		err := service.NewTransferValidator()(trans)
-		AssertError(t, err, client_errors.TransferingZero)
-	})
-}
