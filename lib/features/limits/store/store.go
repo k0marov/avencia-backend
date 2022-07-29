@@ -7,6 +7,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
+	"github.com/k0marov/avencia-backend/lib/core/helpers/general_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
 )
@@ -44,9 +45,9 @@ func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
 				return map[string]values.WithdrawnWithUpdated{}, core_err.Rethrow("fetching a withdraw document", err)
 			}
 			withdrawnVal := snap.Data()[withdrawnKey]
-			withdrawn, ok := withdrawnVal.(float64)
-			if !ok {
-				return map[string]values.WithdrawnWithUpdated{}, fmt.Errorf("withdrawn value %v is not a float", withdrawnVal)
+			withdrawn, err := general_helpers.DecodeFloat(withdrawnVal)
+			if err != nil {
+				return map[string]values.WithdrawnWithUpdated{}, err
 			}
 			withdraws[doc.ID] = values.WithdrawnWithUpdated{
 				Withdrawn: core.NewMoneyAmount(withdrawn),
