@@ -6,9 +6,9 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade/batch"
-	atmService "github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
+	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
 )
 
@@ -22,7 +22,7 @@ type transferValidator = func(values.Transfer) error
 
 // TODO: try to simplify
 
-func NewTransferer(convert transferConverter, validate transferValidator, runBatch batch.WriteRunner, transact atmService.TransactionFinalizer) Transferer {
+func NewTransferer(convert transferConverter, validate transferValidator, runBatch batch.WriteRunner, transact tService.TransactionFinalizer) Transferer {
 	return func(raw values.RawTransfer) error {
 		t, err := convert(raw)
 		if err != nil {
