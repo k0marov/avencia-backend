@@ -1,7 +1,6 @@
 package service_test
 
 import (
-	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
@@ -60,12 +59,6 @@ func TestTransferer(t *testing.T) {
 }
 
 func TestTransferPerformer(t *testing.T) {
-	// TODO: simplify this callback hell
-	runBatch := func(f func(firestore_facade.BatchUpdater) error) error {
-		return f(func(*firestore.DocumentRef, map[string]any) error {
-			return nil
-		})
-	}
 	transf := RandomTransfer()
 
 	withdrawTrans := transValues.Transaction{
@@ -92,7 +85,7 @@ func TestTransferPerformer(t *testing.T) {
 			}
 			return nil
 		}
-		err := service.NewTransferPerformer(runBatch, transact)(transf)
+		err := service.NewTransferPerformer(StubRunBatch, transact)(transf)
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - depositing to recipient fails", func(t *testing.T) {
@@ -102,11 +95,11 @@ func TestTransferPerformer(t *testing.T) {
 			}
 			return nil
 		}
-		err := service.NewTransferPerformer(runBatch, transact)(transf)
+		err := service.NewTransferPerformer(StubRunBatch, transact)(transf)
 		AssertSomeError(t, err)
 	})
 	t.Run("happy case", func(t *testing.T) {
-		err := service.NewTransferPerformer(runBatch, transact)(transf)
+		err := service.NewTransferPerformer(StubRunBatch, transact)(transf)
 		AssertNoError(t, err)
 	})
 }

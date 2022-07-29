@@ -11,7 +11,6 @@ import (
 )
 
 import (
-	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	userEntities "github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
 	"reflect"
@@ -110,12 +109,6 @@ func TestATMTransactionFinalizer(t *testing.T) {
 		ATMSecret: RandomSecret(),
 		Trans:     RandomTransactionData(),
 	}
-	// TODO: remove this callback hell
-	stubRunBatch := func(f func(firestore_facade.BatchUpdater) error) error {
-		return f(func(*firestore.DocumentRef, map[string]any) error {
-			return nil
-		})
-	}
 	t.Run("error case - validation throws", func(t *testing.T) {
 		err := RandomError()
 		validate := func(atmSecret []byte) error {
@@ -138,7 +131,7 @@ func TestATMTransactionFinalizer(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		gotErr := service.NewATMTransactionFinalizer(validate, stubRunBatch, finalize)(atmTrans)
+		gotErr := service.NewATMTransactionFinalizer(validate, StubRunBatch, finalize)(atmTrans)
 		AssertError(t, gotErr, err)
 	})
 }
