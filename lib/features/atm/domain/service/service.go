@@ -10,7 +10,6 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
-	limitsStore "github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
 	userEntities "github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
 	userService "github.com/k0marov/avencia-backend/lib/features/users/domain/service"
 	walletStore "github.com/k0marov/avencia-backend/lib/features/wallets/domain/store"
@@ -83,17 +82,12 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform t
 	}
 }
 
-// TODO: please simplify this (move updating withdraw to a separate service)
-func NewTransactionPerformer(updBal walletStore.BalanceUpdater, getNewWithdrawn limitsService.WithdrawnUpdateGetter, updWithdrawn limitsStore.WithdrawUpdater) transactionPerformer {
+func NewTransactionPerformer(updBal walletStore.BalanceUpdater, updateWithdrawn limitsService.WithdrawUpdater) transactionPerformer {
 	return func(u firestore_facade.BatchUpdater, curBal core.MoneyAmount, t values.Transaction) error {
 		if t.Money.Amount.IsNeg() {
-			withdrawn, err := getNewWithdrawn(t)
+			err := updateWithdrawn(u, t)
 			if err != nil {
-				return core_err.Rethrow("getting the new 'withdrawn' value", err)
-			}
-			err = updWithdrawn(u, t.UserId, withdrawn)
-			if err != nil {
-				return core_err.Rethrow("updating withdrawn value", err)
+				return core_err.Rethrow("updating withdrawn", err)
 			}
 		}
 		return updBal(u, t.UserId, t.Money.Currency, curBal.Add(t.Money.Amount))

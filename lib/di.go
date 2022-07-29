@@ -79,10 +79,11 @@ func Initialize() http.Handler {
 
 	// ===== LIMITS =====
 	storeGetWithdraws := limitsStore.NewWithdrawsGetter(fsClient)
-	updateWithdrawn := limitsStore.NewWithdrawUpdater(limitsStore.NewWithdrawDocGetter(firestore_facade.NewDocGetter(fsClient)))
+	storeUpdateWithdrawn := limitsStore.NewWithdrawUpdater(limitsStore.NewWithdrawDocGetter(firestore_facade.NewDocGetter(fsClient)))
 	getLimits := limitsService.NewLimitsGetter(storeGetWithdraws, configurable.LimitedCurrencies)
 	checkLimit := limitsService.NewLimitChecker(getLimits)
 	getUpdatedWithdrawn := limitsService.NewWithdrawnUpdateGetter(getLimits)
+	updateWithdrawn := limitsService.NewWithdrawUpdater(getUpdatedWithdrawn, storeUpdateWithdrawn)
 
 	// ===== USER =====
 	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits)
@@ -97,7 +98,7 @@ func Initialize() http.Handler {
 	genCode := service.NewCodeGenerator(jwtIssuer)
 	verifyCode := service.NewCodeVerifier(codeValidator, getUserInfo)
 	checkBanknote := service.NewBanknoteChecker(verifyCode)
-	performTrans := service.NewTransactionPerformer(updateBalance, getUpdatedWithdrawn, updateWithdrawn)
+	performTrans := service.NewTransactionPerformer(updateBalance, updateWithdrawn)
 	finalizeTransaction := service.NewTransactionFinalizer(transValidator, performTrans)
 	atmFinalizeTransaction := service.NewATMTransactionFinalizer(atmSecretValidator, batch.NewWriteRunner(fsClient), finalizeTransaction)
 	// handlers

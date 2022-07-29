@@ -1,8 +1,10 @@
 package service_test
 
 import (
+	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
@@ -180,5 +182,51 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 			Currency: "BTC",
 			Amount:   core.NewMoneyAmount(0.01),
 		}, "returned withdrawn value")
+	})
+}
+
+func TestWithdrawUpdater(t *testing.T) {
+	dummyFSUpdater := func(*firestore.DocumentRef, map[string]any) error {
+		return nil
+	}
+
+	trans := transValues.Transaction{
+		UserId: RandomString(),
+		Money:  RandomNegativeMoney(),
+	}
+	newWithdrawn := RandomPositiveMoney()
+	getValue := func(transValues.Transaction) (core.Money, error) {
+		return newWithdrawn, nil
+	}
+	t.Run("error case - getting new value throws", func(t *testing.T) {
+		getValue := func(gotTrans transValues.Transaction) (core.Money, error) {
+			if gotTrans == trans {
+				return core.Money{}, RandomError()
+			}
+			panic("unexpected")
+		}
+		err := service.NewWithdrawUpdater(getValue, nil)(dummyFSUpdater, trans)
+		AssertSomeError(t, err)
+	})
+	update := func(_ firestore_facade.Updater, userId string, value core.Money) error {
+		return nil
+		//if userId == trans.UserId && value == newWithdrawn {
+		//
+		//}
+	}
+	t.Run("error case - updating throws", func(t *testing.T) {
+		update := func(_ firestore_facade.Updater, userId string, value core.Money) error {
+			if userId == trans.UserId && value == newWithdrawn {
+				return RandomError()
+			}
+			panic("unexpected")
+		}
+		err := service.NewWithdrawUpdater(getValue, update)(dummyFSUpdater, trans)
+		AssertSomeError(t, err)
+
+	})
+	t.Run("happy case", func(t *testing.T) {
+		err := service.NewWithdrawUpdater(getValue, update)(dummyFSUpdater, trans)
+		AssertNoError(t, err)
 	})
 }

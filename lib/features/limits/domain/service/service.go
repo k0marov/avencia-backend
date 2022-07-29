@@ -6,6 +6,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
+	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
@@ -17,9 +18,9 @@ import (
 type LimitChecker = func(wantTransaction transValues.Transaction) error
 type LimitsGetter = func(userId string) (entities.Limits, error)
 
-// WithdrawnUpdateGetter computes the new Withdrawn value from a transaction;
-// returns an error if transaction is not a withdrawal, in other words, when the Amount is positive
-type WithdrawnUpdateGetter = func(t transValues.Transaction) (core.Money, error)
+type WithdrawUpdater = func(u firestore_facade.Updater, t transValues.Transaction) error
+
+type withdrawnUpdateGetter = func(t transValues.Transaction) (core.Money, error)
 
 func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[core.Currency]core.MoneyAmount) LimitsGetter {
 	return func(userId string) (entities.Limits, error) {
@@ -61,7 +62,7 @@ func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
 	}
 }
 
-func NewWithdrawnUpdateGetter(getLimits LimitsGetter) WithdrawnUpdateGetter {
+func NewWithdrawnUpdateGetter(getLimits LimitsGetter) withdrawnUpdateGetter {
 	return func(t transValues.Transaction) (core.Money, error) {
 		if t.Money.Amount.IsPos() {
 			return core.Money{}, fmt.Errorf("expected withdrawal; got deposit")
@@ -76,5 +77,19 @@ func NewWithdrawnUpdateGetter(getLimits LimitsGetter) WithdrawnUpdateGetter {
 			Currency: t.Money.Currency,
 			Amount:   newWithdrawn,
 		}, nil
+	}
+}
+
+func NewWithdrawUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUpdater) WithdrawUpdater {
+	return func(u firestore_facade.Updater, t transValues.Transaction) error {
+		newWithdrawn, err := getValue(t)
+		if err != nil {
+			return core_err.Rethrow("getting new withdrawn value", err)
+		}
+		err = update(u, t.UserId, newWithdrawn)
+		if err != nil {
+			return core_err.Rethrow("updating the withdrawn value in store", err)
+		}
+		return nil
 	}
 }
