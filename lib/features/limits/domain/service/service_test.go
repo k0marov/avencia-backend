@@ -3,7 +3,7 @@ package service_test
 import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
-	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
+	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/service"

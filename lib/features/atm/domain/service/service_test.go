@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
+	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
@@ -15,7 +16,6 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
-	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
 	userEntities "github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
 	"reflect"
 )

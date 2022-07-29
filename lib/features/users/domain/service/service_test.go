@@ -1,7 +1,7 @@
 package service_test
 
 import (
-	. "github.com/k0marov/avencia-backend/lib/core/test_helpers"
+	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	limitsEntities "github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	userEntities "github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/users/domain/service"

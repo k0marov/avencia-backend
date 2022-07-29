@@ -2,7 +2,7 @@ package transfers
 
 import (
 	"cloud.google.com/go/firestore"
-	"github.com/k0marov/avencia-backend/lib/core/batch"
+	"github.com/k0marov/avencia-backend/lib/core/firestore_facade/batch"
 	atmService "github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/delivery/http/handlers"

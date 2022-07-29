@@ -3,9 +3,9 @@ package service
 import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/batch"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
+	"github.com/k0marov/avencia-backend/lib/core/firestore_facade/batch"
 	atmService "github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
@@ -21,6 +21,7 @@ type transferConverter = func(values.RawTransfer) (values.Transfer, error)
 type transferValidator = func(values.Transfer) error
 
 // TODO: try to simplify
+
 func NewTransferer(convert transferConverter, validate transferValidator, runBatch batch.WriteRunner, transact atmService.TransactionFinalizer) Transferer {
 	return func(raw values.RawTransfer) error {
 		t, err := convert(raw)
