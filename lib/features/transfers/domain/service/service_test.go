@@ -28,7 +28,7 @@ func TestTransferer(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		err := service.NewTransferer(convert, nil, nil, nil)(tRaw)
+		err := service.NewTransferer(convert, nil, nil)(tRaw)
 		AssertSomeError(t, err)
 	})
 	validate := func(transfer values.Transfer) error {
@@ -42,16 +42,31 @@ func TestTransferer(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		gotErr := service.NewTransferer(convert, validate, nil, nil)(tRaw)
+		gotErr := service.NewTransferer(convert, validate, nil)(tRaw)
 		AssertError(t, gotErr, err)
 	})
 
+	t.Run("happy case - forward to perform", func(t *testing.T) {
+		err := RandomError()
+		perform := func(t values.Transfer) error {
+			if t == transf {
+				return err
+			}
+			panic("unexpected")
+		}
+		gotErr := service.NewTransferer(convert, validate, perform)(tRaw)
+		AssertError(t, gotErr, err)
+	})
+}
+
+func TestTransferPerformer(t *testing.T) {
 	// TODO: simplify this callback hell
 	runBatch := func(f func(firestore_facade.BatchUpdater) error) error {
 		return f(func(*firestore.DocumentRef, map[string]any) error {
 			return nil
 		})
 	}
+	transf := RandomTransfer()
 
 	withdrawTrans := transValues.Transaction{
 		UserId: transf.FromId,
@@ -77,7 +92,7 @@ func TestTransferer(t *testing.T) {
 			}
 			return nil
 		}
-		err := service.NewTransferer(convert, validate, runBatch, transact)(tRaw)
+		err := service.NewTransferPerformer(runBatch, transact)(transf)
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - depositing to recipient fails", func(t *testing.T) {
@@ -87,11 +102,11 @@ func TestTransferer(t *testing.T) {
 			}
 			return nil
 		}
-		err := service.NewTransferer(convert, validate, runBatch, transact)(tRaw)
+		err := service.NewTransferPerformer(runBatch, transact)(transf)
 		AssertSomeError(t, err)
 	})
 	t.Run("happy case", func(t *testing.T) {
-		err := service.NewTransferer(convert, validate, runBatch, transact)(tRaw)
+		err := service.NewTransferPerformer(runBatch, transact)(transf)
 		AssertNoError(t, err)
 	})
 }

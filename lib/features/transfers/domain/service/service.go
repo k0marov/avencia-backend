@@ -18,20 +18,26 @@ type Transferer = func(values.RawTransfer) error
 // transferConverter error may be a ClientError
 type transferConverter = func(values.RawTransfer) (values.Transfer, error)
 
-// TODO: try to simplify
+type transferPerformer = func(values.Transfer) error
 
-func NewTransferer(convert transferConverter, validate validators.TransferValidator, runBatch batch.WriteRunner, transact tService.TransactionFinalizer) Transferer {
+func NewTransferer(convert transferConverter, validate validators.TransferValidator, perform transferPerformer) Transferer {
 	return func(raw values.RawTransfer) error {
 		t, err := convert(raw)
 		if err != nil {
-			return core_err.Rethrow("converting raw transfers data to a transfers", err)
+			return core_err.Rethrow("converting raw transfer data to a transfer", err)
 		}
 		err = validate(t)
 		if err != nil {
 			return err
 		}
+		return perform(t)
+	}
+}
+
+func NewTransferPerformer(runBatch batch.WriteRunner, transact tService.TransactionFinalizer) transferPerformer {
+	return func(t values.Transfer) error {
 		return runBatch(func(u firestore_facade.BatchUpdater) error {
-			// withdraw money from the wallets of caller
+			// withdraw money from the wallet of caller
 			withdrawTrans := transValues.Transaction{
 				UserId: t.FromId,
 				Money: core.Money{
@@ -39,7 +45,7 @@ func NewTransferer(convert transferConverter, validate validators.TransferValida
 					Amount:   t.Money.Amount.Neg(),
 				},
 			}
-			err = transact(u, withdrawTrans)
+			err := transact(u, withdrawTrans)
 			if err != nil {
 				return err
 			}

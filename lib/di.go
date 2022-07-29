@@ -99,7 +99,7 @@ func Initialize() http.Handler {
 	// ===== TRANSACTIONS =====
 	transValidator := tValidators.NewTransactionValidator(checkLimit, getBalance)
 	performTrans := tService.NewTransactionPerformer(updateBalance, updateWithdrawn)
-	finalizeTransaction := tService.NewTransactionFinalizer(transValidator, performTrans)
+	transact := tService.NewTransactionFinalizer(transValidator, performTrans)
 
 	// ===== ATM =====
 	codeValidator := atmValidators.NewTransCodeValidator(jwtVerifier)
@@ -108,7 +108,7 @@ func Initialize() http.Handler {
 	genCode := atmService.NewCodeGenerator(jwtIssuer)
 	verifyCode := atmService.NewCodeVerifier(codeValidator, getUserInfo)
 	checkBanknote := atmService.NewBanknoteChecker(verifyCode)
-	atmFinalizeTransaction := atmService.NewATMTransactionFinalizer(atmSecretValidator, runBatch, finalizeTransaction)
+	atmFinalizeTransaction := atmService.NewATMTransactionFinalizer(atmSecretValidator, runBatch, transact)
 
 	genCodeHandler := atmHandlers.NewGenerateCodeHandler(genCode)
 	verifyCodeHandler := atmHandlers.NewVerifyCodeHandler(verifyCode)
@@ -116,9 +116,10 @@ func Initialize() http.Handler {
 	atmTransactionHandler := atmHandlers.NewFinalizeTransactionHandler(atmFinalizeTransaction)
 
 	// ===== TRANSFERS =====
-	convert := transService.NewTransferConverter(userFromEmail)
-	validate := transValidators.NewTransferValidator()
-	transfer := transService.NewTransferer(convert, validate, runBatch, finalizeTransaction)
+	convertTransfer := transService.NewTransferConverter(userFromEmail)
+	validateTransfer := transValidators.NewTransferValidator()
+	performTransfer := transService.NewTransferPerformer(runBatch, transact)
+	transfer := transService.NewTransferer(convertTransfer, validateTransfer, performTransfer)
 	transferHandler := transHandlers.NewTransferHandler(transfer)
 
 	apiRouter := api.NewAPIRouter(api.Handlers{
