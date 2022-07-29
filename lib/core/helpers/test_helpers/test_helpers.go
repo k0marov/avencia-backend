@@ -2,7 +2,7 @@ package test_helpers
 
 import (
 	"cloud.google.com/go/firestore"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	"log"
 	"math"
 	"math/rand"
@@ -17,7 +17,7 @@ func init() {
 	randGen = rand.New(rand.NewSource(seed))
 }
 
-var StubRunBatch = func(f func(firestore_facade.BatchUpdater) error) error {
+var StubRunBatch = func(f func(fs_facade.BatchUpdater) error) error {
 	return f(func(*firestore.DocumentRef, map[string]any) error {
 		return nil
 	})

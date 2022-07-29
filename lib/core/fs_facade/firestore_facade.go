@@ -1,4 +1,4 @@
-package firestore_facade
+package fs_facade
 
 import (
 	"cloud.google.com/go/firestore"

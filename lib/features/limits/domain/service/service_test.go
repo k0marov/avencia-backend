@@ -4,7 +4,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
@@ -208,14 +208,14 @@ func TestWithdrawUpdater(t *testing.T) {
 		err := service.NewWithdrawUpdater(getValue, nil)(dummyFSUpdater, trans)
 		AssertSomeError(t, err)
 	})
-	update := func(_ firestore_facade.Updater, userId string, value core.Money) error {
+	update := func(_ fs_facade.Updater, userId string, value core.Money) error {
 		return nil
 		//if userId == trans.UserId && value == newWithdrawn {
 		//
 		//}
 	}
 	t.Run("error case - updating throws", func(t *testing.T) {
-		update := func(_ firestore_facade.Updater, userId string, value core.Money) error {
+		update := func(_ fs_facade.Updater, userId string, value core.Money) error {
 			if userId == trans.UserId && value == newWithdrawn {
 				return RandomError()
 			}

@@ -4,7 +4,7 @@ import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
@@ -76,10 +76,10 @@ func TestTransferPerformer(t *testing.T) {
 		},
 	}
 
-	transact := func(firestore_facade.BatchUpdater, transValues.Transaction) error { return nil }
+	transact := func(fs_facade.BatchUpdater, transValues.Transaction) error { return nil }
 
 	t.Run("error case - withdrawing from caller fails", func(t *testing.T) {
-		transact := func(u firestore_facade.BatchUpdater, t transValues.Transaction) error {
+		transact := func(u fs_facade.BatchUpdater, t transValues.Transaction) error {
 			if reflect.DeepEqual(t, withdrawTrans) {
 				return RandomError()
 			}
@@ -89,7 +89,7 @@ func TestTransferPerformer(t *testing.T) {
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - depositing to recipient fails", func(t *testing.T) {
-		transact := func(u firestore_facade.BatchUpdater, t transValues.Transaction) error {
+		transact := func(u fs_facade.BatchUpdater, t transValues.Transaction) error {
 			if t == depositTrans {
 				return RandomError()
 			}

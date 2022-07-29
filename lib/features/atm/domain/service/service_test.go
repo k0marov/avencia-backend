@@ -11,7 +11,7 @@ import (
 )
 
 import (
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	userEntities "github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
 	"reflect"
 )
@@ -125,7 +125,7 @@ func TestATMTransactionFinalizer(t *testing.T) {
 			return nil
 		}
 		err := RandomError()
-		finalize := func(u firestore_facade.BatchUpdater, gotTrans values.Transaction) error {
+		finalize := func(u fs_facade.BatchUpdater, gotTrans values.Transaction) error {
 			if gotTrans == atmTrans.Trans {
 				return err
 			}

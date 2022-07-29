@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade/batch"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade/batch"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
@@ -60,7 +60,7 @@ func NewATMTransactionFinalizer(validateSecret validators.ATMSecretValidator, ru
 		if err != nil {
 			return err
 		}
-		return runBatch(func(u firestore_facade.BatchUpdater) error {
+		return runBatch(func(u fs_facade.BatchUpdater) error {
 			return finalize(u, atmTrans.Trans)
 		})
 	}

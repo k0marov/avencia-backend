@@ -4,17 +4,17 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 )
 
-type WriteRunner = func(func(batch firestore_facade.BatchUpdater) error) error
+type WriteRunner = func(func(batch fs_facade.BatchUpdater) error) error
 
 // TODO: refactor the core directory
 
 func NewWriteRunner(client *firestore.Client) WriteRunner {
-	return func(perform func(batch firestore_facade.BatchUpdater) error) error {
+	return func(perform func(batch fs_facade.BatchUpdater) error) error {
 		batch := client.Batch()
-		err := perform(firestore_facade.NewBatchUpdater(batch))
+		err := perform(fs_facade.NewBatchUpdater(batch))
 		if err != nil {
 			return err
 		}

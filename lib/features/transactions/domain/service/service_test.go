@@ -3,7 +3,7 @@ package service_test
 import (
 	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
@@ -30,7 +30,7 @@ func TestTransactionFinalizer(t *testing.T) {
 		validate := func(values.Transaction) (core.MoneyAmount, error) {
 			return currentBalance, nil
 		}
-		performTransaction := func(u firestore_facade.BatchUpdater, curBal core.MoneyAmount, trans values.Transaction) error {
+		performTransaction := func(u fs_facade.BatchUpdater, curBal core.MoneyAmount, trans values.Transaction) error {
 			if curBal == currentBalance && trans == transaction {
 				return wantErr
 			}
@@ -56,7 +56,7 @@ func TestTransactionPerformer(t *testing.T) {
 			},
 		}
 		t.Run("should compute and update balance", func(t *testing.T) {
-			updBal := func(b firestore_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) error {
+			updBal := func(b fs_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) error {
 				if user == userId && currency == curr && newBal.IsEqual(core.NewMoneyAmount(332.5)) {
 					return nil
 				}
@@ -66,7 +66,7 @@ func TestTransactionPerformer(t *testing.T) {
 			AssertNoError(t, err)
 		})
 		t.Run("updating balance throws", func(t *testing.T) {
-			updBal := func(firestore_facade.Updater, string, core.Currency, core.MoneyAmount) error {
+			updBal := func(fs_facade.Updater, string, core.Currency, core.MoneyAmount) error {
 				return RandomError()
 			}
 			err := service.NewTransactionPerformer(updBal, nil)(batchUpd, curBalance, depTrans)
@@ -81,14 +81,14 @@ func TestTransactionPerformer(t *testing.T) {
 				Amount:   core.NewMoneyAmount(-42.5),
 			},
 		}
-		updBal := func(b firestore_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) error {
+		updBal := func(b fs_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) error {
 			if user == userId && currency == curr && newBal.IsEqual(core.NewMoneyAmount(57.5)) {
 				return nil
 			}
 			panic("unexpected")
 		}
 		t.Run("updating withdrawn throws", func(t *testing.T) {
-			updateWithdrawn := func(_ firestore_facade.Updater, trans values.Transaction) error {
+			updateWithdrawn := func(_ fs_facade.Updater, trans values.Transaction) error {
 				if trans == withdrawTrans {
 					return RandomError()
 				}
@@ -98,7 +98,7 @@ func TestTransactionPerformer(t *testing.T) {
 			AssertSomeError(t, err)
 		})
 		t.Run("happy case", func(t *testing.T) {
-			updateWithdrawn := func(_ firestore_facade.Updater, trans values.Transaction) error {
+			updateWithdrawn := func(_ fs_facade.Updater, trans values.Transaction) error {
 				return nil
 			}
 			err := service.NewTransactionPerformer(updBal, updateWithdrawn)(batchUpd, curBalance, withdrawTrans)

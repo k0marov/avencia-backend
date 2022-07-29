@@ -4,8 +4,8 @@ import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade/batch"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade/batch"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
@@ -36,7 +36,7 @@ func NewTransferer(convert transferConverter, validate validators.TransferValida
 
 func NewTransferPerformer(runBatch batch.WriteRunner, transact tService.TransactionFinalizer) transferPerformer {
 	return func(t values.Transfer) error {
-		return runBatch(func(u firestore_facade.BatchUpdater) error {
+		return runBatch(func(u fs_facade.BatchUpdater) error {
 			// withdraw money from the wallet of caller
 			withdrawTrans := transValues.Transaction{
 				UserId: t.FromId,

@@ -6,7 +6,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
@@ -18,7 +18,7 @@ import (
 type LimitChecker = func(wantTransaction transValues.Transaction) error
 type LimitsGetter = func(userId string) (entities.Limits, error)
 
-type WithdrawUpdater = func(u firestore_facade.Updater, t transValues.Transaction) error
+type WithdrawUpdater = func(u fs_facade.Updater, t transValues.Transaction) error
 
 type withdrawnUpdateGetter = func(t transValues.Transaction) (core.Money, error)
 
@@ -81,7 +81,7 @@ func NewWithdrawnUpdateGetter(getLimits LimitsGetter) withdrawnUpdateGetter {
 }
 
 func NewWithdrawUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUpdater) WithdrawUpdater {
-	return func(u firestore_facade.Updater, t transValues.Transaction) error {
+	return func(u fs_facade.Updater, t transValues.Transaction) error {
 		newWithdrawn, err := getValue(t)
 		if err != nil {
 			return core_err.Rethrow("getting new withdrawn value", err)

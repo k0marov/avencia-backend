@@ -6,8 +6,8 @@ import (
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade/batch"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade/batch"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/handlers"
 	atmService "github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
@@ -78,7 +78,7 @@ func Initialize() http.Handler {
 	userFromEmail := auth.NewUserFromEmail(fbAuth)
 
 	// ===== WALLETS =====
-	walletDocGetter := storeImpl.NewWalletDocGetter(firestore_facade.NewDocGetter(fsClient))
+	walletDocGetter := storeImpl.NewWalletDocGetter(fs_facade.NewDocGetter(fsClient))
 	storeGetWallet := storeImpl.NewWalletGetter(walletDocGetter)
 	updateBalance := storeImpl.NewBalanceUpdater(walletDocGetter)
 	getWallet := walletService.NewWalletGetter(storeGetWallet)
@@ -86,7 +86,7 @@ func Initialize() http.Handler {
 
 	// ===== LIMITS =====
 	storeGetWithdraws := limitsStore.NewWithdrawsGetter(fsClient)
-	storeUpdateWithdrawn := limitsStore.NewWithdrawUpdater(limitsStore.NewWithdrawDocGetter(firestore_facade.NewDocGetter(fsClient)))
+	storeUpdateWithdrawn := limitsStore.NewWithdrawUpdater(limitsStore.NewWithdrawDocGetter(fs_facade.NewDocGetter(fsClient)))
 	getLimits := limitsService.NewLimitsGetter(storeGetWithdraws, configurable.LimitedCurrencies)
 	checkLimit := limitsService.NewLimitChecker(getLimits)
 	getUpdatedWithdrawn := limitsService.NewWithdrawnUpdateGetter(getLimits)

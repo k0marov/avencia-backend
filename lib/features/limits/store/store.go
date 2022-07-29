@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/firestore_facade"
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/general_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
@@ -15,7 +15,7 @@ import (
 // withdrawsDocGetter userId should be non-empty
 type withdrawDocGetter = func(userId string, currency core.Currency) *firestore.DocumentRef
 
-func NewWithdrawDocGetter(getDoc firestore_facade.DocGetter) withdrawDocGetter {
+func NewWithdrawDocGetter(getDoc fs_facade.DocGetter) withdrawDocGetter {
 	return func(userId string, currency core.Currency) *firestore.DocumentRef {
 		doc := getDoc(fmt.Sprintf("Withdraws/%s/Withdraws/%s", userId, string(currency)))
 		if doc == nil {
@@ -59,7 +59,7 @@ func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
 }
 
 func NewWithdrawUpdater(getDoc withdrawDocGetter) store.WithdrawUpdater {
-	return func(update firestore_facade.Updater, userId string, withdrawn core.Money) error {
+	return func(update fs_facade.Updater, userId string, withdrawn core.Money) error {
 		doc := getDoc(userId, withdrawn.Currency)
 		return update(doc, map[string]any{withdrawnKey: withdrawn.Amount.Num()})
 	}
