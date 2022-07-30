@@ -2,15 +2,17 @@ package service
 
 import (
 	"fmt"
+
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
-	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/k0marov/avencia-backend/lib/core/helpers/general_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
+	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
 // LimitChecker returns a client error if rejected; simple error if server error; nil if accepted
@@ -22,6 +24,8 @@ type WithdrawUpdater = func(u fs_facade.Updater, t transValues.Transaction) erro
 
 type withdrawnUpdateGetter = func(t transValues.Transaction) (core.Money, error)
 
+
+// TODO: simplify 
 func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[core.Currency]core.MoneyAmount) LimitsGetter {
 	return func(userId string) (entities.Limits, error) {
 		withdrawns, err := getWithdrawns(userId)
@@ -30,13 +34,19 @@ func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[
 		}
 		limits := entities.Limits{}
 		for curr, maxLimit := range limitedCurrencies {
-			withdrawn := withdrawns[string(curr)]
-			withdrawnRelevant := core.NewMoneyAmount(0)
-			if configurable.IsWithdrawLimitRelevant(withdrawn.UpdatedAt) {
-				withdrawnRelevant = withdrawn.Withdrawn
+			i := general_helpers.FindInSlice(withdrawns, func(w values.WithdrawnModel) bool { return w.Withdrawn.Currency == curr; }) 
+			var w values.WithdrawnModel
+			if i != -1 {
+				w = withdrawns[i] 
 			}
+
+			relevantWithdrawn := core.NewMoneyAmount(0)
+			if configurable.IsWithdrawLimitRelevant(w.UpdatedAt) {
+				relevantWithdrawn = core.NewMoneyAmount(w.Withdrawn.Amount.Num())
+			} 			
+			// log.Printf("%v (%v): %v", curr, w.Withdrawn.Currency, relevantWithdrawn.Num())
 			limits[curr] = values.Limit{
-				Withdrawn: withdrawnRelevant,
+				Withdrawn: relevantWithdrawn,
 				Max:       maxLimit,
 			}
 		}

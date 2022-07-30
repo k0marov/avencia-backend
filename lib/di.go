@@ -2,6 +2,10 @@ package lib
 
 import (
 	"context"
+	"io/ioutil"
+	"log"
+	"net/http"
+
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/config"
@@ -14,6 +18,7 @@ import (
 	atmValidators "github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	limitsStore "github.com/k0marov/avencia-backend/lib/features/limits/store"
+	"github.com/k0marov/avencia-backend/lib/features/limits/store/mappers"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
 	tValidators "github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
 	transHandlers "github.com/k0marov/avencia-backend/lib/features/transfers/delivery/http/handlers"
@@ -23,9 +28,6 @@ import (
 	userService "github.com/k0marov/avencia-backend/lib/features/users/domain/service"
 	walletService "github.com/k0marov/avencia-backend/lib/features/wallets/domain/service"
 	storeImpl "github.com/k0marov/avencia-backend/lib/features/wallets/store"
-	"io/ioutil"
-	"log"
-	"net/http"
 
 	firebase "firebase.google.com/go"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
@@ -68,6 +70,7 @@ func Initialize() http.Handler {
 
 	// ===== FIRESTORE =====
 	runBatch := batch.NewWriteRunner(fsClient)
+	getDoc := fs_facade.NewDocGetter(fsClient)
 
 	// ===== JWT =====
 	jwtIssuer := jwt.NewIssuer(jwtSecret)
@@ -78,15 +81,15 @@ func Initialize() http.Handler {
 	userFromEmail := auth.NewUserFromEmail(fbAuth)
 
 	// ===== WALLETS =====
-	walletDocGetter := storeImpl.NewWalletDocGetter(fs_facade.NewDocGetter(fsClient))
+	walletDocGetter := storeImpl.NewWalletDocGetter(getDoc)
 	storeGetWallet := storeImpl.NewWalletGetter(walletDocGetter)
 	updateBalance := storeImpl.NewBalanceUpdater(walletDocGetter)
 	getWallet := walletService.NewWalletGetter(storeGetWallet)
 	getBalance := walletService.NewBalanceGetter(getWallet)
 
 	// ===== LIMITS =====
-	storeGetWithdraws := limitsStore.NewWithdrawsGetter(fsClient)
-	storeUpdateWithdrawn := limitsStore.NewWithdrawUpdater(limitsStore.NewWithdrawDocGetter(fs_facade.NewDocGetter(fsClient)))
+	storeGetWithdraws := limitsStore.NewWithdrawsGetter(fsClient, mappers.WithdrawsDecoderImpl)
+	storeUpdateWithdrawn := limitsStore.NewWithdrawUpdater(getDoc, mappers.WithdrawEncoderImpl)
 	getLimits := limitsService.NewLimitsGetter(storeGetWithdraws, configurable.LimitedCurrencies)
 	checkLimit := limitsService.NewLimitChecker(getLimits)
 	getUpdatedWithdrawn := limitsService.NewWithdrawnUpdateGetter(getLimits)

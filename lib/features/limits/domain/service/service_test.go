@@ -1,25 +1,26 @@
 package service_test
 
 import (
+	"testing"
+	"time"
+
 	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
-	"testing"
-	"time"
+	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
-// TODO: simplify or split this file - it's too big 
+// TODO: simplify or split this file - it's too big
 
 func TestLimitsGetter(t *testing.T) {
 	user := RandomString()
 	t.Run("error case - getting withdrawns throws", func(t *testing.T) {
-		getWithdrawns := func(userId string) (map[string]values.WithdrawnModel, error) {
+		getWithdrawns := func(userId string) ([]values.WithdrawnModel, error) {
 			if userId == user {
 				return nil, RandomError()
 			}
@@ -35,23 +36,35 @@ func TestLimitsGetter(t *testing.T) {
 			"ETH": core.NewMoneyAmount(42),
 			"EUR": core.NewMoneyAmount(1000),
 		}
-		getWithdrawns := func(string) (map[string]values.WithdrawnModel, error) {
-			return map[string]values.WithdrawnModel{
-				"BTC": {
-					Withdrawn: core.NewMoneyAmount(0.001), 
-					UpdatedAt: time.Now(), 
+		getWithdrawns := func(string) ([]values.WithdrawnModel, error) {
+			return []values.WithdrawnModel{
+				{
+					Withdrawn: core.Money{
+						Currency: core.Currency("BTC"), // not in limited values
+						Amount:   core.NewMoneyAmount(0.001),
+					},
+					UpdatedAt: time.Now(),
 				},
-				"RUB": {
-					Withdrawn: core.NewMoneyAmount(10000), 
-					UpdatedAt: time.Date(1999, 0, 0, 0, 0, 0, 0, time.UTC), 
+				{
+					Withdrawn: core.Money{
+						Currency: core.Currency("RUB"), // withdraw too old
+						Amount:   core.NewMoneyAmount(10000),
+					},
+					UpdatedAt: time.Date(1999, 0, 0, 0, 0, 0, 0, time.UTC),
 				},
-				"ETH": {
-					Withdrawn: core.NewMoneyAmount(41),
-					UpdatedAt: time.Now().Add(-10*time.Hour),
+				{
+					Withdrawn: core.Money{
+						Currency: "ETH",
+						Amount:   core.NewMoneyAmount(41),
+					},
+					UpdatedAt: time.Now().Add(-10 * time.Hour),
 				},
-				"USD": {
-					Withdrawn: core.NewMoneyAmount(499), 
-					UpdatedAt: time.Now(), 
+				{
+					Withdrawn: core.Money{
+						Currency: core.Currency("USD"),
+						Amount:   core.NewMoneyAmount(499),
+					},
+					UpdatedAt: time.Now(),
 				},
 			}, nil
 		}
@@ -75,7 +88,7 @@ func TestLimitsGetter(t *testing.T) {
 				Max:       core.NewMoneyAmount(40000),
 			},
 		}
-		Assert(t, limits, wantLimits, "returned limits")
+		Assert(t, limits, wantLimits, "returned limits") 
 	})
 }
 
@@ -120,7 +133,7 @@ func TestLimitChecker(t *testing.T) {
 	})
 	t.Run("happy case", func(t *testing.T) {
 		trans := transValues.Transaction{
-			Source: RandomTransactionSource(), 
+			Source: RandomTransactionSource(),
 			UserId: user,
 			Money: core.Money{
 				Currency: "RUB",

@@ -14,3 +14,13 @@ func DecodeFloat(value any) (float64, error) {
 	}
 	return 0, fmt.Errorf("failed to decode %+v as float64", value)
 }
+
+// FindInSlice returns -1 if element does not exist
+func FindInSlice[T any](slice []T, match func(T) bool) (index int) {
+	for i := range slice {
+		if match(slice[i]) {
+			return i
+		}
+	}
+	return -1
+}
