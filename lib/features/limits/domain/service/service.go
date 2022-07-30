@@ -44,7 +44,6 @@ func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[
 			if configurable.IsWithdrawLimitRelevant(w.UpdatedAt) {
 				relevantWithdrawn = core.NewMoneyAmount(w.Withdrawn.Amount.Num())
 			} 			
-			// log.Printf("%v (%v): %v", curr, w.Withdrawn.Currency, relevantWithdrawn.Num())
 			limits[curr] = values.Limit{
 				Withdrawn: relevantWithdrawn,
 				Max:       maxLimit,
