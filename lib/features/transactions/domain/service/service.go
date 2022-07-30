@@ -5,6 +5,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
+	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
 	walletStore "github.com/k0marov/avencia-backend/lib/features/wallets/domain/store"
@@ -23,13 +24,17 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform t
 	}
 }
 
-func NewTransactionPerformer(updateWithdrawn limitsService.WithdrawUpdater, updBal walletStore.BalanceUpdater) transactionPerformer {
+func NewTransactionPerformer(updateWithdrawn limitsService.WithdrawUpdater, addHist histService.TransStorer, updBal walletStore.BalanceUpdater) transactionPerformer {
 	return func(u fs_facade.BatchUpdater, curBal core.MoneyAmount, t values.Transaction) error {
 		if t.Money.Amount.IsNeg() {
 			err := updateWithdrawn(u, t)
 			if err != nil {
 				return core_err.Rethrow("updating withdrawn", err)
 			}
+		}
+		err := addHist(u, t) 
+		if err != nil {
+			return core_err.Rethrow("adding trans to history", err)
 		}
 
 		return updBal(u, t.UserId, t.Money.Currency, curBal.Add(t.Money.Amount))

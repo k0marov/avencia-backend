@@ -72,11 +72,24 @@ func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount
 				}
 				panic("unexpected")
 			}
-			err := service.NewTransactionPerformer(updateWithdrawn, nil)(batchUpd, curBalance, trans)
+			err := service.NewTransactionPerformer(updateWithdrawn, nil, nil)(batchUpd, curBalance, trans)
 			AssertSomeError(t, err)
 		})
 	}
 
+	addHist := func(u fs_facade.Updater, gotTrans values.Transaction) error {
+		if gotTrans == trans {
+			return nil
+		}
+		panic("unexpected")
+	}
+	t.Run("adding transaction to history throws", func(t *testing.T) {
+		addHist := func(fs_facade.Updater, values.Transaction) error {
+			return RandomError()
+		}
+		err := service.NewTransactionPerformer(updateWithdrawn, addHist, nil)(batchUpd, curBalance, trans) 
+		AssertSomeError(t, err)
+	})
 
 	updBal := func(b fs_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) error {
 		if user == trans.UserId && currency == trans.Money.Currency && newBal.IsEqual(wantNewBal) {
@@ -88,12 +101,12 @@ func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount
 		updBal := func(fs_facade.Updater, string, core.Currency, core.MoneyAmount) error {
 			return RandomError()
 		}
-		err := service.NewTransactionPerformer(updateWithdrawn, updBal)(batchUpd, curBalance, trans)
+		err := service.NewTransactionPerformer(updateWithdrawn, addHist, updBal)(batchUpd, curBalance, trans)
 		AssertSomeError(t, err)
 	})
 
 	t.Run("happy case", func(t *testing.T) {
-		err := service.NewTransactionPerformer(updateWithdrawn, updBal)(batchUpd, curBalance, trans)
+		err := service.NewTransactionPerformer(updateWithdrawn, addHist, updBal)(batchUpd, curBalance, trans)
 		AssertNoError(t, err)
 	})
 }
