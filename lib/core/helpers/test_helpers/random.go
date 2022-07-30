@@ -57,8 +57,16 @@ func RandomUserInfo() userEntities.UserInfo {
 }
 func RandomTransactionData() transValues.Transaction {
 	return transValues.Transaction{
+		Source: RandomTransactionSource(),
 		UserId: RandomString(),
 		Money:  RandomPositiveMoney(),
+	}
+}
+
+func RandomTransactionSource() transValues.TransSource {
+	return transValues.TransSource{
+		Type:   transValues.TransSourceType(RandomString()),
+		Detail: RandomString(),
 	}
 }
 

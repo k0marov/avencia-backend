@@ -12,6 +12,7 @@ import (
 func TestTransactionValidator(t *testing.T) {
 	curBalance := core.NewMoneyAmount(100.0)
 	trans := values.Transaction{
+		Source: RandomTransactionSource(),
 		UserId: RandomString(),
 		Money: core.Money{
 			Currency: RandomCurrency(),

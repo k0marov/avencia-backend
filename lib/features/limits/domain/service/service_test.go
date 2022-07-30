@@ -95,6 +95,7 @@ func TestLimitChecker(t *testing.T) {
 	t.Run("error case - limit exceeded", func(t *testing.T) {
 		trans := transValues.Transaction{
 			UserId: user,
+			Source: RandomTransactionSource(),
 			Money: core.Money{
 				Currency: "USD",
 				Amount:   core.NewMoneyAmount(-200),
@@ -105,6 +106,7 @@ func TestLimitChecker(t *testing.T) {
 	})
 	t.Run("happy case", func(t *testing.T) {
 		trans := transValues.Transaction{
+			Source: RandomTransactionSource(), 
 			UserId: user,
 			Money: core.Money{
 				Currency: "RUB",
@@ -116,6 +118,7 @@ func TestLimitChecker(t *testing.T) {
 	})
 	t.Run("happy case - value is positive (its a deposit)", func(t *testing.T) {
 		trans := transValues.Transaction{
+			Source: RandomTransactionSource(),
 			UserId: user,
 			Money: core.Money{
 				Currency: "USD",
@@ -155,6 +158,7 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 	})
 	t.Run("happy case - previous withdrawn value exists", func(t *testing.T) {
 		trans := transValues.Transaction{
+			Source: RandomTransactionSource(),
 			UserId: userId,
 			Money: core.Money{
 				Currency: "USD",
@@ -170,6 +174,7 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 	})
 	t.Run("happy case - there is no previous withdrawn value", func(t *testing.T) {
 		trans := transValues.Transaction{
+			Source: RandomTransactionSource(),
 			UserId: userId,
 			Money: core.Money{
 				Currency: "BTC",
@@ -191,6 +196,7 @@ func TestWithdrawUpdater(t *testing.T) {
 	}
 
 	trans := transValues.Transaction{
+		Source: RandomTransactionSource(),
 		UserId: RandomString(),
 		Money:  RandomNegativeMoney(),
 	}

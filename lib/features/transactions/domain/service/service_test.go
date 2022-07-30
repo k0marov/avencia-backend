@@ -51,6 +51,7 @@ func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount
 	curBalance := core.NewMoneyAmount(100)
 
 	trans := values.Transaction{
+		Source: RandomTransactionSource(),
 		UserId: RandomString(),
 		Money: core.Money{
 			Currency: RandomCurrency(),

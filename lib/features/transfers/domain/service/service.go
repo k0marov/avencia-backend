@@ -6,9 +6,10 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade/batch"
-	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
+	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
 )
@@ -39,6 +40,7 @@ func NewTransferPerformer(runBatch batch.WriteRunner, transact tService.Transact
 		return runBatch(func(u fs_facade.BatchUpdater) error {
 			// withdraw money from the wallet of caller
 			withdrawTrans := transValues.Transaction{
+				Source: RandomTransactionSource(), // TODO: transaction source should be "transfer" with proper detail
 				UserId: t.FromId,
 				Money: core.Money{
 					Currency: t.Money.Currency,

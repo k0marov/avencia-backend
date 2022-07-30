@@ -26,6 +26,10 @@ func ATMTransactionDecoder(_ url.Values, request api.FinalizeTransactionRequest)
 	return atmValues.ATMTransaction{
 		ATMSecret: []byte(request.ATMSecret),
 		Trans: transValues.Transaction{
+			Source: transValues.TransSource{
+				Type: transValues.TransSourceType(request.Source.Type),
+				Detail: request.Source.Detail,
+			},
 			UserId: request.UserId,
 			Money: core.Money{
 				Currency: core.Currency(request.Currency),

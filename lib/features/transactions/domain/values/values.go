@@ -1,12 +1,11 @@
 package values
 
 import (
-	"time"
-
 	"github.com/k0marov/avencia-backend/lib/core"
 )
 
 type Transaction struct {
+	Source TransSource
 	UserId string
 	Money  core.Money
 }
@@ -24,12 +23,6 @@ const (
 type TransSource struct {
 	Type   TransSourceType
 	Detail string
-}
-
-type TransEntry struct {
-	Source    TransSource
-	Money     core.Money
-	CreatedAt time.Time
 }
 
 
