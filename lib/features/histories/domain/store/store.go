@@ -1,5 +1,7 @@
 package store
 
-import "github.com/k0marov/avencia-backend/lib/core/fs_facade"
+import (
+	"github.com/k0marov/avencia-backend/lib/features/histories/domain/entities"
+)
 
-type HistoryGetter = func(userId string) (fs_facade.Documents, error)
+type HistoryGetter = func(userId string) ([]entities.TransEntry, error)

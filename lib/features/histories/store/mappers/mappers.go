@@ -30,10 +30,6 @@ func TransEntryEncoderImpl(source transValues.TransSource, money core.Money) map
 	}
 }
 
-
-
-
-
 func TransEntryDecoderImpl(doc fs_facade.Document) (entities.TransEntry, error) {
 	sourceMap, ok := doc.Data["source"].(map[string]string)
 	if !ok {
