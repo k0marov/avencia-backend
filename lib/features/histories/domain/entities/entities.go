@@ -4,24 +4,11 @@ import (
 	"time"
 
 	"github.com/k0marov/avencia-backend/lib/core"
+	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
-
-type TransSourceType string
-
-const (
-	CreditCard TransSourceType = "credit-card"
-	Cash                       = "cash"
-	Crypto                     = "crypto"
-	Transfer                   = "transfer"
-)
-
-type TransSource struct {
-	Type   TransSourceType
-	Detail string
-}
-
 type TransEntry struct {
-	Source    TransSource
+	Source    transValues.TransSource
 	Money     core.Money
 	CreatedAt time.Time
 }
+
