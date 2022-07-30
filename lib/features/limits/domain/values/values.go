@@ -10,7 +10,9 @@ type Limit struct {
 	Max       core.MoneyAmount
 }
 
-type WithdrawnWithUpdated struct {
-	Withdrawn core.MoneyAmount
+
+// TODO: move to models 
+type WithdrawnModel struct {
+	Withdrawn core.Money
 	UpdatedAt time.Time
 }

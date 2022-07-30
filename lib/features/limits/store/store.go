@@ -28,22 +28,22 @@ func NewWithdrawDocGetter(getDoc fs_facade.DocGetter) withdrawDocGetter {
 const withdrawnKey = "withdrawn"
 
 func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
-	return func(userId string) (map[string]values.WithdrawnWithUpdated, error) {
+	return func(userId string) ([]values.WithdrawnModel, error) {
 		col := client.Collection(fmt.Sprintf("Withdraws/%s/Withdraws", userId))
 		docs, err := col.Documents(context.Background()).GetAll()
 		if err != nil {
-			return map[string]values.WithdrawnWithUpdated{}, fmt.Errorf("fetching a list of withdraws documents %w", err)
+			return map[string]values.WithdrawnModel{}, fmt.Errorf("fetching a list of withdraws documents %w", err)
 		}
 
-		withdraws := map[string]values.WithdrawnWithUpdated{}
+		withdraws := map[string]values.WithdrawnModel{}
 
 		for _, doc := range docs {
 			withdrawnVal := doc.Data()[withdrawnKey]
 			withdrawn, err := general_helpers.DecodeFloat(withdrawnVal)
 			if err != nil {
-				return map[string]values.WithdrawnWithUpdated{}, err
+				return map[string]values.WithdrawnModel{}, err
 			}
-			withdraws[doc.Ref.ID] = values.WithdrawnWithUpdated{
+			withdraws[doc.Ref.ID] = values.WithdrawnModel{
 				Withdrawn: core.NewMoneyAmount(withdrawn),
 				UpdatedAt: doc.UpdateTime,
 			}

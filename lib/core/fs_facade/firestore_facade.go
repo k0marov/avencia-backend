@@ -8,15 +8,17 @@ import (
 )
 
 type Document struct {
-	Data map[string]any
+	Id        string
+	Data      map[string]any
 	UpdatedAt time.Time
 	CreatedAt time.Time
 }
 
-type Documents []Document 
+type Documents []Document
 
 func NewDocument(doc *firestore.DocumentSnapshot) Document {
 	return Document{
+		Id:        doc.Ref.ID,
 		Data:      doc.Data(),
 		UpdatedAt: doc.UpdateTime,
 		CreatedAt: doc.CreateTime,
@@ -29,8 +31,6 @@ func NewDocuments(docs []*firestore.DocumentSnapshot) (res Documents) {
 	}
 	return
 }
-
-
 
 // TODO: add tests for the store layers thanks to the new facades
 

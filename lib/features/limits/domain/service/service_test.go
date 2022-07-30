@@ -19,7 +19,7 @@ import (
 func TestLimitsGetter(t *testing.T) {
 	user := RandomString()
 	t.Run("error case - getting withdrawns throws", func(t *testing.T) {
-		getWithdrawns := func(userId string) (map[string]values.WithdrawnWithUpdated, error) {
+		getWithdrawns := func(userId string) (map[string]values.WithdrawnModel, error) {
 			if userId == user {
 				return nil, RandomError()
 			}
@@ -35,8 +35,8 @@ func TestLimitsGetter(t *testing.T) {
 			"ETH": core.NewMoneyAmount(42),
 			"EUR": core.NewMoneyAmount(1000),
 		}
-		getWithdrawns := func(string) (map[string]values.WithdrawnWithUpdated, error) {
-			return map[string]values.WithdrawnWithUpdated{
+		getWithdrawns := func(string) (map[string]values.WithdrawnModel, error) {
+			return map[string]values.WithdrawnModel{
 				"BTC": {
 					Withdrawn: core.NewMoneyAmount(0.001), 
 					UpdatedAt: time.Now(), 
