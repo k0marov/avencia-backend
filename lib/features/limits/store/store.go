@@ -28,7 +28,7 @@ func NewWithdrawDocGetter(getDoc fs_facade.DocGetter) withdrawDocGetter {
 const withdrawnKey = "withdrawn"
 
 // TODO: somehow simplify this
-
+// TODO: use GetAll instead of Get in a loop 
 func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
 	return func(userId string) (map[string]values.WithdrawnWithUpdated, error) {
 		coll := client.Collection(fmt.Sprintf("Withdraws/%s/Withdraws", userId))

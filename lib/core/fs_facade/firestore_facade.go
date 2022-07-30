@@ -1,9 +1,36 @@
 package fs_facade
 
 import (
-	"cloud.google.com/go/firestore"
 	"context"
+	"time"
+
+	"cloud.google.com/go/firestore"
 )
+
+type Document struct {
+	Data map[string]any
+	UpdatedAt time.Time
+	CreatedAt time.Time
+}
+
+type Documents []Document 
+
+func NewDocument(doc *firestore.DocumentSnapshot) Document {
+	return Document{
+		Data:      doc.Data(),
+		UpdatedAt: doc.UpdateTime,
+		CreatedAt: doc.CreateTime,
+	}
+}
+
+func NewDocuments(docs []*firestore.DocumentSnapshot) (res Documents) {
+	for _, doc := range docs {
+		res = append(res, NewDocument(doc))
+	}
+	return
+}
+
+
 
 // TODO: add tests for the store layers thanks to the new facades
 
