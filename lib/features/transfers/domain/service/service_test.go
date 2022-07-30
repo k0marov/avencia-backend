@@ -6,8 +6,8 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
+	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
 	"reflect"
@@ -59,20 +59,35 @@ func TestTransferer(t *testing.T) {
 }
 
 func TestTransferPerformer(t *testing.T) {
-	transf := RandomTransfer()
+	transf := values.Transfer{
+		FromId: "vasya",
+		ToId:   "petya",
+		Money: core.Money{
+			Currency: "shekely",
+			Amount:   core.NewMoneyAmount(42),
+		},
+	}
 
 	withdrawTrans := transValues.Transaction{
-		UserId: transf.FromId,
+		Source: transValues.TransSource{
+			Type:   transValues.Transfer,
+			Detail: "petya",
+		},
+		UserId: "vasya",
 		Money: core.Money{
-			Currency: transf.Money.Currency,
-			Amount:   transf.Money.Amount.Neg(),
+			Currency: "shekely",
+			Amount:   core.NewMoneyAmount(-42),
 		},
 	}
 	depositTrans := transValues.Transaction{
-		UserId: transf.ToId,
+		Source: transValues.TransSource{
+			Type:   transValues.Transfer,
+			Detail: "vasya",
+		},
+		UserId: "petya",
 		Money: core.Money{
-			Currency: transf.Money.Currency,
-			Amount:   transf.Money.Amount,
+			Currency: "shekely",
+			Amount:   core.NewMoneyAmount(42),
 		},
 	}
 
@@ -90,7 +105,7 @@ func TestTransferPerformer(t *testing.T) {
 	})
 	t.Run("error case - depositing to recipient fails", func(t *testing.T) {
 		transact := func(u fs_facade.BatchUpdater, t transValues.Transaction) error {
-			if t == depositTrans {
+			if reflect.DeepEqual(t, depositTrans) {
 				return RandomError()
 			}
 			return nil
