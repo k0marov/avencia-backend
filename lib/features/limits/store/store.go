@@ -1,15 +1,14 @@
 package store
 
 import (
-	"cloud.google.com/go/firestore"
 	"context"
 	"fmt"
+
+	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
-	"github.com/k0marov/avencia-backend/lib/core/helpers/general_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
-	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
 )
 
 // withdrawsDocGetter userId should be non-empty
@@ -27,34 +26,14 @@ func NewWithdrawDocGetter(getDoc fs_facade.DocGetter) withdrawDocGetter {
 
 const withdrawnKey = "withdrawn"
 
-// TODO: somehow simplify this
-// TODO: use GetAll instead of Get in a loop 
 func NewWithdrawsGetter(client *firestore.Client) store.WithdrawsGetter {
-	return func(userId string) (map[string]values.WithdrawnWithUpdated, error) {
-		coll := client.Collection(fmt.Sprintf("Withdraws/%s/Withdraws", userId))
-		docs, err := coll.DocumentRefs(context.Background()).GetAll()
+	return func(userId string) (fs_facade.Documents, error) {
+		col := client.Collection(fmt.Sprintf("Withdraws/%s/Withdraws", userId))
+		docs, err := col.Documents(context.Background()).GetAll()
 		if err != nil {
-			return map[string]values.WithdrawnWithUpdated{}, fmt.Errorf("fetching a list of withdraws documents %w", err)
+			return fs_facade.Documents{}, core_err.Rethrow("fetching all withdraws docs from fs", err)
 		}
-
-		withdraws := map[string]values.WithdrawnWithUpdated{}
-
-		for _, doc := range docs {
-			snap, err := doc.Get(context.Background())
-			if err != nil {
-				return map[string]values.WithdrawnWithUpdated{}, core_err.Rethrow("fetching a withdraw document", err)
-			}
-			withdrawnVal := snap.Data()[withdrawnKey]
-			withdrawn, err := general_helpers.DecodeFloat(withdrawnVal)
-			if err != nil {
-				return map[string]values.WithdrawnWithUpdated{}, err
-			}
-			withdraws[doc.ID] = values.WithdrawnWithUpdated{
-				Withdrawn: core.NewMoneyAmount(withdrawn),
-				UpdatedAt: snap.UpdateTime,
-			}
-		}
-		return withdraws, nil
+		return fs_facade.NewDocuments(docs), nil
 	}
 }
 
