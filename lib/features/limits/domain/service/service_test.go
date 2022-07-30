@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+// TODO: simplify or split this file - it's too big 
+
 func TestLimitsGetter(t *testing.T) {
 	user := RandomString()
 	t.Run("error case - getting withdrawns throws", func(t *testing.T) {
@@ -35,10 +37,22 @@ func TestLimitsGetter(t *testing.T) {
 		}
 		getWithdrawns := func(string) (map[string]values.WithdrawnWithUpdated, error) {
 			return map[string]values.WithdrawnWithUpdated{
-				"BTC": {Withdrawn: core.NewMoneyAmount(0.001), UpdatedAt: time.Now()},                                  // not in limited currencies
-				"RUB": {Withdrawn: core.NewMoneyAmount(10000), UpdatedAt: time.Date(1999, 0, 0, 0, 0, 0, 0, time.UTC)}, // more than a year ago
-				"ETH": {Withdrawn: core.NewMoneyAmount(41), UpdatedAt: time.Now().Add(-10 * time.Hour)},
-				"USD": {Withdrawn: core.NewMoneyAmount(499), UpdatedAt: time.Now()},
+				"BTC": {
+					Withdrawn: core.NewMoneyAmount(0.001), 
+					UpdatedAt: time.Now(), 
+				},
+				"RUB": {
+					Withdrawn: core.NewMoneyAmount(10000), 
+					UpdatedAt: time.Date(1999, 0, 0, 0, 0, 0, 0, time.UTC), 
+				},
+				"ETH": {
+					Withdrawn: core.NewMoneyAmount(41),
+					UpdatedAt: time.Now().Add(-10*time.Hour),
+				},
+				"USD": {
+					Withdrawn: core.NewMoneyAmount(499), 
+					UpdatedAt: time.Now(), 
+				},
 			}, nil
 		}
 		limits, err := service.NewLimitsGetter(getWithdrawns, limitedCurrencies)(user)
