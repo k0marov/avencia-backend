@@ -2,18 +2,20 @@ package test_helpers
 
 import (
 	"errors"
+	"math/rand"
+	"strconv"
+
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
-	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
+	atmValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	limitsEntities "github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	limitsValues "github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
+	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	transferValues "github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
 	userEntities "github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
 	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallets/domain/entities"
-	"math/rand"
-	"strconv"
 )
 
 func RandomClientError() client_errors.ClientError {
@@ -128,15 +130,15 @@ func RandomLimit() limitsValues.Limit {
 	}
 }
 
-func RandomBanknote() transValues.Banknote {
-	return transValues.Banknote{Money: RandomPositiveMoney()}
+func RandomBanknote() atmValues.Banknote {
+	return atmValues.Banknote{Money: RandomPositiveMoney()}
 }
 
-func RandomTransactionType() transValues.TransactionType {
+func RandomTransactionType() atmValues.TransactionType {
 	if RandomBool() {
-		return transValues.Deposit
+		return atmValues.Deposit
 	} else {
-		return transValues.Withdrawal
+		return atmValues.Withdrawal
 	}
 }
 

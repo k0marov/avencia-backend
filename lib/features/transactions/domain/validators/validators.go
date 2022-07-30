@@ -4,7 +4,7 @@ import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
+	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	walletService "github.com/k0marov/avencia-backend/lib/features/wallets/domain/service"
 	"math"

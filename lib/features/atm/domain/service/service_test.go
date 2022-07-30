@@ -5,6 +5,7 @@ import (
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
+	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"testing"
 	"time"
@@ -125,7 +126,7 @@ func TestATMTransactionFinalizer(t *testing.T) {
 			return nil
 		}
 		err := RandomError()
-		finalize := func(u fs_facade.BatchUpdater, gotTrans values.Transaction) error {
+		finalize := func(u fs_facade.BatchUpdater, gotTrans transValues.Transaction) error {
 			if gotTrans == atmTrans.Trans {
 				return err
 			}

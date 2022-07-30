@@ -1,9 +1,11 @@
 package values
 
 import (
+	"time"
+
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
-	"time"
+	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
 // TransactionType is either Deposit or Withdrawal
@@ -34,14 +36,10 @@ type Banknote struct {
 	Money     core.Money
 }
 
-type Transaction struct {
-	UserId string
-	Money  core.Money
-}
 
 type ATMTransaction struct {
 	ATMSecret []byte
-	Trans     Transaction
+	Trans     transValues.Transaction
 }
 
 const UserIdClaim = "sub"

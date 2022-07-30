@@ -6,6 +6,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
 	atmValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
+	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	transferValues "github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
 	"net/url"
@@ -24,7 +25,7 @@ func BanknoteDecoder(_ url.Values, request api.BanknoteCheckRequest) (atmValues.
 func ATMTransactionDecoder(_ url.Values, request api.FinalizeTransactionRequest) (atmValues.ATMTransaction, error) {
 	return atmValues.ATMTransaction{
 		ATMSecret: []byte(request.ATMSecret),
-		Trans: atmValues.Transaction{
+		Trans: transValues.Transaction{
 			UserId: request.UserId,
 			Money: core.Money{
 				Currency: core.Currency(request.Currency),

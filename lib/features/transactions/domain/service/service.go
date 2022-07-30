@@ -4,7 +4,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
+	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"

@@ -6,7 +6,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
+	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
