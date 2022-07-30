@@ -1,12 +1,13 @@
 package service
 
 import (
+	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	transValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/histories/domain/entities"
 )
 
 type HistoryGetter = func(userId string) ([]entities.TransEntry, error)
-type TransStorer = func(transValues.Transaction) error
+type TransStorer = func(fs_facade.Updater, transValues.Transaction) error
 
 
 func NewHistoryGetter() HistoryGetter {
@@ -16,7 +17,7 @@ func NewHistoryGetter() HistoryGetter {
 }
 
 func NewTransStorer() TransStorer {
-  return func(t transValues.Transaction) error {
+  return func(u fs_facade.Updater, t transValues.Transaction) error {
     panic("unimplemented")
   }
 }

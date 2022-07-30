@@ -1,13 +1,15 @@
 package service_test
 
 import (
+	"testing"
+
 	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
+	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
-	"testing"
 )
 
 func TestTransactionFinalizer(t *testing.T) {
@@ -41,68 +43,66 @@ func TestTransactionFinalizer(t *testing.T) {
 	})
 }
 
-func TestTransactionPerformer(t *testing.T) {
+
+
+
+func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount) {
 	batchUpd := func(*firestore.DocumentRef, map[string]any) error { return nil }
-	userId := RandomString()
-	curr := RandomCurrency()
 	curBalance := core.NewMoneyAmount(100)
 
-	t.Run("deposit", func(t *testing.T) {
-		depTrans := values.Transaction{
-			UserId: userId,
-			Money: core.Money{
-				Currency: curr,
-				Amount:   core.NewMoneyAmount(232.5),
-			},
-		}
-		t.Run("should compute and update balance", func(t *testing.T) {
-			updBal := func(b fs_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) error {
-				if user == userId && currency == curr && newBal.IsEqual(core.NewMoneyAmount(332.5)) {
-					return nil
-				}
-				panic("unexpected")
-			}
-			err := service.NewTransactionPerformer(updBal, nil)(batchUpd, curBalance, depTrans)
-			AssertNoError(t, err)
-		})
-		t.Run("updating balance throws", func(t *testing.T) {
-			updBal := func(fs_facade.Updater, string, core.Currency, core.MoneyAmount) error {
-				return RandomError()
-			}
-			err := service.NewTransactionPerformer(updBal, nil)(batchUpd, curBalance, depTrans)
-			AssertSomeError(t, err)
-		})
-	})
-	t.Run("withdrawal", func(t *testing.T) {
-		withdrawTrans := values.Transaction{
-			UserId: userId,
-			Money: core.Money{
-				Currency: curr,
-				Amount:   core.NewMoneyAmount(-42.5),
-			},
-		}
-		updBal := func(b fs_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) error {
-			if user == userId && currency == curr && newBal.IsEqual(core.NewMoneyAmount(57.5)) {
-				return nil
-			}
-			panic("unexpected")
+	trans := values.Transaction{
+		UserId: RandomString(),
+		Money: core.Money{
+			Currency: RandomCurrency(),
+			Amount:   transAmount,
+		},
+	}
+
+	wantNewBal := curBalance.Add(transAmount)
+
+	var updateWithdrawn limitsService.WithdrawUpdater
+	if transAmount.IsNeg() {
+		updateWithdrawn = func(fs_facade.Updater, values.Transaction) error {
+			return nil
 		}
 		t.Run("updating withdrawn throws", func(t *testing.T) {
-			updateWithdrawn := func(_ fs_facade.Updater, trans values.Transaction) error {
-				if trans == withdrawTrans {
+			updateWithdrawn := func(_ fs_facade.Updater, gotTrans values.Transaction) error {
+				if gotTrans == trans {
 					return RandomError()
 				}
 				panic("unexpected")
 			}
-			err := service.NewTransactionPerformer(updBal, updateWithdrawn)(batchUpd, curBalance, withdrawTrans)
+			err := service.NewTransactionPerformer(updateWithdrawn, nil)(batchUpd, curBalance, trans)
 			AssertSomeError(t, err)
 		})
-		t.Run("happy case", func(t *testing.T) {
-			updateWithdrawn := func(_ fs_facade.Updater, trans values.Transaction) error {
-				return nil
-			}
-			err := service.NewTransactionPerformer(updBal, updateWithdrawn)(batchUpd, curBalance, withdrawTrans)
-			AssertNoError(t, err)
-		})
+	}
+
+
+	updBal := func(b fs_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) error {
+		if user == trans.UserId && currency == trans.Money.Currency && newBal.IsEqual(wantNewBal) {
+			return nil
+		}
+		panic("unexpected")
+	}
+	t.Run("updating balance throws", func(t *testing.T) {
+		updBal := func(fs_facade.Updater, string, core.Currency, core.MoneyAmount) error {
+			return RandomError()
+		}
+		err := service.NewTransactionPerformer(updateWithdrawn, updBal)(batchUpd, curBalance, trans)
+		AssertSomeError(t, err)
+	})
+
+	t.Run("happy case", func(t *testing.T) {
+		err := service.NewTransactionPerformer(updateWithdrawn, updBal)(batchUpd, curBalance, trans)
+		AssertNoError(t, err)
+	})
+}
+
+func TestTransactionPerformer(t *testing.T) {
+	t.Run("deposit", func(t *testing.T) {
+		testTransactionPerfomerForAmount(t, RandomPosMoneyAmount())
+	})
+	t.Run("withdrawal", func(t *testing.T) {
+		testTransactionPerfomerForAmount(t, RandomNegMoneyAmount())
 	})
 }

@@ -79,6 +79,14 @@ func RandomNegMoneyAmount() core.MoneyAmount {
 	return core.NewMoneyAmount(-RandomFloat())
 }
 
+func RandomMoneyAmount() core.MoneyAmount {
+	if RandomBool() {
+		return RandomPosMoneyAmount()
+	} else {
+		return RandomNegMoneyAmount()
+	}
+}
+
 func RandomPositiveMoney() core.Money {
 	return core.Money{
 		Currency: RandomCurrency(),

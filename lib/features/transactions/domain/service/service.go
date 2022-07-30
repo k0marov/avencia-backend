@@ -23,7 +23,7 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform t
 	}
 }
 
-func NewTransactionPerformer(updBal walletStore.BalanceUpdater, updateWithdrawn limitsService.WithdrawUpdater) transactionPerformer {
+func NewTransactionPerformer(updateWithdrawn limitsService.WithdrawUpdater, updBal walletStore.BalanceUpdater) transactionPerformer {
 	return func(u fs_facade.BatchUpdater, curBal core.MoneyAmount, t values.Transaction) error {
 		if t.Money.Amount.IsNeg() {
 			err := updateWithdrawn(u, t)
@@ -31,6 +31,7 @@ func NewTransactionPerformer(updBal walletStore.BalanceUpdater, updateWithdrawn 
 				return core_err.Rethrow("updating withdrawn", err)
 			}
 		}
+
 		return updBal(u, t.UserId, t.Money.Currency, curBal.Add(t.Money.Amount))
 	}
 }

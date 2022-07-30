@@ -98,7 +98,7 @@ func Initialize() http.Handler {
 
 	// ===== TRANSACTIONS =====
 	transValidator := tValidators.NewTransactionValidator(checkLimit, getBalance)
-	performTrans := tService.NewTransactionPerformer(updateBalance, updateWithdrawn)
+	performTrans := tService.NewTransactionPerformer(updateWithdrawn, updateBalance)
 	transact := tService.NewTransactionFinalizer(transValidator, performTrans)
 
 	// ===== ATM =====
