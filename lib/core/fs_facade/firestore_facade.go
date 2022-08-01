@@ -5,7 +5,16 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
+	"github.com/google/uuid"
 )
+
+// TODO: prettify
+
+
+func NewDocId() string {
+	uuid, _ := uuid.NewUUID() 
+	return uuid.String()
+}
 
 type Document struct {
 	Id        string
