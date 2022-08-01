@@ -16,9 +16,13 @@ import (
 	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/handlers"
 	atmService "github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	atmValidators "github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
+	histHandlers "github.com/k0marov/avencia-backend/lib/features/histories/delivery/http/handlers"
+	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
+	histStore "github.com/k0marov/avencia-backend/lib/features/histories/store"
+	histMappers "github.com/k0marov/avencia-backend/lib/features/histories/store/mappers"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	limitsStore "github.com/k0marov/avencia-backend/lib/features/limits/store"
-	"github.com/k0marov/avencia-backend/lib/features/limits/store/mappers"
+	limitsMappers "github.com/k0marov/avencia-backend/lib/features/limits/store/mappers"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
 	tValidators "github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
 	transHandlers "github.com/k0marov/avencia-backend/lib/features/transfers/delivery/http/handlers"
@@ -70,7 +74,7 @@ func Initialize() http.Handler {
 
 	// ===== FIRESTORE =====
 	runBatch := batch.NewWriteRunner(fsClient)
-	getDoc := fs_facade.NewDocGetter(fsClient)
+	fsDocGetter := fs_facade.NewDocGetter(fsClient)
 
 	// ===== JWT =====
 	jwtIssuer := jwt.NewIssuer(jwtSecret)
@@ -81,15 +85,15 @@ func Initialize() http.Handler {
 	userFromEmail := auth.NewUserFromEmail(fbAuth)
 
 	// ===== WALLETS =====
-	walletDocGetter := storeImpl.NewWalletDocGetter(getDoc)
+	walletDocGetter := storeImpl.NewWalletDocGetter(fsDocGetter)
 	storeGetWallet := storeImpl.NewWalletGetter(walletDocGetter)
 	updateBalance := storeImpl.NewBalanceUpdater(walletDocGetter)
 	getWallet := walletService.NewWalletGetter(storeGetWallet)
 	getBalance := walletService.NewBalanceGetter(getWallet)
 
 	// ===== LIMITS =====
-	storeGetWithdraws := limitsStore.NewWithdrawsGetter(fsClient, mappers.WithdrawsDecoderImpl)
-	storeUpdateWithdrawn := limitsStore.NewWithdrawUpdater(getDoc, mappers.WithdrawEncoderImpl)
+	storeGetWithdraws := limitsStore.NewWithdrawsGetter(fsClient, limitsMappers.WithdrawsDecoderImpl)
+	storeUpdateWithdrawn := limitsStore.NewWithdrawUpdater(fsDocGetter, limitsMappers.WithdrawEncoderImpl)
 	getLimits := limitsService.NewLimitsGetter(storeGetWithdraws, configurable.LimitedCurrencies)
 	checkLimit := limitsService.NewLimitChecker(getLimits)
 	getUpdatedWithdrawn := limitsService.NewWithdrawnUpdateGetter(getLimits)
@@ -99,9 +103,16 @@ func Initialize() http.Handler {
 	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits)
 	getUserInfoHandler := userHandlers.NewGetUserInfoHandler(getUserInfo)
 
+	// ===== HISTORIES =====
+	storeGetHistory := histStore.NewHistoryGetter(fsClient, histMappers.TransEntriesDecoderImpl)
+	storeStoreTrans := histStore.NewTransStorer(fsDocGetter, histMappers.TransEntryEncoderImpl)
+	getHistory := histService.NewHistoryGetter(storeGetHistory)
+	storeTrans := histService.NewTransStorer(storeStoreTrans)
+	getHistoryHandler := histHandlers.NewGetHistoryHandler(getHistory)
+
 	// ===== TRANSACTIONS =====
 	transValidator := tValidators.NewTransactionValidator(checkLimit, getBalance)
-	performTrans := tService.NewTransactionPerformer(updateWithdrawn, nil, updateBalance)
+	performTrans := tService.NewTransactionPerformer(updateWithdrawn, storeTrans, updateBalance)
 	transact := tService.NewTransactionFinalizer(transValidator, performTrans)
 
 	// ===== ATM =====
@@ -132,6 +143,7 @@ func Initialize() http.Handler {
 		FinalizeTransaction: atmTransactionHandler,
 		GetUserInfo:         getUserInfoHandler,
 		Transfer:            transferHandler,
+		GetHistory:          getHistoryHandler,
 	}, authMiddleware)
 	return middleware.Recoverer(apiRouter)
 }

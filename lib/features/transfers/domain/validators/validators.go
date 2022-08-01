@@ -15,10 +15,10 @@ func NewTransferValidator() TransferValidator {
 			return client_errors.NegativeTransferAmount
 		}
 		if t.Money.Amount.IsEqual(core.NewMoneyAmount(0)) {
-			return client_errors.TransferingZero
+			return client_errors.TransferringZero
 		}
 		if t.ToId == t.FromId {
-			return client_errors.TransferingToYourself
+			return client_errors.TransferringToYourself
 
 		}
 		return nil

@@ -201,6 +201,10 @@ github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=
 github.com/k0marov/avencia-api-contract v0.0.0-20220730124834-d7d682e8c513 h1:iD5taZvIcnmB7q4siSsIlY8BDHv3dxhMbodcXQyFIww=
 github.com/k0marov/avencia-api-contract v0.0.0-20220730124834-d7d682e8c513/go.mod h1:Ct5IThuqV7uAGFvVirsrCvEMSeMKrb1vQSv7AGPjaME=
+github.com/k0marov/avencia-api-contract v0.0.0-20220801061229-1d5db47ddcaa h1:ysrzDXOeoLxegjYMEeV2J0tBxUgNYiwJNws+sIewkv8=
+github.com/k0marov/avencia-api-contract v0.0.0-20220801061229-1d5db47ddcaa/go.mod h1:Ct5IThuqV7uAGFvVirsrCvEMSeMKrb1vQSv7AGPjaME=
+github.com/k0marov/avencia-api-contract v0.0.0-20220801062838-c3b38c17bcfd h1:EoKcX0Z7eEOGQrDvusT6JEcDaNUkKVAXksVaFJBFagQ=
+github.com/k0marov/avencia-api-contract v0.0.0-20220801062838-c3b38c17bcfd/go.mod h1:Ct5IThuqV7uAGFvVirsrCvEMSeMKrb1vQSv7AGPjaME=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
@@ -415,6 +419,8 @@ golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c/go.mod h1:oPkhp1MJrh7nUepCBc
 golang.org/x/sys v0.0.0-20220624220833-87e55d714810/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220730100132-1609e554cd39 h1:aNCnH+Fiqs7ZDTFH6oEFjIfbX2HvgQXJ6uQuUbTobjk=
 golang.org/x/sys v0.0.0-20220730100132-1609e554cd39/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20220731174439-a90be440212d h1:Sv5ogFZatcgIMMtBSTTAgMYsicp25MXBubjXNDKwm80=
+golang.org/x/sys v0.0.0-20220731174439-a90be440212d/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/term v0.0.0-20210927222741-03fcf44c2211/go.mod h1:jbD1KX2456YbFQfuXm/mYQcufACuNUgVhRMnK/tPxf8=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=

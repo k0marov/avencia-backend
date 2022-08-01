@@ -27,7 +27,7 @@ func TestTransferValidator(t *testing.T) {
 			Money:  RandomPositiveMoney(),
 		}
 		err := validators.NewTransferValidator()(trans)
-		AssertError(t, err, client_errors.TransferingToYourself)
+		AssertError(t, err, client_errors.TransferringToYourself)
 	})
 	t.Run("error case - transferring 0", func(t *testing.T) {
 		trans := values.Transfer{
@@ -39,6 +39,6 @@ func TestTransferValidator(t *testing.T) {
 			},
 		}
 		err := validators.NewTransferValidator()(trans)
-		AssertError(t, err, client_errors.TransferingZero)
+		AssertError(t, err, client_errors.TransferringZero)
 	})
 }

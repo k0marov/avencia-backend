@@ -32,8 +32,8 @@ func ATMTransactionDecoder(_ url.Values, request api.FinalizeTransactionRequest)
 			},
 			UserId: request.UserId,
 			Money: core.Money{
-				Currency: core.Currency(request.Currency),
-				Amount:   core.NewMoneyAmount(request.Amount),
+				Currency: core.Currency(request.Money.Currency),
+				Amount:   core.NewMoneyAmount(request.Money.Amount),
 			},
 		},
 	}, nil
@@ -44,8 +44,8 @@ func TransferDecoder(user auth.User, _ url.Values, req api.TransferRequest) (tra
 		FromId:  user.Id,
 		ToEmail: req.RecipientIdentifier,
 		Money: core.Money{
-			Currency: core.Currency(req.Currency),
-			Amount:   core.NewMoneyAmount(req.Amount),
+			Currency: core.Currency(req.Money.Currency),
+			Amount:   core.NewMoneyAmount(req.Money.Amount),
 		},
 	}, nil
 }

@@ -41,11 +41,17 @@ func RandomRawTransfer() transferValues.RawTransfer {
 	}
 }
 
+func RandomAPIMoney() api.Money {
+	return api.Money{
+		Currency: RandomString(),
+		Amount:   RandomMoneyAmount().Num(),
+	}
+}
+
 func RandomTransferRequest() api.TransferRequest {
 	return api.TransferRequest{
 		RecipientIdentifier: RandomString(),
-		Currency:            RandomString(),
-		Amount:              RandomFloat(),
+		Money: RandomAPIMoney(),
 	}
 }
 
@@ -129,8 +135,7 @@ func RandomFinalizeTransationRequest() api.FinalizeTransactionRequest {
 	return api.FinalizeTransactionRequest{
 		UserId:    RandomString(),
 		ATMSecret: RandomString(),
-		Currency:  RandomString(),
-		Amount:    RandomFloat(),
+		Money: RandomAPIMoney(),
 	}
 }
 

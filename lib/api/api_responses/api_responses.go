@@ -3,6 +3,7 @@ package apiResponses
 import (
 	"github.com/k0marov/avencia-api-contract/api"
 	atmValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
+	histEntities "github.com/k0marov/avencia-backend/lib/features/histories/domain/entities"
 	limitsEntities "github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	userEntities "github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
 	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallets/domain/entities"
@@ -40,4 +41,25 @@ func WalletEncoder(w walletEntities.Wallet) map[string]float64 {
 		r[string(curr)] = a.Num()
 	}
 	return r
+}
+
+
+func HistoryEncoder(entries []histEntities.TransEntry) api.TransactionHistory {
+	respEntries := []api.TransEntry{}
+	for _, e := range entries {
+		respEntries = append(respEntries, api.TransEntry{
+			TransactedAt: e.CreatedAt.UTC().Unix(),
+			Source:  api.TransactionSource{
+				Type:   string(e.Source.Type),
+				Detail: e.Source.Detail,
+			},
+			Money:        api.Money{
+				Currency: string(e.Money.Currency),
+				Amount:   e.Money.Amount.Num(),
+			},
+		})
+	}
+	return api.TransactionHistory{
+		Entries: respEntries,
+	}
 }
