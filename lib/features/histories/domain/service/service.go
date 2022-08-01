@@ -1,6 +1,9 @@
 package service
 
 import (
+	"sort"
+
+	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	"github.com/k0marov/avencia-backend/lib/features/histories/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/histories/domain/store"
@@ -13,7 +16,12 @@ type TransStorer = func(fs_facade.Updater, transValues.Transaction) error
 
 func NewHistoryGetter(getHistory store.HistoryGetter) HistoryGetter {
   return func(userId string) ([]entities.TransEntry, error) {
-  	panic("unimplemented")
+  	entries, err := getHistory(userId) 
+  	if err != nil {
+  		return []entities.TransEntry{}, core_err.Rethrow("getting history from store", err)
+  	}
+  	sort.Slice(entries, func(i, j int) bool {return entries[i].CreatedAt.After(entries[j].CreatedAt)})
+  	return entries, nil
   }
 }
 

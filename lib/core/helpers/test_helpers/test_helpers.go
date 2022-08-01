@@ -26,3 +26,7 @@ var StubRunBatch = func(f func(fs_facade.BatchUpdater) error) error {
 func TimeAlmostEqual(t1, t2 time.Time) bool {
 	return math.Abs(t1.Sub(t2).Minutes()) < 1
 }
+
+func TimeWithYear(year int) time.Time {
+	return time.Date(year, 0, 0, 0, 0, 0, 0, time.UTC)
+}

@@ -110,6 +110,13 @@ func RandomNegativeMoney() core.Money {
 	}
 }
 
+func RandomMoney() core.Money {
+	return core.Money{
+		Currency: RandomCurrency(), 
+		Amount: RandomMoneyAmount(),
+	}
+}
+
 func RandomBanknoteCheckRequest() api.BanknoteCheckRequest {
 	return api.BanknoteCheckRequest{
 		TransactionCode: RandomString(),
