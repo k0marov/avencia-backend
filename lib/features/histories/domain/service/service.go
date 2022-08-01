@@ -25,8 +25,8 @@ func NewHistoryGetter(getHistory store.HistoryGetter) HistoryGetter {
   }
 }
 
-func NewTransStorer() TransStorer {
+func NewTransStorer(storeTrans store.TransStorer) TransStorer {
   return func(u fs_facade.Updater, t transValues.Transaction) error {
-    panic("unimplemented")
+  	return storeTrans(u, t)
   }
 }
