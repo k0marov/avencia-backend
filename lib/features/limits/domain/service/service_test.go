@@ -10,6 +10,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
+	"github.com/k0marov/avencia-backend/lib/features/limits/domain/models"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
@@ -20,7 +21,7 @@ import (
 func TestLimitsGetter(t *testing.T) {
 	user := RandomString()
 	t.Run("error case - getting withdrawns throws", func(t *testing.T) {
-		getWithdrawns := func(userId string) ([]values.WithdrawnModel, error) {
+		getWithdrawns := func(userId string) ([]models.Withdrawn, error) {
 			if userId == user {
 				return nil, RandomError()
 			}
@@ -36,8 +37,8 @@ func TestLimitsGetter(t *testing.T) {
 			"ETH": core.NewMoneyAmount(42),
 			"EUR": core.NewMoneyAmount(1000),
 		}
-		getWithdrawns := func(string) ([]values.WithdrawnModel, error) {
-			return []values.WithdrawnModel{
+		getWithdrawns := func(string) ([]models.Withdrawn, error) {
+			return []models.Withdrawn{
 				{
 					Withdrawn: core.Money{
 						Currency: core.Currency("BTC"), // not in limited values

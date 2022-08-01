@@ -10,6 +10,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/general_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
+	"github.com/k0marov/avencia-backend/lib/features/limits/domain/models"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
@@ -34,8 +35,8 @@ func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[
 		}
 		limits := entities.Limits{}
 		for curr, maxLimit := range limitedCurrencies {
-			i := general_helpers.FindInSlice(withdrawns, func(w values.WithdrawnModel) bool { return w.Withdrawn.Currency == curr; }) 
-			var w values.WithdrawnModel
+			i := general_helpers.FindInSlice(withdrawns, func(w models.Withdrawn) bool { return w.Withdrawn.Currency == curr; }) 
+			var w models.Withdrawn
 			if i != -1 {
 				w = withdrawns[i] 
 			}

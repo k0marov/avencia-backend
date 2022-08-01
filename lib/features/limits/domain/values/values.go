@@ -2,7 +2,6 @@ package values
 
 import (
 	"github.com/k0marov/avencia-backend/lib/core"
-	"time"
 )
 
 type Limit struct {
@@ -11,8 +10,3 @@ type Limit struct {
 }
 
 
-// TODO: move to models 
-type WithdrawnModel struct {
-	Withdrawn core.Money
-	UpdatedAt time.Time
-}

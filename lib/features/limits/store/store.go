@@ -7,17 +7,17 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
+	"github.com/k0marov/avencia-backend/lib/features/limits/domain/models"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
-	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/limits/store/mappers"
 )
 
 func NewWithdrawsGetter(client *firestore.Client, decode mappers.WithdrawsDecoder) store.WithdrawsGetter {
-	return func(userId string) ([]values.WithdrawnModel, error) {
+	return func(userId string) ([]models.Withdrawn, error) {
 		col := client.Collection(fmt.Sprintf("Users/%s/Withdraws", userId))
 		docs, err := col.Documents(context.Background()).GetAll()
 		if err != nil {
-			return []values.WithdrawnModel{}, fmt.Errorf("fetching a list of withdraws documents %w", err)
+			return []models.Withdrawn{}, fmt.Errorf("fetching a list of withdraws documents %w", err)
 		}
 		
 		return decode(fs_facade.NewDocuments(docs)) 
