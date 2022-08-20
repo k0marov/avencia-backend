@@ -10,22 +10,21 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/auth"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
 func TestCodeGenerator(t *testing.T) {
-	tUser := auth.User{Id: RandomId()}
+	tUserId := RandomId()
 	tType := RandomTransactionType()
 	newCode := service.InitTrans{
 		TransType: tType,
-		User:      tUser,
+		UserId:    tUserId,
 	}
 
 	wantClaims := map[string]any{
-		values.UserIdClaim:          tUser.Id,
+		values.UserIdClaim:          tUserId,
 		values.TransactionTypeClaim: tType,
 	}
 	wantExpireAt := time.Now().UTC().Add(configurable.TransactionExpDuration)
@@ -46,7 +45,6 @@ func TestCodeGenerator(t *testing.T) {
 
 	})
 }
-
 
 func TestTransactionFinalizer(t *testing.T) {
 	batchUpd := func(*firestore.DocumentRef, map[string]any) error { return nil }
@@ -78,9 +76,6 @@ func TestTransactionFinalizer(t *testing.T) {
 		AssertError(t, err, wantErr)
 	})
 }
-
-
-
 
 func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount) {
 	batchUpd := func(*firestore.DocumentRef, map[string]any) error { return nil }
@@ -124,7 +119,7 @@ func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount
 		addHist := func(fs_facade.Updater, values.Transaction) error {
 			return RandomError()
 		}
-		err := service.NewTransactionPerformer(updateWithdrawn, addHist, nil)(batchUpd, curBalance, trans) 
+		err := service.NewTransactionPerformer(updateWithdrawn, addHist, nil)(batchUpd, curBalance, trans)
 		AssertSomeError(t, err)
 	})
 

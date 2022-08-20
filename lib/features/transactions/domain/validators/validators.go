@@ -1,7 +1,6 @@
 package validators
 
 import (
-	"crypto/subtle"
 	"math"
 
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
@@ -17,8 +16,7 @@ import (
 type TransactionValidator = func(t values.Transaction) (curBalance core.MoneyAmount, err error)
 // TransCodeValidator err can be a ClientError
 type TransCodeValidator = func(code string, wantType values.TransactionType) (userId string, err error)
-// ATMSecretValidator err can be a ClientError
-type ATMSecretValidator = func(gotAtmSecret []byte) error
+
 
 func NewTransCodeValidator(verifyJWT jwt.Verifier) TransCodeValidator {
 	return func(code string, wantType values.TransactionType) (string, error) {
@@ -34,15 +32,6 @@ func NewTransCodeValidator(verifyJWT jwt.Verifier) TransCodeValidator {
 			return "", client_errors.InvalidCode
 		}
 		return userId, nil
-	}
-}
-
-func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
-	return func(gotAtmSecret []byte) error {
-		if subtle.ConstantTimeCompare(gotAtmSecret, trueATMSecret) == 0 {
-			return client_errors.InvalidATMSecret
-		}
-		return nil
 	}
 }
 

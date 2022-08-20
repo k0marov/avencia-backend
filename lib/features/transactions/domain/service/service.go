@@ -8,7 +8,6 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
-	"github.com/k0marov/avencia-backend/lib/features/auth"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
@@ -23,13 +22,12 @@ type CodeGenerator = func(InitTrans) (values.GeneratedCode, error)
 
 type InitTrans struct {
 	TransType values.TransactionType
-	User      auth.User
+	UserId      string
 }
-// TODO: move to transactions
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(trans InitTrans) (values.GeneratedCode, error) {
 		claims := map[string]any{
-			values.UserIdClaim:          trans.User.Id,
+			values.UserIdClaim:          trans.UserId,
 			values.TransactionTypeClaim: trans.TransType,
 		}
 		expireAt := time.Now().UTC().Add(configurable.TransactionExpDuration)
