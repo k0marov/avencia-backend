@@ -2,12 +2,11 @@ package values
 
 import (
 	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	tValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
-
-type NewTransaction struct {
-	Code string
-	Type values.TransactionType
+type NewTrans struct {
+	Type tValues.TransactionType 
+	QRCodeText string 
 }
 
 type CreatedTransaction struct {

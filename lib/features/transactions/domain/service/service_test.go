@@ -18,7 +18,7 @@ import (
 func TestCodeGenerator(t *testing.T) {
 	tUserId := RandomId()
 	tType := RandomTransactionType()
-	newCode := service.InitTrans{
+	newCode := values.InitTrans{
 		TransType: tType,
 		UserId:    tUserId,
 	}

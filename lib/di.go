@@ -12,6 +12,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade/batch"
+	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/handlers"
 	atmMiddleware "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/middleware"
 	atmValidators "github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 	histHandlers "github.com/k0marov/avencia-backend/lib/features/histories/delivery/http/handlers"
@@ -115,18 +116,11 @@ func Initialize() http.Handler {
 	// ===== ATM =====
 	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
 	// codeValidator := atmValidators.NewTransCodeValidator(jwtVerifier)
-
-	// genCode := atmService.NewCodeGenerator(jwtIssuer)
-	// verifyCode := atmService.NewCodeVerifier(codeValidator, getUserInfo)
-	// checkBanknote := atmService.NewBanknoteChecker(verifyCode)
-	// atmFinalizeTransaction := atmService.NewATMTransactionFinalizer(atmSecretValidator, runBatch, transact)
-
+	
 	atmAuthMiddleware := atmMiddleware.NewATMAuthMiddleware(atmSecretValidator)
 
-	// genCodeHandler := atmHandlers.NewGenerateCodeHandler(genCode)
-	// verifyCodeHandler := atmHandlers.NewVerifyCodeHandler(verifyCode)
-	// checkBanknoteHandler := atmHandlers.NewCheckBanknoteHandler(checkBanknote)
-	// atmTransactionHandler := atmHandlers.NewFinalizeTransactionHandler(atmFinalizeTransaction)
+	createTransHandler := atmHandlers.NewCreateTransactionHandler(nil) // TODO: add service 
+
 
 
 	// ===== TRANSFERS =====
@@ -138,7 +132,7 @@ func Initialize() http.Handler {
 
 	apiRouter := api.NewAPIRouter(api.Handlers{
 		Transaction: api.TransactionHandlers{
-			OnCreate: nil,
+			OnCreate: createTransHandler,
 			OnCancel: nil,
 			Deposit: api.TransactionDepositHandlers{
 				OnBanknoteEscrow:   nil,
