@@ -2,7 +2,6 @@ package lib
 
 import (
 	"context"
-	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -12,10 +11,6 @@ import (
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade/batch"
-	"github.com/k0marov/avencia-backend/lib/core/jwt"
-	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/handlers"
-	atmService "github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
-	atmValidators "github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 	histHandlers "github.com/k0marov/avencia-backend/lib/features/histories/delivery/http/handlers"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
 	histStore "github.com/k0marov/avencia-backend/lib/features/histories/store"
@@ -52,14 +47,14 @@ func initFirebase(config config.Config) *firebase.App {
 func Initialize() http.Handler {
 	conf := config.LoadConfig()
 	// ===== CONFIG =====
-	atmSecret, err := ioutil.ReadFile(conf.ATMSecretPath)
-	if err != nil {
-		log.Fatalf("error while reading atm secret: %v", err)
-	}
-	jwtSecret, err := ioutil.ReadFile(conf.JWTSecretPath)
-	if err != nil {
-		log.Fatalf("error while reading jwt secret: %v", err)
-	}
+	// atmSecret, err := ioutil.ReadFile(conf.ATMSecretPath)
+	// if err != nil {
+	// 	log.Fatalf("error while reading atm secret: %v", err)
+	// }
+	// jwtSecret, err := ioutil.ReadFile(conf.JWTSecretPath)
+	// if err != nil {
+	// 	log.Fatalf("error while reading jwt secret: %v", err)
+	// }
 
 	// ===== FIREBASE =====
 	fbApp := initFirebase(conf)
@@ -77,8 +72,8 @@ func Initialize() http.Handler {
 	fsDocGetter := fs_facade.NewDocGetter(fsClient)
 
 	// ===== JWT =====
-	jwtIssuer := jwt.NewIssuer(jwtSecret)
-	jwtVerifier := jwt.NewVerifier(jwtSecret)
+	// jwtIssuer := jwt.NewIssuer(jwtSecret)
+	// jwtVerifier := jwt.NewVerifier(jwtSecret)
 
 	// ===== AUTH =====
 	authMiddleware := auth.NewAuthMiddleware(fbAuth)
@@ -116,18 +111,18 @@ func Initialize() http.Handler {
 	transact := tService.NewTransactionFinalizer(transValidator, performTrans)
 
 	// ===== ATM =====
-	codeValidator := atmValidators.NewTransCodeValidator(jwtVerifier)
-	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
+	// codeValidator := atmValidators.NewTransCodeValidator(jwtVerifier)
+	// atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
 
-	genCode := atmService.NewCodeGenerator(jwtIssuer)
-	verifyCode := atmService.NewCodeVerifier(codeValidator, getUserInfo)
-	checkBanknote := atmService.NewBanknoteChecker(verifyCode)
-	atmFinalizeTransaction := atmService.NewATMTransactionFinalizer(atmSecretValidator, runBatch, transact)
+	// genCode := atmService.NewCodeGenerator(jwtIssuer)
+	// verifyCode := atmService.NewCodeVerifier(codeValidator, getUserInfo)
+	// checkBanknote := atmService.NewBanknoteChecker(verifyCode)
+	// atmFinalizeTransaction := atmService.NewATMTransactionFinalizer(atmSecretValidator, runBatch, transact)
 
-	genCodeHandler := atmHandlers.NewGenerateCodeHandler(genCode)
-	verifyCodeHandler := atmHandlers.NewVerifyCodeHandler(verifyCode)
-	checkBanknoteHandler := atmHandlers.NewCheckBanknoteHandler(checkBanknote)
-	atmTransactionHandler := atmHandlers.NewFinalizeTransactionHandler(atmFinalizeTransaction)
+	// genCodeHandler := atmHandlers.NewGenerateCodeHandler(genCode)
+	// verifyCodeHandler := atmHandlers.NewVerifyCodeHandler(verifyCode)
+	// checkBanknoteHandler := atmHandlers.NewCheckBanknoteHandler(checkBanknote)
+	// atmTransactionHandler := atmHandlers.NewFinalizeTransactionHandler(atmFinalizeTransaction)
 
 	// ===== TRANSFERS =====
 	convertTransfer := transService.NewTransferConverter(userFromEmail)
@@ -137,13 +132,27 @@ func Initialize() http.Handler {
 	transferHandler := transHandlers.NewTransferHandler(transfer)
 
 	apiRouter := api.NewAPIRouter(api.Handlers{
-		GenCode:             genCodeHandler,
-		VerifyCode:          verifyCodeHandler,
-		CheckBanknote:       checkBanknoteHandler,
-		FinalizeTransaction: atmTransactionHandler,
-		GetUserInfo:         getUserInfoHandler,
-		Transfer:            transferHandler,
-		GetHistory:          getHistoryHandler,
-	}, authMiddleware)
+		Transaction: api.TransactionHandlers{
+			OnCreate: nil,
+			OnCancel: nil,
+			Deposit: api.TransactionDepositHandlers{
+				OnBanknoteEscrow:   nil,
+				OnBanknoteAccepted: nil,
+				OnComplete:         nil,
+			},
+			Withdrawal: api.TransactionWithdrawalHandlers{
+				OnStart:                 nil,
+				OnPreBanknoteDispensed:  nil,
+				OnPostBanknoteDispensed: nil,
+				OnComplete:              nil,
+			},
+		},
+		App: api.AppHandlers{
+			GenCode:     nil,
+			GetUserInfo: getUserInfoHandler,
+			Transfer:    transferHandler,
+			GetHistory:  getHistoryHandler,
+		},
+	}, authMiddleware, nil)
 	return middleware.Recoverer(apiRouter)
 }

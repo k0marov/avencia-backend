@@ -1,14 +1,35 @@
 package values
 
 import (
+	"time"
+
 	"github.com/k0marov/avencia-backend/lib/core"
 )
+
+type TransactionType string
+
+const (
+	Deposit    TransactionType = "deposit"
+	Withdrawal                 = "withdrawal"
+)
+
+
+const UserIdClaim = "sub"
+const TransactionTypeClaim = "transaction_type"
+
 
 type Transaction struct {
 	Source TransSource
 	UserId string
 	Money  core.Money
 }
+
+
+type GeneratedCode struct {
+	Code      string
+	ExpiresAt time.Time
+}
+
 
 
 type TransSourceType string

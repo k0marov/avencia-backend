@@ -1,18 +1,45 @@
 package service
 
 import (
+	"time"
+
+	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/k0marov/avencia-backend/lib/core/jwt"
+	"github.com/k0marov/avencia-backend/lib/features/auth"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
+	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	walletStore "github.com/k0marov/avencia-backend/lib/features/wallets/domain/store"
 )
 
 type TransactionFinalizer = func(u fs_facade.BatchUpdater, t values.Transaction) error
 type transactionPerformer = func(u fs_facade.BatchUpdater, curBalance core.MoneyAmount, t values.Transaction) error
+
+type CodeGenerator = func(InitTrans) (values.GeneratedCode, error)
+
+type InitTrans struct {
+	TransType values.TransactionType
+	User      auth.User
+}
+// TODO: move to transactions
+func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
+	return func(trans InitTrans) (values.GeneratedCode, error) {
+		claims := map[string]any{
+			values.UserIdClaim:          trans.User.Id,
+			values.TransactionTypeClaim: trans.TransType,
+		}
+		expireAt := time.Now().UTC().Add(configurable.TransactionExpDuration)
+		code, err := issueJWT(claims, expireAt)
+		return values.GeneratedCode{
+			Code:      code,
+			ExpiresAt: expireAt,
+		}, err
+	}
+}
 
 func NewTransactionFinalizer(validate validators.TransactionValidator, perform transactionPerformer) TransactionFinalizer {
 	return func(u fs_facade.BatchUpdater, t values.Transaction) error {

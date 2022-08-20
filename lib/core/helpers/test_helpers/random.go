@@ -8,7 +8,6 @@ import (
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
-	atmValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	limitsEntities "github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	limitsValues "github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
@@ -45,13 +44,6 @@ func RandomAPIMoney() api.Money {
 	return api.Money{
 		Currency: RandomString(),
 		Amount:   RandomMoneyAmount().Num(),
-	}
-}
-
-func RandomTransferRequest() api.TransferRequest {
-	return api.TransferRequest{
-		RecipientIdentifier: RandomString(),
-		Money: RandomAPIMoney(),
 	}
 }
 
@@ -123,22 +115,6 @@ func RandomMoney() core.Money {
 	}
 }
 
-func RandomBanknoteCheckRequest() api.BanknoteCheckRequest {
-	return api.BanknoteCheckRequest{
-		TransactionCode: RandomString(),
-		Currency:        RandomString(),
-		Amount:          RandomFloat(),
-	}
-}
-
-func RandomFinalizeTransationRequest() api.FinalizeTransactionRequest {
-	return api.FinalizeTransactionRequest{
-		UserId:    RandomString(),
-		ATMSecret: RandomString(),
-		Money: RandomAPIMoney(),
-	}
-}
-
 func RandomLimits() limitsEntities.Limits {
 	return limitsEntities.Limits{RandomCurrency(): RandomLimit(), RandomCurrency(): RandomLimit()}
 }
@@ -150,15 +126,12 @@ func RandomLimit() limitsValues.Limit {
 	}
 }
 
-func RandomBanknote() atmValues.Banknote {
-	return atmValues.Banknote{Money: RandomPositiveMoney()}
-}
 
-func RandomTransactionType() atmValues.TransactionType {
+func RandomTransactionType() transValues.TransactionType {
 	if RandomBool() {
-		return atmValues.Deposit
+		return transValues.Deposit
 	} else {
-		return atmValues.Withdrawal
+		return transValues.Withdrawal
 	}
 }
 
