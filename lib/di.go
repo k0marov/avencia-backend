@@ -2,6 +2,7 @@ package lib
 
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade/batch"
+	atmMiddleware "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/middleware"
+	atmValidators "github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 	histHandlers "github.com/k0marov/avencia-backend/lib/features/histories/delivery/http/handlers"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
 	histStore "github.com/k0marov/avencia-backend/lib/features/histories/store"
@@ -47,10 +50,10 @@ func initFirebase(config config.Config) *firebase.App {
 func Initialize() http.Handler {
 	conf := config.LoadConfig()
 	// ===== CONFIG =====
-	// atmSecret, err := ioutil.ReadFile(conf.ATMSecretPath)
-	// if err != nil {
-	// 	log.Fatalf("error while reading atm secret: %v", err)
-	// }
+	atmSecret, err := ioutil.ReadFile(conf.ATMSecretPath)
+	if err != nil {
+		log.Fatalf("error while reading atm secret: %v", err)
+	}
 	// jwtSecret, err := ioutil.ReadFile(conf.JWTSecretPath)
 	// if err != nil {
 	// 	log.Fatalf("error while reading jwt secret: %v", err)
@@ -107,22 +110,24 @@ func Initialize() http.Handler {
 
 	// ===== TRANSACTIONS =====
 	transValidator := tValidators.NewTransactionValidator(checkLimit, getBalance)
-	performTrans := tService.NewTransactionPerformer(updateWithdrawn, storeTrans, updateBalance)
-	transact := tService.NewTransactionFinalizer(transValidator, performTrans)
+	transact := tService.NewTransactionFinalizer(transValidator, tService.NewTransactionPerformer(updateWithdrawn, storeTrans, updateBalance))
 
 	// ===== ATM =====
+	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
 	// codeValidator := atmValidators.NewTransCodeValidator(jwtVerifier)
-	// atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
 
 	// genCode := atmService.NewCodeGenerator(jwtIssuer)
 	// verifyCode := atmService.NewCodeVerifier(codeValidator, getUserInfo)
 	// checkBanknote := atmService.NewBanknoteChecker(verifyCode)
 	// atmFinalizeTransaction := atmService.NewATMTransactionFinalizer(atmSecretValidator, runBatch, transact)
 
+	atmAuthMiddleware := atmMiddleware.NewATMAuthMiddleware(atmSecretValidator)
+
 	// genCodeHandler := atmHandlers.NewGenerateCodeHandler(genCode)
 	// verifyCodeHandler := atmHandlers.NewVerifyCodeHandler(verifyCode)
 	// checkBanknoteHandler := atmHandlers.NewCheckBanknoteHandler(checkBanknote)
 	// atmTransactionHandler := atmHandlers.NewFinalizeTransactionHandler(atmFinalizeTransaction)
+
 
 	// ===== TRANSFERS =====
 	convertTransfer := transService.NewTransferConverter(userFromEmail)
@@ -153,6 +158,6 @@ func Initialize() http.Handler {
 			Transfer:    transferHandler,
 			GetHistory:  getHistoryHandler,
 		},
-	}, authMiddleware, nil)
+	}, authMiddleware, atmAuthMiddleware)
 	return middleware.Recoverer(apiRouter)
 }
