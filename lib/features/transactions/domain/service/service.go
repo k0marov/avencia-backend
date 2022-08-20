@@ -18,14 +18,11 @@ import (
 type TransactionFinalizer = func(u fs_facade.BatchUpdater, t values.Transaction) error
 type transactionPerformer = func(u fs_facade.BatchUpdater, curBalance core.MoneyAmount, t values.Transaction) error
 
-type CodeGenerator = func(InitTrans) (values.GeneratedCode, error)
+type CodeGenerator = func(values.InitTrans) (values.GeneratedCode, error)
+type InitTransDataGetter = func(transactionId string) (values.InitTrans, error) // TODO: implement
 
-type InitTrans struct {
-	TransType values.TransactionType
-	UserId      string
-}
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
-	return func(trans InitTrans) (values.GeneratedCode, error) {
+	return func(trans values.InitTrans) (values.GeneratedCode, error) {
 		claims := map[string]any{
 			values.UserIdClaim:          trans.UserId,
 			values.TransactionTypeClaim: trans.TransType,

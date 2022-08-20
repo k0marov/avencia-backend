@@ -13,10 +13,13 @@ const (
 	Withdrawal                 = "withdrawal"
 )
 
+type InitTrans struct {
+	TransType TransactionType
+	UserId    string
+}
 
 const UserIdClaim = "sub"
 const TransactionTypeClaim = "transaction_type"
-
 
 type Transaction struct {
 	Source TransSource
@@ -24,13 +27,10 @@ type Transaction struct {
 	Money  core.Money
 }
 
-
 type GeneratedCode struct {
 	Code      string
 	ExpiresAt time.Time
 }
-
-
 
 type TransSourceType string
 
@@ -45,5 +45,3 @@ type TransSource struct {
 	Type   TransSourceType
 	Detail string
 }
-
-
