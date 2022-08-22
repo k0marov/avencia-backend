@@ -218,7 +218,7 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 	})
 }
 
-func TestWithdrawUpdater(t *testing.T) {
+func TestWithdrawnUpdater(t *testing.T) {
 	dummyFSUpdater := func(*firestore.DocumentRef, map[string]any) error {
 		return nil
 	}
@@ -239,7 +239,7 @@ func TestWithdrawUpdater(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		err := service.NewWithdrawUpdater(getValue, nil)(dummyFSUpdater, trans)
+		err := service.NewWithdrawnUpdater(getValue, nil)(dummyFSUpdater, trans)
 		AssertSomeError(t, err)
 	})
 	update := func(_ fs_facade.Updater, userId string, value core.Money) error {
@@ -255,12 +255,12 @@ func TestWithdrawUpdater(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		err := service.NewWithdrawUpdater(getValue, update)(dummyFSUpdater, trans)
+		err := service.NewWithdrawnUpdater(getValue, update)(dummyFSUpdater, trans)
 		AssertSomeError(t, err)
 
 	})
 	t.Run("happy case", func(t *testing.T) {
-		err := service.NewWithdrawUpdater(getValue, update)(dummyFSUpdater, trans)
+		err := service.NewWithdrawnUpdater(getValue, update)(dummyFSUpdater, trans)
 		AssertNoError(t, err)
 	})
 }

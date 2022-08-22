@@ -58,7 +58,7 @@ func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount
 
 	wantNewBal := curBalance.Add(transAmount)
 
-	var updateWithdrawn limitsService.WithdrawUpdater
+	var updateWithdrawn limitsService.WithdrawnUpdater
 	if transAmount.IsNeg() {
 		updateWithdrawn = func(fs_facade.Updater, values.Transaction) error {
 			return nil

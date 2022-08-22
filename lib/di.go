@@ -96,7 +96,7 @@ func Initialize() http.Handler {
 	getLimits := limitsService.NewLimitsGetter(storeGetWithdraws, configurable.LimitedCurrencies)
 	checkLimit := limitsService.NewLimitChecker(getLimits)
 	getUpdatedWithdrawn := limitsService.NewWithdrawnUpdateGetter(getLimits)
-	updateWithdrawn := limitsService.NewWithdrawUpdater(getUpdatedWithdrawn, storeUpdateWithdrawn)
+	updateWithdrawn := limitsService.NewWithdrawnUpdater(getUpdatedWithdrawn, storeUpdateWithdrawn)
 
 	// ===== USERS =====
 	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits)

@@ -21,7 +21,7 @@ import (
 type LimitChecker = func(wantTransaction transValues.Transaction) error
 type LimitsGetter = func(userId string) (entities.Limits, error)
 
-type WithdrawUpdater = func(u fs_facade.Updater, t transValues.Transaction) error
+type WithdrawnUpdater = func(u fs_facade.Updater, t transValues.Transaction) error
 
 type withdrawnUpdateGetter = func(t transValues.Transaction) (core.Money, error)
 
@@ -90,7 +90,7 @@ func NewWithdrawnUpdateGetter(getLimits LimitsGetter) withdrawnUpdateGetter {
 	}
 }
 
-func NewWithdrawUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUpdater) WithdrawUpdater {
+func NewWithdrawnUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUpdater) WithdrawnUpdater {
 	return func(u fs_facade.Updater, t transValues.Transaction) error {
 		newWithdrawn, err := getValue(t)
 		if err != nil {

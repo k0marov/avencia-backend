@@ -27,14 +27,15 @@ func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
 
 // TODO: implement some checks  
 func NewInsertedBanknoteValidator() InsertedBanknoteValidator {
-	return func(values.InsertedBanknote) error {
+	return func(ib values.InsertedBanknote) error {
+
 		return nil
 	}
 }
 
 // TODO: implement some checks  
 func NewDispensedBanknoteValidator() DispensedBanknoteValidator {
-	return func(values.DispensedBanknote) error {
+	return func(dp values.DispensedBanknote) error {
 		return nil 
 	}
 }
