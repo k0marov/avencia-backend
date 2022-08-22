@@ -1,12 +1,9 @@
 package service_test
 
 import (
-	"reflect"
 	"testing"
-	"time"
 
 	"cloud.google.com/go/firestore"
-	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
@@ -14,43 +11,6 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
-
-func TestCodeGenerator(t *testing.T) {
-	tUserId := RandomId()
-	tType := RandomTransactionType()
-	newCode := values.MetaTrans{
-		TransType: tType,
-		UserId:    tUserId,
-	}
-
-	wantClaims := map[string]any{
-		values.UserIdClaim:          tUserId,
-		values.TransactionTypeClaim: tType,
-	}
-	wantExpireAt := time.Now().UTC().Add(configurable.TransactionExpDuration)
-
-	t.Run("forward test", func(t *testing.T) {
-		token := RandomString()
-		err := RandomError()
-		issueJwt := func(gotClaims map[string]any, exp time.Time) (string, error) {
-			if reflect.DeepEqual(gotClaims, wantClaims) && TimeAlmostEqual(wantExpireAt, exp) {
-				return token, err
-			}
-			panic("unexpected")
-		}
-		gotCode, gotErr := service.NewCodeGenerator(issueJwt)(newCode)
-		Assert(t, TimeAlmostEqual(gotCode.ExpiresAt, wantExpireAt), true, "the expiration time is Now + ExpDuration")
-		AssertError(t, gotErr, err)
-		Assert(t, gotCode.Code, token, "returned token")
-
-	})
-}
-
-func TestTransactionIdEncoding(t *testing.T) { 
-
-}
-
-
 
 func TestTransactionFinalizer(t *testing.T) {
 	batchUpd := func(*firestore.DocumentRef, map[string]any) error { return nil }

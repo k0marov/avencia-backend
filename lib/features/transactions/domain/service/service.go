@@ -1,13 +1,9 @@
 package service
 
 import (
-	"time"
-
-	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
-	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
@@ -18,36 +14,7 @@ import (
 type TransactionFinalizer = func(u fs_facade.BatchUpdater, t values.Transaction) error
 type transactionPerformer = func(u fs_facade.BatchUpdater, curBalance core.MoneyAmount, t values.Transaction) error
 
-type CodeGenerator = func(values.MetaTrans) (values.GeneratedCode, error)
-type TransactionIdEncoder = func(qrCodeText string) string
-type TransactionIdDecoder = func(transactionId string) (values.MetaTrans, error) 
 
-func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
-	return func(trans values.MetaTrans) (values.GeneratedCode, error) {
-		claims := map[string]any{
-			values.UserIdClaim:          trans.UserId,
-			values.TransactionTypeClaim: trans.TransType,
-		}
-		expireAt := time.Now().UTC().Add(configurable.TransactionExpDuration)
-		code, err := issueJWT(claims, expireAt)
-		return values.GeneratedCode{
-			Code:      code,
-			ExpiresAt: expireAt,
-		}, err
-	}
-}
-
-func NewTransactionIdEncoder() TransactionIdEncoder {
-	return func(transCode string) string {
-		panic("unimplemented")
-	}
-}
-
-func NewTransactionIdDecoder(validators.TransCodeValidator) TransactionIdDecoder {
-	return func(transactionId string) (values.MetaTrans, error) {
-		panic("unimplemented")
-	}
-}
 
 func NewTransactionFinalizer(validate validators.TransactionValidator, perform transactionPerformer) TransactionFinalizer {
 	return func(u fs_facade.BatchUpdater, t values.Transaction) error {
@@ -58,6 +25,9 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform t
 		return perform(u, bal, t)
 	}
 }
+
+
+// TODO: rename fs_facade to db_facade 
 
 func NewTransactionPerformer(updateWithdrawn limitsService.WithdrawUpdater, addHist histService.TransStorer, updBal walletStore.BalanceUpdater) transactionPerformer {
 	return func(u fs_facade.BatchUpdater, curBal core.MoneyAmount, t values.Transaction) error {

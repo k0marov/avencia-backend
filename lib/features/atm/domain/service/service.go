@@ -14,11 +14,11 @@ type WithdrawalFinalizer = func(values.WithdrawalData) error
 
 
 // TODO: add validation that user doesn't have any active transaction 
-// func NewTransactionCreator() TransactionCreator {
-// 	return func(nt values.NewTrans) (values.CreatedTransaction, error) {
-// 		return values.CreatedTransaction{}, nil
-// 	}
-// }
+func NewTransactionCreator() TransactionCreator {
+	return func(nt values.NewTrans) (values.CreatedTransaction, error) {
+		return values.CreatedTransaction{}, nil
+	}
+}
 
 
 
