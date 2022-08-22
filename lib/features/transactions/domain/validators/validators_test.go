@@ -1,12 +1,13 @@
 package validators_test
 
 import (
+	"testing"
+
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
-	"testing"
+	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
 func TestTransCodeValidator(t *testing.T) {
@@ -51,10 +52,14 @@ func TestTransCodeValidator(t *testing.T) {
 					return tt.claims, nil
 				}
 
-				gotUserId, err := validators.NewTransCodeValidator(jwtVerifier)(tCode, tType)
+				gotTrans, err := validators.NewTransCodeValidator(jwtVerifier)(tCode, tType)
 				AssertError(t, err, tt.wantErr)
 				if tt.wantErr == nil {
-					Assert(t, gotUserId, userId, "returned users id")
+					wantTrans := values.MetaTrans{
+						TransType: tType,
+						UserId:    userId,
+					}
+					Assert(t, gotTrans, wantTrans, "the parsed transaction")
 				}
 			})
 		}

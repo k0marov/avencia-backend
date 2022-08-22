@@ -18,11 +18,12 @@ import (
 type TransactionFinalizer = func(u fs_facade.BatchUpdater, t values.Transaction) error
 type transactionPerformer = func(u fs_facade.BatchUpdater, curBalance core.MoneyAmount, t values.Transaction) error
 
-type CodeGenerator = func(values.InitTrans) (values.GeneratedCode, error)
-type InitTransDataGetter = func(transactionId string) (values.InitTrans, error) // TODO: implement
+type CodeGenerator = func(values.MetaTrans) (values.GeneratedCode, error)
+type TransactionIdEncoder = func(qrCodeText string) string
+type TransactionIdDecoder = func(transactionId string) (values.MetaTrans, error) 
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
-	return func(trans values.InitTrans) (values.GeneratedCode, error) {
+	return func(trans values.MetaTrans) (values.GeneratedCode, error) {
 		claims := map[string]any{
 			values.UserIdClaim:          trans.UserId,
 			values.TransactionTypeClaim: trans.TransType,
@@ -33,6 +34,18 @@ func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 			Code:      code,
 			ExpiresAt: expireAt,
 		}, err
+	}
+}
+
+func NewTransactionIdEncoder() TransactionIdEncoder {
+	return func(transCode string) string {
+		panic("unimplemented")
+	}
+}
+
+func NewTransactionIdDecoder(validators.TransCodeValidator) TransactionIdDecoder {
+	return func(transactionId string) (values.MetaTrans, error) {
+		panic("unimplemented")
 	}
 }
 

@@ -15,23 +15,33 @@ import (
 // TransactionValidator err can be a ClientError
 type TransactionValidator = func(t values.Transaction) (curBalance core.MoneyAmount, err error)
 // TransCodeValidator err can be a ClientError
-type TransCodeValidator = func(code string, wantType values.TransactionType) (userId string, err error)
+type TransCodeValidator = func(code string, wantType values.TransactionType) (values.MetaTrans, error)
 
 
 func NewTransCodeValidator(verifyJWT jwt.Verifier) TransCodeValidator {
-	return func(code string, wantType values.TransactionType) (string, error) {
+	return func(code string, wantType values.TransactionType) (values.MetaTrans, error) {
 		data, err := verifyJWT(code)
 		if err != nil {
-			return "", client_errors.InvalidCode
+			return values.MetaTrans{}, client_errors.InvalidCode
 		}
-		if data[values.TransactionTypeClaim] != string(wantType) {
-			return "", client_errors.InvalidTransactionType
+		tType, ok := data[values.TransactionTypeClaim].(string) 
+		if !ok {
+			return values.MetaTrans{}, client_errors.InvalidCode 
+		}
+		if tType != string(wantType) {
+			return values.MetaTrans{}, client_errors.InvalidTransactionType
 		}
 		userId, ok := data[values.UserIdClaim].(string)
 		if !ok {
-			return "", client_errors.InvalidCode
+			return values.MetaTrans{}, client_errors.InvalidCode
 		}
-		return userId, nil
+
+		trans := values.MetaTrans{
+			TransType: values.TransactionType(tType),
+			UserId:    userId,
+		}
+
+		return trans, nil
 	}
 }
 

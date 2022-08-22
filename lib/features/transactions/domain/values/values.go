@@ -13,7 +13,8 @@ const (
 	Withdrawal                 = "withdrawal"
 )
 
-type InitTrans struct {
+// TODO: TransSource should be added here
+type MetaTrans struct {
 	TransType TransactionType
 	UserId    string
 }

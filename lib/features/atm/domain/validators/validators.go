@@ -39,9 +39,9 @@ func NewDispensedBanknoteValidator() DispensedBanknoteValidator {
 	}
 }
 
-func NewWithdrawalValidator(getTrans tService.InitTransDataGetter, validate tValidators.TransactionValidator) WithdrawalValidator {
+func NewWithdrawalValidator(getTrans tService.TransactionIdDecoder, validate tValidators.TransactionValidator) WithdrawalValidator {
 	return func(wd values.WithdrawalData) error {
-		initTrans, err := getTrans(wd.TransactionId)
+		metaTrans, err := getTrans(wd.TransactionId)
 		if err != nil {
 			return core_err.Rethrow("getting transaction data from transaction id", err)
 		}
@@ -49,7 +49,7 @@ func NewWithdrawalValidator(getTrans tService.InitTransDataGetter, validate tVal
 			Source: tValues.TransSource{
 				Type:   tValues.Cash,
 			},
-			UserId: initTrans.UserId,
+			UserId: metaTrans.UserId,
 			Money:  wd.Money,
 		}
 		_, err = validate(t) 

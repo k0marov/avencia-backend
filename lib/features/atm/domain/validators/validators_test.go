@@ -40,7 +40,7 @@ func TestWithdrawalValidator(t *testing.T) {
 		TransactionId: RandomString(),
 		Money:         RandomNegativeMoney(),
 	}
-	initTrans := tValues.InitTrans{
+	initTrans := tValues.MetaTrans{
 		TransType: RandomTransactionType(),
 		UserId:    RandomString(),
 	}
@@ -53,13 +53,13 @@ func TestWithdrawalValidator(t *testing.T) {
 		Money:  wd.Money,
 	}
 	
-	transDataGetter := func(string) (tValues.InitTrans, error) {
+	transDataGetter := func(string) (tValues.MetaTrans, error) {
 		return initTrans, nil
 	}
 	t.Run("error case - getting trans data throws an error", func(t *testing.T) {
-		transDataGetter := func(transId string) (tValues.InitTrans, error) {
+		transDataGetter := func(transId string) (tValues.MetaTrans, error) {
 			if transId == wd.TransactionId {
-				return tValues.InitTrans{}, RandomError()
+				return tValues.MetaTrans{}, RandomError()
 			}
 			panic("unexpected") 
 		}

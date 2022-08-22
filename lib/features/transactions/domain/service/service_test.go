@@ -18,7 +18,7 @@ import (
 func TestCodeGenerator(t *testing.T) {
 	tUserId := RandomId()
 	tType := RandomTransactionType()
-	newCode := values.InitTrans{
+	newCode := values.MetaTrans{
 		TransType: tType,
 		UserId:    tUserId,
 	}
@@ -45,6 +45,12 @@ func TestCodeGenerator(t *testing.T) {
 
 	})
 }
+
+func TestTransactionIdEncoding(t *testing.T) { 
+
+}
+
+
 
 func TestTransactionFinalizer(t *testing.T) {
 	batchUpd := func(*firestore.DocumentRef, map[string]any) error { return nil }
