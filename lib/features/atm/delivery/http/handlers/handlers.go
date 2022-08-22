@@ -12,7 +12,7 @@ import (
 	tValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
-func NewCreateTransactionHandler(create service.TransactionCreator) http.HandlerFunc {
+func NewCreateTransactionHandler(create service.ATMTransactionCreator) http.HandlerFunc {
   return http_helpers.NewHandler(
 		func(_ url.Values, req api.OnTransactionCreateRequest) (values.NewTrans, error) {
 			return values.NewTrans{

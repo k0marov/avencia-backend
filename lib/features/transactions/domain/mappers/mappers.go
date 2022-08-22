@@ -22,7 +22,7 @@ func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(trans values.MetaTrans) (values.GeneratedCode, error) {
 		claims := map[string]any{
 			values.UserIdClaim:          trans.UserId,
-			values.TransactionTypeClaim: trans.TransType,
+			values.TransactionTypeClaim: trans.Type,
 		}
 		expireAt := time.Now().UTC().Add(configurable.TransactionExpDuration)
 		code, err := issueJWT(claims, expireAt)
@@ -50,7 +50,7 @@ func NewCodeParser(parseJWT jwt.Verifier) CodeParser {
 		}
 
 		return values.MetaTrans{
-			TransType: values.TransactionType(tType),
+			Type: values.TransactionType(tType),
 			UserId:    userId,
 		}, nil
 	}

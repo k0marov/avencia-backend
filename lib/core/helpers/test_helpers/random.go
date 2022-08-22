@@ -21,7 +21,7 @@ import (
 
 func RandomMetaTrans() transValues.MetaTrans {
 	return transValues.MetaTrans{
-		TransType: RandomTransactionType(),
+		Type: RandomTransactionType(),
 		UserId:    RandomString(),
 	}
 }

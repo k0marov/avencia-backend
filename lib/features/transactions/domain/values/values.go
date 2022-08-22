@@ -15,7 +15,7 @@ const (
 
 // TODO: TransSource should be added here
 type MetaTrans struct {
-	TransType TransactionType
+	Type TransactionType
 	UserId    string
 }
 

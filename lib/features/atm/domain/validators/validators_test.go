@@ -41,7 +41,7 @@ func TestWithdrawalValidator(t *testing.T) {
 		Money:         RandomNegativeMoney(),
 	}
 	initTrans := tValues.MetaTrans{
-		TransType: RandomTransactionType(),
+		Type: RandomTransactionType(),
 		UserId:    RandomString(),
 	}
 
