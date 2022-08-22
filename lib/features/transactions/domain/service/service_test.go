@@ -12,6 +12,65 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
+func TestTransactionIdGetter(t *testing.T) {
+	trans := RandomMetaTrans() 
+	code := RandomGeneratedCode()
+	id := RandomString() 
+	t.Run("error case - generating code throws", func(t *testing.T) {
+		genCode := func(gotTrans values.MetaTrans) (values.GeneratedCode, error) {
+			if gotTrans == trans {
+				return values.GeneratedCode{}, RandomError() 
+			}
+			panic("unexpected")
+		}
+		_, err := service.NewTransactionIdGetter(genCode, nil)(trans) 
+		AssertSomeError(t, err)
+	})
+	t.Run("happy case", func(t *testing.T) {
+		genCode := func(values.MetaTrans) (values.GeneratedCode, error) {
+			return 	code, nil
+		}
+		genId := func(gotCode string) string {
+			if gotCode == code.Code {
+				return id
+			}
+			panic("unexpected")
+		}
+
+		gotId, err := service.NewTransactionIdGetter(genCode, genId)(trans) 
+		AssertNoError(t, err)
+		Assert(t, gotId, id, "returned id")
+	})
+}
+
+func TestTransactionGetter(t *testing.T) {
+	id := RandomString() 
+	code := RandomString()
+	trans := RandomMetaTrans() 
+
+	parseId := func(gotId string) string {
+		if gotId == id {
+			return code 
+		}
+		panic("unexpected")
+	}
+
+	t.Run("should forward to parseCode", func(t *testing.T) {
+		tErr := RandomError() 
+		parseCode := func(gotCode string) (values.MetaTrans, error) {
+			return trans, tErr
+		}
+
+		gotTrans, err := service.NewTransactionGetter(parseId, parseCode)(id)
+		AssertError(t, err, tErr)
+		Assert(t, gotTrans, trans, "returned transaction")
+	})
+
+
+}
+
+
+
 func TestTransactionFinalizer(t *testing.T) {
 	batchUpd := func(*firestore.DocumentRef, map[string]any) error { return nil }
 	transaction := RandomTransactionData()

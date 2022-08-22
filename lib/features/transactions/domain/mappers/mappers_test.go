@@ -35,8 +35,8 @@ func TestPropertiesOfCodeMapping(t *testing.T) {
 }
 
 func TestPropertiesOfTransactionIdEncoding(t *testing.T) {
-	generate := mappers.NewTransactionIdGenerator()
-	parse := mappers.NewTransactionIdParser()
+	generate := mappers.NewTransIdGenerator()
+	parse := mappers.NewTransIdParser()
 	assertion := func(code string) bool {
 		return parse(generate(code)) == code
 	}

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math/rand"
 	"strconv"
+	"time"
 
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
@@ -16,6 +17,21 @@ import (
 	userEntities "github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
 	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallets/domain/entities"
 )
+
+
+func RandomMetaTrans() transValues.MetaTrans {
+	return transValues.MetaTrans{
+		TransType: RandomTransactionType(),
+		UserId:    RandomString(),
+	}
+}
+
+func RandomGeneratedCode() transValues.GeneratedCode {
+	return transValues.GeneratedCode{
+		Code:      RandomString(),
+		ExpiresAt: time.Now(),
+	}
+}
 
 func RandomClientError() client_errors.ClientError {
 	return client_errors.ClientError{
