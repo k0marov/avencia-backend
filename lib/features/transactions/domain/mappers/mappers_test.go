@@ -14,10 +14,10 @@ import (
 
 func TestPropertiesOfCodeMapping(t *testing.T) {
 	jwtSecret := RandomSecret()
-	generateCode := mappers.NewCodeGenerator(jwt.NewIssuer(jwtSecret))
-	parseCode := mappers.NewCodeParser(jwt.NewVerifier(jwtSecret))
+	generate := mappers.NewCodeGenerator(jwt.NewIssuer(jwtSecret))
+	parse := mappers.NewCodeParser(jwt.NewVerifier(jwtSecret))
 	assertion := func(trans values.MetaTrans) bool {
-		code, err := generateCode(trans)
+		code, err := generate(trans)
 		if err != nil {
 			return false 
 		}
@@ -25,7 +25,7 @@ func TestPropertiesOfCodeMapping(t *testing.T) {
 		wantExpireAt := time.Now().UTC().Add(configurable.TransactionExpDuration)
 		Assert(t, TimeAlmostEqual(code.ExpiresAt, wantExpireAt), true, "the expiration time is Now + ExpDuration")
 
-		parsedTrans, err := parseCode(code.Code) 
+		parsedTrans, err := parse(code.Code) 
 		return parsedTrans == trans && err == nil
 	}
 
@@ -35,10 +35,10 @@ func TestPropertiesOfCodeMapping(t *testing.T) {
 }
 
 func TestPropertiesOfTransactionIdEncoding(t *testing.T) {
-	encode := mappers.NewTransactionIdEncoder()
-	decode := mappers.NewTransactionIdDecoder()
+	generate := mappers.NewTransactionIdGenerator()
+	parse := mappers.NewTransactionIdParser()
 	assertion := func(code string) bool {
-		return decode(encode(code)) == code
+		return parse(generate(code)) == code
 	}
 
 	if err := quick.Check(assertion, nil); err != nil {

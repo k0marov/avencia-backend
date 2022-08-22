@@ -15,8 +15,8 @@ import (
 type CodeGenerator = func(values.MetaTrans) (values.GeneratedCode, error)
 type CodeParser = func(code string) (values.MetaTrans, error) 
 
-type TransactionIdEncoder = func(code string) string
-type TransactionIdDecoder = func(transactionId string) string
+type TransactionIdGenerator = func(code string)  (transId string)
+type TransactionIdParser = func(transactionId string) (code string)
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(trans values.MetaTrans) (values.GeneratedCode, error) {
@@ -56,14 +56,14 @@ func NewCodeParser(parseJWT jwt.Verifier) CodeParser {
 	}
 }
 
-func NewTransactionIdEncoder() TransactionIdEncoder {
+func NewTransactionIdGenerator() TransactionIdGenerator {
 	return func(transCode string) string {
 		uuid, _ := uuid.NewUUID()
 		return uuid.String() + "_" + transCode
 	}
 }
 
-func NewTransactionIdDecoder() TransactionIdDecoder {
+func NewTransactionIdParser() TransactionIdParser {
 	return func(transactionId string) string {
 		return strings.Split(transactionId, "_")[1] // TODO: maybe add a check for out-of-bounds index
 	}
