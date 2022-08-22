@@ -1,21 +1,22 @@
 package mappers
 
 import (
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
 type CodeGenerator = func(values.MetaTrans) (values.GeneratedCode, error)
 type CodeParser = func(code string) (values.MetaTrans, error) 
 
-type TransactionIdEncoder = func(qrCodeText string) string
-type TransactionIdDecoder = func(transactionId string) (values.MetaTrans, error)
+type TransactionIdEncoder = func(code string) string
+type TransactionIdDecoder = func(transactionId string) string
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(trans values.MetaTrans) (values.GeneratedCode, error) {
@@ -57,13 +58,13 @@ func NewCodeParser(parseJWT jwt.Verifier) CodeParser {
 
 func NewTransactionIdEncoder() TransactionIdEncoder {
 	return func(transCode string) string {
-		// return transCode
-		panic("unimplemented")
+		uuid, _ := uuid.NewUUID()
+		return uuid.String() + "_" + transCode
 	}
 }
 
-func NewTransactionIdDecoder(parseCode CodeParser) TransactionIdDecoder {
-	return func(transactionId string) (values.MetaTrans, error) {
-		panic("unimplemented")
+func NewTransactionIdDecoder() TransactionIdDecoder {
+	return func(transactionId string) string {
+		return strings.Split(transactionId, "_")[1] // TODO: maybe add a check for out-of-bounds index
 	}
 }

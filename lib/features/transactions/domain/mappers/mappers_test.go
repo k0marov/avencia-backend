@@ -34,7 +34,15 @@ func TestPropertiesOfCodeMapping(t *testing.T) {
 	}
 }
 
-// func TestPropertiesOfTransactionIdEncoding(t *testing.T) {
-// 	assertion := func()
-// }
-//
+func TestPropertiesOfTransactionIdEncoding(t *testing.T) {
+	encode := mappers.NewTransactionIdEncoder()
+	decode := mappers.NewTransactionIdDecoder()
+	assertion := func(code string) bool {
+		return decode(encode(code)) == code
+	}
+
+	if err := quick.Check(assertion, nil); err != nil {
+		t.Error("failed checks", err)
+	}
+}
+
