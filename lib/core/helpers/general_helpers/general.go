@@ -1,6 +1,10 @@
 package general_helpers
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+)
 
 // DecodeFloat is needed because if an integer value is stored in firestore it cannot be decoded as float64 easily
 func DecodeFloat(value any) (float64, error) {
@@ -23,4 +27,9 @@ func FindInSlice[T any](slice []T, match func(T) bool) (index int) {
 		}
 	}
 	return -1
+}
+
+func RandomId() string {
+	uuid, _ := uuid.NewUUID() 
+	return uuid.String()
 }

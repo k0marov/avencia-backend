@@ -20,7 +20,7 @@ func TestTransferValidator(t *testing.T) {
 		AssertError(t, err, client_errors.NegativeTransferAmount)
 	})
 	t.Run("error case - transfering to yourself", func(t *testing.T) {
-		user := RandomId()
+		user := RandomString()
 		trans := values.Transfer{
 			FromId: user,
 			ToId:   user,

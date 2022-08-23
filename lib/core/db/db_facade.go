@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+
 type DB interface {
   get(path string) (Document, error)
   getAll(path string) (Documents, error) 
@@ -32,5 +33,4 @@ func ColGetterImpl(db DB, path string) (Documents, error) {
 func SetterImpl(db DB, path string, data map[string]any) error {
   return db.set(path, data)
 }
-
 

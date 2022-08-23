@@ -64,10 +64,10 @@ func RandomAPIMoney() api.Money {
 }
 
 func RandomUser() auth.User {
-	return auth.User{Id: RandomId()}
+	return auth.User{Id: RandomString()}
 }
 func RandomUserInfo() userEntities.UserInfo {
-	return userEntities.UserInfo{Id: RandomId(), Wallet: RandomWallet(), Limits: RandomLimits()}
+	return userEntities.UserInfo{Id: RandomString(), Wallet: RandomWallet(), Limits: RandomLimits()}
 }
 func RandomTransactionData() transValues.Transaction {
 	return transValues.Transaction{
@@ -149,10 +149,6 @@ func RandomTransactionType() transValues.TransactionType {
 	} else {
 		return transValues.Withdrawal
 	}
-}
-
-func RandomId() string {
-	return strconv.Itoa(rand.Intn(100000))
 }
 
 func RandomError() error {

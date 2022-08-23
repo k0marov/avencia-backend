@@ -5,14 +5,14 @@ import (
 
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/general_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/histories/domain/entities"
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
-type TransEntryDecoder = func(fs_facade.Document) (entities.TransEntry, error) 
-type TransEntriesDecoder = func(fs_facade.Documents) ([]entities.TransEntry, error) 
+type TransEntryDecoder = func(db.Document) (entities.TransEntry, error) 
+type TransEntriesDecoder = func(db.Documents) ([]entities.TransEntry, error) 
 
 type TransEntryEncoder = func(transValues.TransSource, core.Money) map[string]any
 
@@ -30,7 +30,8 @@ func TransEntryEncoderImpl(source transValues.TransSource, money core.Money) map
 	}
 }
 
-func TransEntryDecoderImpl(doc fs_facade.Document) (entities.TransEntry, error) {
+// TODO: replace this nightmare with proper struct tags usage
+func TransEntryDecoderImpl(doc db.Document) (entities.TransEntry, error) {
 	sourceMap, ok := doc.Data["source"].(map[string]string)
 	if !ok {
 		return entities.TransEntry{}, fmt.Errorf("decoding transaction source of doc: %+v", doc)
@@ -68,7 +69,7 @@ func TransEntryDecoderImpl(doc fs_facade.Document) (entities.TransEntry, error) 
 }
 
 
-func TransEntriesDecoderImpl(docs fs_facade.Documents) ([]entities.TransEntry, error) {
+func TransEntriesDecoderImpl(docs db.Documents) ([]entities.TransEntry, error) {
 	var entries []entities.TransEntry
 	for _, doc := range docs {
 		entry, err := TransEntryDecoderImpl(doc) 
