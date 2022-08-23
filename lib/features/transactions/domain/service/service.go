@@ -19,6 +19,7 @@ import (
 type TransactionIdGetter = func(trans values.MetaTrans) (id string, err error)
 type TransactionGetter = func(transactionId string) (values.MetaTrans, error)
 
+type MultiTransactionFinalizer = func(u fs_facade.BatchUpdater, t []values.Transaction) error 
 type TransactionFinalizer = func(u fs_facade.BatchUpdater, t values.Transaction) error
 type transactionPerformer = func(u fs_facade.BatchUpdater, curBalance core.MoneyAmount, t values.Transaction) error
 
@@ -40,7 +41,6 @@ func NewTransactionGetter(parseId mappers.TransIdParser, parseCode mappers.CodeP
 		return parseCode(code)
 	}
 }
-
 
 
 func NewTransactionFinalizer(validate validators.TransactionValidator, perform transactionPerformer) TransactionFinalizer {

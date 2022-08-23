@@ -11,7 +11,10 @@ type WriteRunner = func(func(batch fs_facade.BatchUpdater) error) error
 
 func NewWriteRunner(client *firestore.Client) WriteRunner {
 	return func(perform func(batch fs_facade.BatchUpdater) error) error {
-		batch := client.Batch()
+		batch := client.RunTransaction(context.Background(), func(ctx context.Context, t *firestore.Transaction) error {
+
+			return nil
+		})
 		err := perform(fs_facade.NewBatchUpdater(batch))
 		if err != nil {
 			return err

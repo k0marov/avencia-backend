@@ -36,7 +36,26 @@ func NewATMTransactionCreator(getTrans tMappers.CodeParser, getTransId tService.
 	}
 }
 
+// TODO: here the user's current transaction may be reset 
+func NewTransactionCanceler() TransactionCanceler {
+	return func(id string) error {
+		return nil
+	}
+}
 
+func NewDepositFinalizer(getTrans tService.TransactionGetter, finalize tService.TransactionFinalizer) DepositFinalizer {
+	return func(dd values.DepositData) error {
+    panic("unimplemented")
+	}
+}
+
+
+
+func NewWithdrawalFinalizer(getTrans tService.TransactionGetter, finalize tService.TransactionFinalizer) WithdrawalFinalizer {
+	return func(wd values.WithdrawalData) error {
+    panic("unimplemented")
+	}
+}
 
 
 
