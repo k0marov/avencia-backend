@@ -14,6 +14,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/db/firestore"
 	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/handlers"
 	atmMiddleware "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/middleware"
+	atmService "github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	atmValidators "github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 	histHandlers "github.com/k0marov/avencia-backend/lib/features/histories/delivery/http/handlers"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
@@ -22,6 +23,7 @@ import (
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	limitsStore "github.com/k0marov/avencia-backend/lib/features/limits/store"
 	limitsMappers "github.com/k0marov/avencia-backend/lib/features/limits/store/mappers"
+	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/mappers"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
 	tValidators "github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
 	transHandlers "github.com/k0marov/avencia-backend/lib/features/transfers/delivery/http/handlers"
@@ -76,8 +78,8 @@ func Initialize() http.Handler {
 	runTransaction := firestore.NewTransactionRunner(fsClient)
 
 	// ===== JWT =====
-	// jwtIssuer := jwt.NewIssuer(jwtSecret)
-	// jwtVerifier := jwt.NewVerifier(jwtSecret)
+	jwtIssuer := jwt.NewIssuer(jwtSecret)
+	jwtVerifier := jwt.NewVerifier(jwtSecret)
 
 	// ===== AUTH =====
 	authMiddleware := auth.NewAuthMiddleware(fbAuth)
@@ -112,17 +114,29 @@ func Initialize() http.Handler {
 
 	// ===== TRANSACTIONS =====
 	transValidator := tValidators.NewTransactionValidator(checkLimit, getBalance)
+	codeParser := mappers.NewCodeParser(jwtVerifier)
+	codeGenerator := mappers.NewCodeGenerator(jwtIssuer)
+
+	getTransId := tService.NewTransactionIdGetter(codeGenerator, mappers.NewTransIdGenerator())
 	transact := tService.NewTransactionFinalizer(transValidator, tService.NewTransactionPerformer(updateWithdrawn, storeTrans, updateBalance))
 	multiTransact := tService.NewMultiTransactionFinalizer(transact) 
 
 	// ===== ATM =====
 	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
-	// codeValidator := atmValidators.NewTransCodeValidator(jwtVerifier)
+	insertedBanknoteValidator := atmValidators.NewDeliveryInsertedBanknoteValidator(simpleDB, atmValidators.NewInsertedBanknoteValidator())
+	dispensedBanknoteValidator := atmValidators.NewDeliveryDispensedBanknoteValidator(simpleDB, atmValidators.NewDispensedBanknoteValidator())
+	cancelTrans := atmService.NewTransactionCanceler()
+	createAtmTrans  := atmService.NewATMTransactionCreator(codeParser, getTransId)
 	
 	atmAuthMiddleware := atmMiddleware.NewATMAuthMiddleware(atmSecretValidator)
 
-	createTransHandler := atmHandlers.NewCreateTransactionHandler(nil) // TODO: add service 
-
+	createTransHandler := atmHandlers.NewCreateTransactionHandler(createAtmTrans) 
+	onCancelHandler := atmHandlers.NewCancelTransactionHandler(cancelTrans)
+	banknoteEscrowHandler := atmHandlers.NewBanknoteEscrowHandler(insertedBanknoteValidator)
+	banknoteAcceptedHandler := atmHandlers.NewBanknoteAcceptedHandler(insertedBanknoteValidator)
+	preBanknoteDispensedHandler := atmHandlers.NewPreBanknoteDispensedHandler(dispensedBanknoteValidator)
+	postBanknoteDispensedHandler := atmHandlers.NewPostBanknoteDispensedHandler(dispensedBanknoteValidator)
+	
 
 
 	// ===== TRANSFERS =====
@@ -136,16 +150,16 @@ func Initialize() http.Handler {
 	apiRouter := api.NewAPIRouter(api.Handlers{
 		Transaction: api.TransactionHandlers{
 			OnCreate: createTransHandler,
-			OnCancel: nil,
+			OnCancel: onCancelHandler,
 			Deposit: api.TransactionDepositHandlers{
-				OnBanknoteEscrow:   nil,
-				OnBanknoteAccepted: nil,
+				OnBanknoteEscrow:   banknoteEscrowHandler,
+				OnBanknoteAccepted: banknoteAcceptedHandler,
 				OnComplete:         nil,
 			},
 			Withdrawal: api.TransactionWithdrawalHandlers{
 				OnStart:                 nil,
-				OnPreBanknoteDispensed:  nil,
-				OnPostBanknoteDispensed: nil,
+				OnPreBanknoteDispensed:  preBanknoteDispensedHandler,
+				OnPostBanknoteDispensed: postBanknoteDispensedHandler,
 				OnComplete:              nil,
 			},
 		},

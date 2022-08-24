@@ -58,3 +58,22 @@ func NewWithdrawalValidator(getTrans tService.TransactionGetter, validate tValid
 		return err
 	}
 }
+
+type DeliveryInsertedBanknoteValidator = func(values.InsertedBanknote) error 
+type DeliveryDispensedBanknoteValidator = func(values.DispensedBanknote) error 
+
+func NewDeliveryInsertedBanknoteValidator(db db.DB, validate InsertedBanknoteValidator) DeliveryInsertedBanknoteValidator {
+	return func(ib values.InsertedBanknote) error {
+		return validate(db, ib)
+	}
+}
+func NewDeliveryDispensedBanknoteValidator(db db.DB, validate DispensedBanknoteValidator) DeliveryDispensedBanknoteValidator {
+	return func(b values.DispensedBanknote) error {
+		return validate(db, b)
+	}
+}
+
+
+
+
+
