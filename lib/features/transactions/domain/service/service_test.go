@@ -3,9 +3,8 @@ package service_test
 import (
 	"testing"
 
-	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
@@ -72,38 +71,38 @@ func TestTransactionGetter(t *testing.T) {
 
 
 func TestTransactionFinalizer(t *testing.T) {
-	batchUpd := func(*firestore.DocumentRef, map[string]any) error { return nil }
 	transaction := RandomTransactionData()
+	mockDB := NewStubDB() 
 	t.Run("error case - validation throws", func(t *testing.T) {
 		err := RandomError()
-		validate := func(t values.Transaction) (core.MoneyAmount, error) {
-			if t == transaction {
+		validate := func(gotDB db.DB, t values.Transaction) (core.MoneyAmount, error) {
+			if gotDB == mockDB && t == transaction {
 				return core.NewMoneyAmount(0), err
 			}
 			panic("unexpected")
 		}
-		gotErr := service.NewTransactionFinalizer(validate, nil)(batchUpd, transaction)
+		gotErr := service.NewTransactionFinalizer(validate, nil)(mockDB, transaction)
 		AssertError(t, gotErr, err)
 	})
 	t.Run("forward case - return whatever performTransaction returns", func(t *testing.T) {
 		wantErr := RandomError()
 		currentBalance := RandomPosMoneyAmount()
-		validate := func(values.Transaction) (core.MoneyAmount, error) {
+		validate := func(db.DB, values.Transaction) (core.MoneyAmount, error) {
 			return currentBalance, nil
 		}
-		performTransaction := func(u fs_facade.BatchUpdater, curBal core.MoneyAmount, trans values.Transaction) error {
+		performTransaction := func(gotDB db.DB, curBal core.MoneyAmount, trans values.Transaction) error {
 			if curBal == currentBalance && trans == transaction {
 				return wantErr
 			}
 			panic("unexpected")
 		}
-		err := service.NewTransactionFinalizer(validate, performTransaction)(batchUpd, transaction)
+		err := service.NewTransactionFinalizer(validate, performTransaction)(mockDB, transaction)
 		AssertError(t, err, wantErr)
 	})
 }
 
 func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount) {
-	batchUpd := func(*firestore.DocumentRef, map[string]any) error { return nil }
+	mockDB := NewStubDB() 
 	curBalance := core.NewMoneyAmount(100)
 
 	trans := values.Transaction{
@@ -119,51 +118,51 @@ func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount
 
 	var updateWithdrawn limitsService.WithdrawnUpdater
 	if transAmount.IsNeg() {
-		updateWithdrawn = func(fs_facade.Updater, values.Transaction) error {
+		updateWithdrawn = func(db.DB, values.Transaction) error {
 			return nil
 		}
 		t.Run("updating withdrawn throws", func(t *testing.T) {
-			updateWithdrawn := func(_ fs_facade.Updater, gotTrans values.Transaction) error {
-				if gotTrans == trans {
+			updateWithdrawn := func(gotDB db.DB, gotTrans values.Transaction) error {
+				if gotDB == mockDB && gotTrans == trans {
 					return RandomError()
 				}
 				panic("unexpected")
 			}
-			err := service.NewTransactionPerformer(updateWithdrawn, nil, nil)(batchUpd, curBalance, trans)
+			err := service.NewTransactionPerformer(updateWithdrawn, nil, nil)(mockDB, curBalance, trans)
 			AssertSomeError(t, err)
 		})
 	}
 
-	addHist := func(u fs_facade.Updater, gotTrans values.Transaction) error {
-		if gotTrans == trans {
+	addHist := func(gotDB db.DB, gotTrans values.Transaction) error {
+		if gotDB == mockDB && gotTrans == trans {
 			return nil
 		}
 		panic("unexpected")
 	}
 	t.Run("adding transaction to history throws", func(t *testing.T) {
-		addHist := func(fs_facade.Updater, values.Transaction) error {
+		addHist := func(db.DB, values.Transaction) error {
 			return RandomError()
 		}
-		err := service.NewTransactionPerformer(updateWithdrawn, addHist, nil)(batchUpd, curBalance, trans)
+		err := service.NewTransactionPerformer(updateWithdrawn, addHist, nil)(mockDB, curBalance, trans)
 		AssertSomeError(t, err)
 	})
 
-	updBal := func(b fs_facade.Updater, user string, currency core.Currency, newBal core.MoneyAmount) error {
-		if user == trans.UserId && currency == trans.Money.Currency && newBal.IsEqual(wantNewBal) {
+	updBal := func(gotDB db.DB, user string, currency core.Currency, newBal core.MoneyAmount) error {
+		if gotDB == mockDB && user == trans.UserId && currency == trans.Money.Currency && newBal.IsEqual(wantNewBal) {
 			return nil
 		}
 		panic("unexpected")
 	}
 	t.Run("updating balance throws", func(t *testing.T) {
-		updBal := func(fs_facade.Updater, string, core.Currency, core.MoneyAmount) error {
+		updBal := func(db.DB, string, core.Currency, core.MoneyAmount) error {
 			return RandomError()
 		}
-		err := service.NewTransactionPerformer(updateWithdrawn, addHist, updBal)(batchUpd, curBalance, trans)
+		err := service.NewTransactionPerformer(updateWithdrawn, addHist, updBal)(mockDB, curBalance, trans)
 		AssertSomeError(t, err)
 	})
 
 	t.Run("happy case", func(t *testing.T) {
-		err := service.NewTransactionPerformer(updateWithdrawn, addHist, updBal)(batchUpd, curBalance, trans)
+		err := service.NewTransactionPerformer(updateWithdrawn, addHist, updBal)(mockDB, curBalance, trans)
 		AssertNoError(t, err)
 	})
 }
