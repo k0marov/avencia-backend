@@ -1,7 +1,5 @@
 package lib
 
-// TODO: use MultiTransactionFinalizer in the Transferer service
-
 import (
 	"context"
 	"io/ioutil"

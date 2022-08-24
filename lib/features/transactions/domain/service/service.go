@@ -41,6 +41,19 @@ func NewTransactionGetter(parseId mappers.TransIdParser, parseCode mappers.CodeP
 	}
 }
 
+// TODO: not tested 
+func NewMultiTransactionFinalizer(finalize TransactionFinalizer) MultiTransactionFinalizer {
+	return func(db db.DB, tList []values.Transaction) error {
+		for _, t := range tList {
+			err := finalize(db, t)
+			if err != nil {
+				return core_err.Rethrow("finalizing one of the transactions", err)
+			}
+		}
+		return nil 
+	}
+}
+
 
 func NewTransactionFinalizer(validate validators.TransactionValidator, perform transactionPerformer) TransactionFinalizer {
 	return func(db db.DB, t values.Transaction) error {

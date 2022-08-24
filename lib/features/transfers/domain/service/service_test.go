@@ -94,32 +94,17 @@ func TestTransferPerformer(t *testing.T) {
 	}
 
 	mockDB := NewStubDB()
-
-	transact := func(db.DB, transValues.Transaction) error { return nil }
-
-	t.Run("error case - withdrawing from caller fails", func(t *testing.T) {
-		transact := func(gotDB db.DB, t transValues.Transaction) error {
-			if gotDB == mockDB && reflect.DeepEqual(t, withdrawTrans) {
-				return RandomError()
+	
+	t.Run("forward case", func(t *testing.T) {
+		tErr := RandomError()
+		transact := func(gotDB db.DB, tList []transValues.Transaction) error {
+			if gotDB == mockDB && reflect.DeepEqual(tList, []transValues.Transaction{withdrawTrans, depositTrans}) {
+				return tErr
 			}
-			return nil
+			panic("unexpected")
 		}
-		err := service.NewTransferPerformer(transact)(mockDB, transf)
-		AssertSomeError(t, err)
-	})
-	t.Run("error case - depositing to recipient fails", func(t *testing.T) {
-		transact := func(gotDB db.DB, t transValues.Transaction) error {
-			if gotDB == mockDB && reflect.DeepEqual(t, depositTrans) {
-				return RandomError()
-			}
-			return nil
-		}
-		err := service.NewTransferPerformer(transact)(mockDB,transf)
-		AssertSomeError(t, err)
-	})
-	t.Run("happy case", func(t *testing.T) {
-		err := service.NewTransferPerformer(transact)(mockDB, transf)
-		AssertNoError(t, err)
+		gotErr := service.NewTransferPerformer(transact)(mockDB, transf)
+		AssertError(t, gotErr, tErr)
 	})
 }
 

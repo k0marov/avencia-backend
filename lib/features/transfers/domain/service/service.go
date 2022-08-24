@@ -42,7 +42,7 @@ func NewTransferer(convert transferConverter, validate validators.TransferValida
 	}
 }
 
-func NewTransferPerformer(transact tService.TransactionFinalizer) transferPerformer {
+func NewTransferPerformer(transact tService.MultiTransactionFinalizer) transferPerformer {
 	return func(db db.DB, t values.Transfer) error {
 		withdrawTrans := transValues.Transaction{
 			Source: transValues.TransSource{
@@ -55,11 +55,6 @@ func NewTransferPerformer(transact tService.TransactionFinalizer) transferPerfor
 				Amount:   t.Money.Amount.Neg(),
 			},
 		}
-		err := transact(db, withdrawTrans)
-		if err != nil {
-			return err
-		}
-		// deposit money to recipient
 		depositTrans := transValues.Transaction{
 			Source: transValues.TransSource{
 				Type:   transValues.Transfer,
@@ -71,11 +66,7 @@ func NewTransferPerformer(transact tService.TransactionFinalizer) transferPerfor
 				Amount:   t.Money.Amount,
 			},
 		}
-		err = transact(db, depositTrans)
-		if err != nil {
-			return err
-		}
-		return nil
+		return transact(db, []transValues.Transaction{withdrawTrans, depositTrans})
 	}
 }
 
