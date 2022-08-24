@@ -10,8 +10,6 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/middleware"
 )
 
-// TODO: change InvalidATMSecret client error to have 401 code
-
 func TestATMAuthMiddleware(t *testing.T) {
 	authHeader := RandomString()
 
