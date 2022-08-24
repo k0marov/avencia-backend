@@ -5,6 +5,7 @@ import (
 
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
@@ -52,6 +53,7 @@ func TestWithdrawalValidator(t *testing.T) {
 		UserId: initTrans.UserId,
 		Money:  wd.Money,
 	}
+	mockDB := NewStubDB()
 	
 	transDataGetter := func(string) (tValues.MetaTrans, error) {
 		return initTrans, nil
@@ -63,19 +65,19 @@ func TestWithdrawalValidator(t *testing.T) {
 			}
 			panic("unexpected") 
 		}
-		err := validators.NewWithdrawalValidator(transDataGetter, nil)(wd) 
+		err := validators.NewWithdrawalValidator(transDataGetter, nil)(mockDB, wd) 
 		AssertSomeError(t, err)
 	})
 	
 	t.Run("forward case - forward to TransactionValidator", func(t *testing.T) {
 		tErr := RandomError()
-		transValidator := func(trans tValues.Transaction) (core.MoneyAmount, error) {
-			if trans == wantTrans {
+		transValidator := func(gotDB  db.DB, trans tValues.Transaction) (core.MoneyAmount, error) {
+			if gotDB == mockDB && trans == wantTrans {
 				return core.NewMoneyAmount(42), tErr
 			} 		
 			panic("unexpected")
 		}
-		err := validators.NewWithdrawalValidator(transDataGetter, transValidator)(wd)
+		err := validators.NewWithdrawalValidator(transDataGetter, transValidator)(mockDB, wd)
 		AssertError(t, err, tErr)
 	})
 }

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	"github.com/k0marov/avencia-backend/lib/core"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
@@ -69,19 +68,5 @@ func TestATMTransactionCreator(t *testing.T) {
 	  Assert(t, created.Id, id, "returned id")
 	})
 }
-
-
-
-// func TestDepositFinalizer(t *testing.T) {
-//   dd := values.DepositData{
-//   	TransactionId: RandomString(),
-//   	Received:      []core.Money{RandomPosMoneyAmount(), RandomPosMoneyAmount(), RandomPosMoneyAmount()},
-//   }
-//
-//   getTrans := func(id string) (tValues.MetaTrans, error) {
-//
-//   } 
-// }
-//
 
 

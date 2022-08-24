@@ -10,7 +10,7 @@ type Handlers struct {
 	GetUserInfo http.HandlerFunc
 }
 
-func NewUserHandlersImpl(getUserInfo service.UserInfoGetter) Handlers {
+func NewUserHandlersImpl(getUserInfo service.DeliveryUserInfoGetter) Handlers {
 	return Handlers{
 		GetUserInfo: handlers.NewGetUserInfoHandler(getUserInfo),
 	}
