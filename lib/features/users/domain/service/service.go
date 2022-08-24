@@ -10,9 +10,9 @@ import (
 
 type DeliveryUserInfoGetter = func(userId string) (entities.UserInfo, error) 
 
-func NewDeliveryUserInfoGetter(simpleDB db.DB, getWallet walletService.WalletGetter, getLimits limitsService.LimitsGetter) DeliveryUserInfoGetter {
+func NewDeliveryUserInfoGetter(simpleDB db.DB, getUserInfo UserInfoGetter) DeliveryUserInfoGetter {
 	return func(userId string) (entities.UserInfo, error) {
-		return NewUserInfoGetter(getWallet, getLimits)(simpleDB, userId)
+		return getUserInfo(simpleDB, userId)
 	}
 }
 

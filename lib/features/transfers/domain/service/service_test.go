@@ -1,21 +1,24 @@
 package service_test
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
-	"reflect"
-	"testing"
 )
 
 func TestTransferer(t *testing.T) {
 	tRaw := RandomRawTransfer()
 	transf := RandomTransfer()
+	mockDB := NewStubDB() 
 	convert := func(values.RawTransfer) (values.Transfer, error) {
 		return transf, nil
 	}
@@ -26,7 +29,7 @@ func TestTransferer(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		err := service.NewTransferer(convert, nil, nil)(tRaw)
+		err := service.NewTransferer(convert, nil, nil)(mockDB, tRaw)
 		AssertSomeError(t, err)
 	})
 	validate := func(transfer values.Transfer) error {
@@ -40,29 +43,29 @@ func TestTransferer(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		gotErr := service.NewTransferer(convert, validate, nil)(tRaw)
+		gotErr := service.NewTransferer(convert, validate, nil)(mockDB, tRaw)
 		AssertError(t, gotErr, err)
 	})
 
 	t.Run("happy case - forward to perform", func(t *testing.T) {
 		err := RandomError()
-		perform := func(t values.Transfer) error {
-			if t == transf {
+		perform := func(gotDB db.DB, t values.Transfer) error {
+			if gotDB == mockDB && t == transf {
 				return err
 			}
 			panic("unexpected")
 		}
-		gotErr := service.NewTransferer(convert, validate, perform)(tRaw)
+		gotErr := service.NewTransferer(convert, validate, perform)(mockDB, tRaw)
 		AssertError(t, gotErr, err)
 	})
 }
 
 func TestTransferPerformer(t *testing.T) {
 	transf := values.Transfer{
-		FromId: "vasya",
-		ToId:   "petya",
+		FromId: "John",
+		ToId:   "Sam",
 		Money: core.Money{
-			Currency: "shekely",
+			Currency: "RUB",
 			Amount:   core.NewMoneyAmount(42),
 		},
 	}
@@ -70,50 +73,52 @@ func TestTransferPerformer(t *testing.T) {
 	withdrawTrans := transValues.Transaction{
 		Source: transValues.TransSource{
 			Type:   transValues.Transfer,
-			Detail: "petya",
+			Detail: "Sam",
 		},
-		UserId: "vasya",
+		UserId: "John",
 		Money: core.Money{
-			Currency: "shekely",
+			Currency: "RUB",
 			Amount:   core.NewMoneyAmount(-42),
 		},
 	}
 	depositTrans := transValues.Transaction{
 		Source: transValues.TransSource{
 			Type:   transValues.Transfer,
-			Detail: "vasya",
+			Detail: "John",
 		},
-		UserId: "petya",
+		UserId: "Sam",
 		Money: core.Money{
-			Currency: "shekely",
+			Currency: "RUB",
 			Amount:   core.NewMoneyAmount(42),
 		},
 	}
 
-	transact := func(fs_facade.BatchUpdater, transValues.Transaction) error { return nil }
+	mockDB := NewStubDB()
+
+	transact := func(db.DB, transValues.Transaction) error { return nil }
 
 	t.Run("error case - withdrawing from caller fails", func(t *testing.T) {
-		transact := func(u fs_facade.BatchUpdater, t transValues.Transaction) error {
-			if reflect.DeepEqual(t, withdrawTrans) {
+		transact := func(gotDB db.DB, t transValues.Transaction) error {
+			if gotDB == mockDB && reflect.DeepEqual(t, withdrawTrans) {
 				return RandomError()
 			}
 			return nil
 		}
-		err := service.NewTransferPerformer(StubRunBatch, transact)(transf)
+		err := service.NewTransferPerformer(transact)(mockDB, transf)
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - depositing to recipient fails", func(t *testing.T) {
-		transact := func(u fs_facade.BatchUpdater, t transValues.Transaction) error {
-			if reflect.DeepEqual(t, depositTrans) {
+		transact := func(gotDB db.DB, t transValues.Transaction) error {
+			if gotDB == mockDB && reflect.DeepEqual(t, depositTrans) {
 				return RandomError()
 			}
 			return nil
 		}
-		err := service.NewTransferPerformer(StubRunBatch, transact)(transf)
+		err := service.NewTransferPerformer(transact)(mockDB,transf)
 		AssertSomeError(t, err)
 	})
 	t.Run("happy case", func(t *testing.T) {
-		err := service.NewTransferPerformer(StubRunBatch, transact)(transf)
+		err := service.NewTransferPerformer(transact)(mockDB, transf)
 		AssertNoError(t, err)
 	})
 }

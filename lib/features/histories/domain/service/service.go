@@ -12,9 +12,9 @@ import (
 
 type DeliveryHistoryGetter = func(userId string) ([]entities.TransEntry, error) 
 
-func NewDeliveryHistoryGetter(simpleDB db.DB, getHistory store.HistoryGetter) DeliveryHistoryGetter {
+func NewDeliveryHistoryGetter(simpleDB db.DB, getHistory HistoryGetter) DeliveryHistoryGetter {
 	return func(userId string) ([]entities.TransEntry, error) {
-		return NewHistoryGetter(getHistory)(simpleDB, userId)
+		return getHistory(simpleDB, userId)
 	}
 }
 

@@ -1,28 +1,32 @@
 package firestore
 
 import (
+	"context"
+
 	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/core/db"
 )
 
-type DBTransaction = *firestore.Transaction
-
 type TransactionalDB struct {
-	t DBTransaction
+	t *firestore.Transaction
 	c *firestore.Client
 }
 
+type TransactionRunner func(perform func(db.DB) error) error 
 
-type TransactionDBFactory = func(t DBTransaction) TransactionalDB 
-
-func NewTransactionDBFactory(c *firestore.Client) TransactionDBFactory {
-	return func(t DBTransaction) TransactionalDB {
-		return TransactionalDB{
-			t: t,
-			c: c,
-		}
+func NewTransactionRunner(c *firestore.Client ) TransactionRunner {
+	return func(perform func(db.DB) error) error {
+		return c.RunTransaction(context.Background(), func(ctx context.Context, t *firestore.Transaction) error {
+			db := db.NewDB(TransactionalDB{
+				t: t, 
+				c: c, 
+			})
+			return perform(db)
+		})
 	}
 }
+
+
 
 
 func (db TransactionalDB) Get(path string) (db.Document, error) {

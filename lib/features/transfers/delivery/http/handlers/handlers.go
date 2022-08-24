@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func NewTransferHandler(transfer service.Transferer) http.HandlerFunc {
+func NewTransferHandler(transfer service.DeliveryTransferer) http.HandlerFunc {
 	return http_helpers.NewAuthenticatedHandler(
 		apiRequests.TransferDecoder,
 		http_helpers.NoResponseService(transfer),

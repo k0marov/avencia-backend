@@ -4,8 +4,8 @@ import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
-	"github.com/k0marov/avencia-backend/lib/core/fs_facade/batch"
+	"github.com/k0marov/avencia-backend/lib/core/db"
+	"github.com/k0marov/avencia-backend/lib/core/db/firestore"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
@@ -13,15 +13,23 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
 )
 
-type Transferer = func(values.RawTransfer) error
+type DeliveryTransferer = func(t values.RawTransfer) error 
 
-// transferConverter error may be a ClientError
+func NewDeliveryTransferer(runT firestore.TransactionRunner, transfer Transferer) DeliveryTransferer {
+	return func(t values.RawTransfer) error {
+		return runT(func(db db.DB) error {
+			return transfer(db, t)
+		})
+	}
+}
+
+type Transferer = func(transactionalDB db.DB, t values.RawTransfer) error
+
 type transferConverter = func(values.RawTransfer) (values.Transfer, error)
-
-type transferPerformer = func(values.Transfer) error
+type transferPerformer = func(transactionalDB db.DB, t values.Transfer) error
 
 func NewTransferer(convert transferConverter, validate validators.TransferValidator, perform transferPerformer) Transferer {
-	return func(raw values.RawTransfer) error {
+	return func(db db.DB, raw values.RawTransfer) error {
 		t, err := convert(raw)
 		if err != nil {
 			return core_err.Rethrow("converting raw transfer data to a transfer", err)
@@ -30,47 +38,44 @@ func NewTransferer(convert transferConverter, validate validators.TransferValida
 		if err != nil {
 			return err
 		}
-		return perform(t)
+		return perform(db, t)
 	}
 }
 
-func NewTransferPerformer(runBatch batch.WriteRunner, transact tService.TransactionFinalizer) transferPerformer {
-	return func(t values.Transfer) error {
-		return runBatch(func(u fs_facade.BatchUpdater) error {
-			// withdraw money from the wallet of caller
-			withdrawTrans := transValues.Transaction{
-				Source: transValues.TransSource{
-					Type: transValues.Transfer, 
-					Detail: t.ToId,
-				}, 
-				UserId: t.FromId,
-				Money: core.Money{
-					Currency: t.Money.Currency,
-					Amount:   t.Money.Amount.Neg(),
-				},
-			}
-			err := transact(u, withdrawTrans)
-			if err != nil {
-				return err
-			}
-			// deposit money to recipient
-			depositTrans := transValues.Transaction{
-				Source: transValues.TransSource{
-					Type: transValues.Transfer, 
-					Detail: t.FromId, 
-				},
-				UserId: t.ToId,
-				Money: core.Money{
-					Currency: t.Money.Currency,
-					Amount:   t.Money.Amount,
-				},
-			}
-			err = transact(u, depositTrans)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
+func NewTransferPerformer(transact tService.TransactionFinalizer) transferPerformer {
+	return func(db db.DB, t values.Transfer) error {
+		withdrawTrans := transValues.Transaction{
+			Source: transValues.TransSource{
+				Type:   transValues.Transfer,
+				Detail: t.ToId,
+			},
+			UserId: t.FromId,
+			Money: core.Money{
+				Currency: t.Money.Currency,
+				Amount:   t.Money.Amount.Neg(),
+			},
+		}
+		err := transact(db, withdrawTrans)
+		if err != nil {
+			return err
+		}
+		// deposit money to recipient
+		depositTrans := transValues.Transaction{
+			Source: transValues.TransSource{
+				Type:   transValues.Transfer,
+				Detail: t.FromId,
+			},
+			UserId: t.ToId,
+			Money: core.Money{
+				Currency: t.Money.Currency,
+				Amount:   t.Money.Amount,
+			},
+		}
+		err = transact(db, depositTrans)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 }
 

@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/mappers"
@@ -19,9 +19,9 @@ import (
 type TransactionIdGetter = func(trans values.MetaTrans) (id string, err error)
 type TransactionGetter = func(transactionId string) (values.MetaTrans, error)
 
-type MultiTransactionFinalizer = func(u fs_facade.BatchUpdater, t []values.Transaction) error 
-type TransactionFinalizer = func(u fs_facade.BatchUpdater, t values.Transaction) error
-type transactionPerformer = func(u fs_facade.BatchUpdater, curBalance core.MoneyAmount, t values.Transaction) error
+type MultiTransactionFinalizer = func(db db.DB, t []values.Transaction) error 
+type TransactionFinalizer = func(db db.DB, t values.Transaction) error
+type transactionPerformer = func(db db.DB, curBalance core.MoneyAmount, t values.Transaction) error
 
 
 func NewTransactionIdGetter(genCode mappers.CodeGenerator, genId mappers.TransIdGenerator) TransactionIdGetter {
@@ -44,31 +44,31 @@ func NewTransactionGetter(parseId mappers.TransIdParser, parseCode mappers.CodeP
 
 
 func NewTransactionFinalizer(validate validators.TransactionValidator, perform transactionPerformer) TransactionFinalizer {
-	return func(u fs_facade.BatchUpdater, t values.Transaction) error {
-		bal, err := validate(t)
+	return func(db db.DB, t values.Transaction) error {
+		bal, err := validate(db, t)
 		if err != nil {
 			return err
 		}
-		return perform(u, bal, t)
+		return perform(db, bal, t)
 	}
 }
 
 // TODO: rename fs_facade to db_facade 
 
 func NewTransactionPerformer(updateWithdrawn limitsService.WithdrawnUpdater, addHist histService.TransStorer, updBal walletStore.BalanceUpdater) transactionPerformer {
-	return func(u fs_facade.BatchUpdater, curBal core.MoneyAmount, t values.Transaction) error {
+	return func(db db.DB, curBal core.MoneyAmount, t values.Transaction) error {
 		// TODO: maybe move this check inside updateWithdrawn
 		if t.Money.Amount.IsNeg() {
-			err := updateWithdrawn(u, t)
+			err := updateWithdrawn(db, t)
 			if err != nil {
 				return core_err.Rethrow("updating withdrawn", err)
 			}
 		}
-		err := addHist(u, t) 
+		err := addHist(db, t) 
 		if err != nil {
 			return core_err.Rethrow("adding trans to history", err)
 		}
 
-		return updBal(u, t.UserId, t.Money.Currency, curBal.Add(t.Money.Amount))
+		return updBal(db, t.UserId, t.Money.Currency, curBal.Add(t.Money.Amount))
 	}
 }
