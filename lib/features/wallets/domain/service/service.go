@@ -3,19 +3,20 @@ package service
 import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/general_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/wallets/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/wallets/domain/store"
 )
 
-type WalletGetter = func(userId string) (entities.Wallet, error)
+type WalletGetter = func(db db.DB, userId string) (entities.Wallet, error)
 
 // BalanceGetter Should return 0 if the wallets field for the given currency is null
-type BalanceGetter = func(userId string, currency core.Currency) (core.MoneyAmount, error)
+type BalanceGetter = func(db db.DB, userId string, currency core.Currency) (core.MoneyAmount, error)
 
 func NewWalletGetter(getWallet store.WalletGetter) WalletGetter {
-	return func(userId string) (entities.Wallet, error) {
-		storedWallet, err := getWallet(userId)
+	return func(db db.DB, userId string) (entities.Wallet, error) {
+		storedWallet, err := getWallet(db, userId)
 		if err != nil {
 			return entities.Wallet{}, core_err.Rethrow("getting wallets from store", err)
 		}
@@ -32,8 +33,8 @@ func NewWalletGetter(getWallet store.WalletGetter) WalletGetter {
 }
 
 func NewBalanceGetter(getWallet WalletGetter) BalanceGetter {
-	return func(userId string, currency core.Currency) (core.MoneyAmount, error) {
-		wallet, err := getWallet(userId)
+	return func(db db.DB, userId string, currency core.Currency) (core.MoneyAmount, error) {
+		wallet, err := getWallet(db, userId)
 		if err != nil {
 			return core.NewMoneyAmount(0), core_err.Rethrow("getting wallets to later extract balance", err)
 		}

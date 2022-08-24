@@ -10,8 +10,6 @@ import (
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
-	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
-	"github.com/k0marov/avencia-backend/lib/core/fs_facade/batch"
 	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/handlers"
 	atmMiddleware "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/middleware"
 	atmValidators "github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
@@ -71,9 +69,7 @@ func Initialize() http.Handler {
 		log.Fatalf("erorr while initializing firebase auth: %v", err)
 	}
 
-	// ===== FIRESTORE =====
-	runBatch := batch.NewWriteRunner(fsClient)
-	fsDocGetter := fs_facade.NewDocGetter(fsClient)
+	// ===== DB =====
 
 	// ===== JWT =====
 	// jwtIssuer := jwt.NewIssuer(jwtSecret)
