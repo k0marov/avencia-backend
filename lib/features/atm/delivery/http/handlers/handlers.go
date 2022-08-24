@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/k0marov/avencia-api-contract/api"
 	apiResponses "github.com/k0marov/avencia-backend/lib/api/api_responses"
@@ -14,7 +13,7 @@ import (
 
 func NewCreateTransactionHandler(create service.ATMTransactionCreator) http.HandlerFunc {
   return http_helpers.NewHandler(
-		func(_ url.Values, req api.OnTransactionCreateRequest) (values.NewTrans, error) {
+		func(_ *http.Request, req api.OnTransactionCreateRequest) (values.NewTrans, error) {
 			return values.NewTrans{
 				Type:       tValues.TransactionType(req.Type),
 				QRCodeText: req.QRCodeText,
@@ -25,4 +24,10 @@ func NewCreateTransactionHandler(create service.ATMTransactionCreator) http.Hand
   )
 }
 
+// func NewCancelTransactionHandler(cancel service.TransactionCanceler) http.HandlerFunc {
+// 	return http_helpers.NewHandler(
+// 		func(url.Values)
+// 	)
+// }
+//
 

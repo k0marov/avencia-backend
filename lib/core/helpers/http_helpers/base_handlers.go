@@ -2,10 +2,10 @@ package http_helpers
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
-	"net/http"
-	"net/url"
 )
 
 type NoJSONRequest struct{}
@@ -21,7 +21,7 @@ func NoResponseService[Request any](service func(Request) error) func(Request) (
 }
 
 func NewAuthenticatedHandler[APIRequest any, Request any, Response any, APIResponse any](
-	convertReq func(auth.User, url.Values, APIRequest) (Request, error),
+	convertReq func(auth.User, *http.Request, APIRequest) (Request, error),
 	service func(Request) (Response, error),
 	convertResp func(Response) APIResponse,
 ) http.HandlerFunc {
@@ -37,7 +37,7 @@ func NewAuthenticatedHandler[APIRequest any, Request any, Response any, APIRespo
 			return
 		}
 
-		fullReq, err := convertReq(user, r.URL.Query(), req)
+		fullReq, err := convertReq(user, r, req)
 		if err != nil {
 			ThrowHTTPError(w, err)
 			return
@@ -52,7 +52,7 @@ func NewAuthenticatedHandler[APIRequest any, Request any, Response any, APIRespo
 }
 
 func NewHandler[APIRequest any, Request any, Response any, APIResponse any](
-	convertReq func(url.Values, APIRequest) (Request, error),
+	convertReq func(*http.Request, APIRequest) (Request, error),
 	service func(Request) (Response, error),
 	convertResp func(Response) APIResponse,
 ) http.HandlerFunc {
@@ -64,7 +64,7 @@ func NewHandler[APIRequest any, Request any, Response any, APIResponse any](
 			return
 		}
 
-		fullReq, err := convertReq(r.URL.Query(), req)
+		fullReq, err := convertReq(r, req)
 		if err != nil {
 			ThrowHTTPError(w, err)
 			return

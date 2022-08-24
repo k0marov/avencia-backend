@@ -113,6 +113,7 @@ func Initialize() http.Handler {
 	// ===== TRANSACTIONS =====
 	transValidator := tValidators.NewTransactionValidator(checkLimit, getBalance)
 	transact := tService.NewTransactionFinalizer(transValidator, tService.NewTransactionPerformer(updateWithdrawn, storeTrans, updateBalance))
+	multiTransact := tService.NewMultiTransactionFinalizer(transact) 
 
 	// ===== ATM =====
 	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
@@ -127,7 +128,7 @@ func Initialize() http.Handler {
 	// ===== TRANSFERS =====
 	convertTransfer := transService.NewTransferConverter(userFromEmail)
 	validateTransfer := transValidators.NewTransferValidator()
-	performTransfer := transService.NewTransferPerformer(transact)
+	performTransfer := transService.NewTransferPerformer(multiTransact)
 	transfer := transService.NewTransferer(convertTransfer, validateTransfer, performTransfer)
 	transferDelivery := transService.NewDeliveryTransferer(runTransaction, transfer)
 	transferHandler := transHandlers.NewTransferHandler(transferDelivery)

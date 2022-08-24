@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"net/url"
 
 	apiResponses "github.com/k0marov/avencia-backend/lib/api/api_responses"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
@@ -12,7 +11,7 @@ import (
 
 func NewGetHistoryHandler(getHistory service.DeliveryHistoryGetter) http.HandlerFunc {
   return http_helpers.NewAuthenticatedHandler(
-		func(user auth.User, _ url.Values, _ http_helpers.NoJSONRequest) (string, error) { return user.Id, nil },
+		func(user auth.User, _ *http.Request, _ http_helpers.NoJSONRequest) (string, error) { return user.Id, nil },
 		getHistory,
     apiResponses.HistoryEncoder,
   ) 
