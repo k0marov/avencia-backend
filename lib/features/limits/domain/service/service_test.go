@@ -4,10 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/models"
@@ -20,14 +19,15 @@ import (
 
 func TestLimitsGetter(t *testing.T) {
 	user := RandomString()
+	mockDB := NewStubDB()
 	t.Run("error case - getting withdrawns throws", func(t *testing.T) {
-		getWithdrawns := func(userId string) ([]models.Withdrawn, error) {
-			if userId == user {
+		getWithdrawns := func(gotDB db.DB, userId string) ([]models.Withdrawn, error) {
+			if gotDB == mockDB && userId == user {
 				return nil, RandomError()
 			}
 			panic("unexpected")
 		}
-		_, err := service.NewLimitsGetter(getWithdrawns, nil)(user)
+		_, err := service.NewLimitsGetter(getWithdrawns, nil)(mockDB, user)
 		AssertSomeError(t, err)
 	})
 	t.Run("happy case", func(t *testing.T) {
@@ -37,7 +37,7 @@ func TestLimitsGetter(t *testing.T) {
 			"ETH": core.NewMoneyAmount(42),
 			"EUR": core.NewMoneyAmount(1000),
 		}
-		getWithdrawns := func(string) ([]models.Withdrawn, error) {
+		getWithdrawns := func(db.DB, string) ([]models.Withdrawn, error) {
 			return []models.Withdrawn{
 				{
 					Withdrawn: core.Money{
@@ -69,7 +69,7 @@ func TestLimitsGetter(t *testing.T) {
 				},
 			}, nil
 		}
-		limits, err := service.NewLimitsGetter(getWithdrawns, limitedCurrencies)(user)
+		limits, err := service.NewLimitsGetter(getWithdrawns, limitedCurrencies)(mockDB, user)
 		AssertNoError(t, err)
 		wantLimits := map[core.Currency]values.Limit{
 			"ETH": {
@@ -105,19 +105,20 @@ func TestLimitChecker(t *testing.T) {
 		},
 	}
 	user := RandomString()
+	mockDB := NewStubDB()
 
-	getLimits := func(userId string) (entities.Limits, error) {
-		if userId == user {
+	getLimits := func(gotDB db.DB, userId string) (entities.Limits, error) {
+		if gotDB == mockDB && userId == user {
 			return limits, nil
 		}
 		panic("unexpected")
 	}
 
 	t.Run("error case - getting limits throws", func(t *testing.T) {
-		getLimits := func(string) (entities.Limits, error) {
+		getLimits := func(db.DB, string) (entities.Limits, error) {
 			return nil, RandomError()
 		}
-		err := service.NewLimitChecker(getLimits)(transValues.Transaction{Money: RandomNegativeMoney()})
+		err := service.NewLimitChecker(getLimits)(mockDB, transValues.Transaction{Money: RandomNegativeMoney()})
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - limit exceeded", func(t *testing.T) {
@@ -129,7 +130,7 @@ func TestLimitChecker(t *testing.T) {
 				Amount:   core.NewMoneyAmount(-200),
 			},
 		}
-		err := service.NewLimitChecker(getLimits)(trans)
+		err := service.NewLimitChecker(getLimits)(mockDB, trans)
 		AssertError(t, err, client_errors.WithdrawLimitExceeded)
 	})
 	t.Run("happy case", func(t *testing.T) {
@@ -141,7 +142,7 @@ func TestLimitChecker(t *testing.T) {
 				Amount:   core.NewMoneyAmount(-1000),
 			},
 		}
-		err := service.NewLimitChecker(getLimits)(trans)
+		err := service.NewLimitChecker(getLimits)(mockDB, trans)
 		AssertNoError(t, err)
 	})
 	t.Run("happy case - value is positive (its a deposit)", func(t *testing.T) {
@@ -153,7 +154,7 @@ func TestLimitChecker(t *testing.T) {
 				Amount:   core.NewMoneyAmount(1000),
 			},
 		}
-		err := service.NewLimitChecker(getLimits)(trans)
+		err := service.NewLimitChecker(getLimits)(mockDB, trans)
 		AssertNoError(t, err)
 	})
 }
@@ -165,23 +166,26 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 		},
 	}
 	userId := RandomString()
+	mockDB := NewStubDB()
 
 	t.Run("error case - provided transaction is not a withdrawal", func(t *testing.T) {
-		_, err := service.NewWithdrawnUpdateGetter(nil)(transValues.Transaction{Money: core.Money{Amount: core.NewMoneyAmount(1000)}})
+		trans := transValues.Transaction{Money: core.Money{Amount: core.NewMoneyAmount(1000)}}
+		_, err := service.NewWithdrawnUpdateGetter(nil)(mockDB, trans)
 		AssertSomeError(t, err)
 	})
 
-	getLimits := func(user string) (entities.Limits, error) {
+	getLimits := func(db.DB, string) (entities.Limits, error) {
 		return limits, nil
 	}
 	t.Run("error case - getting limits throws", func(t *testing.T) {
-		getLimits := func(user string) (entities.Limits, error) {
-			if user == userId {
+		getLimits := func(gotDB db.DB, user string) (entities.Limits, error) {
+			if gotDB == mockDB && user == userId {
 				return nil, RandomError()
 			}
 			panic("unexpected")
 		}
-		_, err := service.NewWithdrawnUpdateGetter(getLimits)(transValues.Transaction{UserId: userId, Money: core.Money{Amount: core.NewMoneyAmount(-1000)}})
+		trans := transValues.Transaction{UserId: userId, Money: core.Money{Amount: core.NewMoneyAmount(-1000)}}
+		_, err := service.NewWithdrawnUpdateGetter(getLimits)(mockDB, trans)
 		AssertSomeError(t, err)
 	})
 	t.Run("happy case - previous withdrawn value exists", func(t *testing.T) {
@@ -193,7 +197,7 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 				Amount:   core.NewMoneyAmount(-300),
 			},
 		}
-		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getLimits)(trans)
+		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getLimits)(mockDB, trans)
 		AssertNoError(t, err)
 		Assert(t, newWithdrawn, core.Money{
 			Currency: "USD",
@@ -209,7 +213,7 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 				Amount:   core.NewMoneyAmount(-0.01),
 			},
 		}
-		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getLimits)(trans)
+		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getLimits)(mockDB, trans)
 		AssertNoError(t, err)
 		Assert(t, newWithdrawn, core.Money{
 			Currency: "BTC",
@@ -219,48 +223,36 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 }
 
 func TestWithdrawnUpdater(t *testing.T) {
-	dummyFSUpdater := func(*firestore.DocumentRef, map[string]any) error {
-		return nil
-	}
-
 	trans := transValues.Transaction{
 		Source: RandomTransactionSource(),
 		UserId: RandomString(),
 		Money:  RandomNegativeMoney(),
 	}
 	newWithdrawn := RandomPositiveMoney()
-	getValue := func(transValues.Transaction) (core.Money, error) {
-		return newWithdrawn, nil
-	}
+	mockDB := NewStubDB()
 	t.Run("error case - getting new value throws", func(t *testing.T) {
-		getValue := func(gotTrans transValues.Transaction) (core.Money, error) {
-			if gotTrans == trans {
+		getValue := func(gotDB db.DB, gotTrans transValues.Transaction) (core.Money, error) {
+			if gotDB == mockDB && gotTrans == trans {
 				return core.Money{}, RandomError()
 			}
 			panic("unexpected")
 		}
-		err := service.NewWithdrawnUpdater(getValue, nil)(dummyFSUpdater, trans)
+		err := service.NewWithdrawnUpdater(getValue, nil)(mockDB, trans)
 		AssertSomeError(t, err)
 	})
-	update := func(_ fs_facade.Updater, userId string, value core.Money) error {
-		return nil
-		//if userId == trans.UserId && value == newWithdrawn {
-		//
-		//}
-	}
-	t.Run("error case - updating throws", func(t *testing.T) {
-		update := func(_ fs_facade.Updater, userId string, value core.Money) error {
-			if userId == trans.UserId && value == newWithdrawn {
-				return RandomError()
+	t.Run("forward case", func(t *testing.T) {
+		tErr := RandomError()
+		getValue := func(db.DB, transValues.Transaction) (core.Money, error) {
+			return newWithdrawn, nil
+		}
+		update := func(gotDB db.DB, userId string, value core.Money) error {
+			if gotDB == mockDB && userId == trans.UserId && value == newWithdrawn {
+				return tErr
 			}
 			panic("unexpected")
 		}
-		err := service.NewWithdrawnUpdater(getValue, update)(dummyFSUpdater, trans)
-		AssertSomeError(t, err)
+		err := service.NewWithdrawnUpdater(getValue, update)(mockDB, trans)
+		AssertError(t, err, tErr)
 
-	})
-	t.Run("happy case", func(t *testing.T) {
-		err := service.NewWithdrawnUpdater(getValue, update)(dummyFSUpdater, trans)
-		AssertNoError(t, err)
 	})
 }

@@ -2,8 +2,6 @@ package test_helpers
 
 import (
 	"errors"
-	"math/rand"
-	"strconv"
 	"time"
 
 	"github.com/k0marov/avencia-api-contract/api"

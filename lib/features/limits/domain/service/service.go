@@ -7,7 +7,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/general_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/models"
@@ -18,18 +18,18 @@ import (
 
 // LimitChecker returns a client error if rejected; simple error if server error; nil if accepted
 // LimitChecker does not update the withdrawn value, see WithdrawUpdater
-type LimitChecker = func(wantTransaction transValues.Transaction) error
-type LimitsGetter = func(userId string) (entities.Limits, error)
+type LimitChecker = func(db db.DB, wantTransaction transValues.Transaction) error
+type LimitsGetter = func(db db.DB, userId string) (entities.Limits, error)
 
-type WithdrawnUpdater = func(u fs_facade.Updater, t transValues.Transaction) error
+type WithdrawnUpdater = func(db.DB, transValues.Transaction) error
 
-type withdrawnUpdateGetter = func(t transValues.Transaction) (core.Money, error)
+type withdrawnUpdateGetter = func(db.DB, transValues.Transaction) (core.Money, error)
 
 
 // TODO: simplify 
 func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[core.Currency]core.MoneyAmount) LimitsGetter {
-	return func(userId string) (entities.Limits, error) {
-		withdrawns, err := getWithdrawns(userId)
+	return func(db db.DB, userId string) (entities.Limits, error) {
+		withdrawns, err := getWithdrawns(db, userId)
 		if err != nil {
 			return entities.Limits{}, core_err.Rethrow("getting current withdrawns", err)
 		}
@@ -55,12 +55,12 @@ func NewLimitsGetter(getWithdrawns store.WithdrawsGetter, limitedCurrencies map[
 }
 
 func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
-	return func(t transValues.Transaction) error {
+	return func(db db.DB, t transValues.Transaction) error {
 		if t.Money.Amount.IsPos() { // it's a deposit
 			return nil
 		}
 		withdraw := t.Money.Amount.Neg()
-		limits, err := getLimits(t.UserId)
+		limits, err := getLimits(db, t.UserId)
 		if err != nil {
 			return core_err.Rethrow("while getting users's limits", err)
 		}
@@ -72,12 +72,22 @@ func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
 	}
 }
 
+func NewWithdrawnUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUpdater) WithdrawnUpdater {
+	return func(db db.DB, t transValues.Transaction) error {
+		newWithdrawn, err := getValue(db, t)
+		if err != nil {
+			return core_err.Rethrow("getting new withdrawn value", err)
+		}
+		return update(db, t.UserId, newWithdrawn)
+	}
+}
+
 func NewWithdrawnUpdateGetter(getLimits LimitsGetter) withdrawnUpdateGetter {
-	return func(t transValues.Transaction) (core.Money, error) {
+	return func(db db.DB, t transValues.Transaction) (core.Money, error) {
 		if t.Money.Amount.IsPos() {
 			return core.Money{}, fmt.Errorf("expected withdrawal; got deposit")
 		}
-		limits, err := getLimits(t.UserId)
+		limits, err := getLimits(db, t.UserId)
 		if err != nil {
 			return core.Money{}, core_err.Rethrow("getting limits", err)
 		}
@@ -90,16 +100,3 @@ func NewWithdrawnUpdateGetter(getLimits LimitsGetter) withdrawnUpdateGetter {
 	}
 }
 
-func NewWithdrawnUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUpdater) WithdrawnUpdater {
-	return func(u fs_facade.Updater, t transValues.Transaction) error {
-		newWithdrawn, err := getValue(t)
-		if err != nil {
-			return core_err.Rethrow("getting new withdrawn value", err)
-		}
-		err = update(u, t.UserId, newWithdrawn)
-		if err != nil {
-			return core_err.Rethrow("updating the withdrawn value in store", err)
-		}
-		return nil
-	}
-}

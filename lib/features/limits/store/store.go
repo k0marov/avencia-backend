@@ -1,33 +1,30 @@
 package store
 
 import (
-	"context"
 	"fmt"
 
-	"cloud.google.com/go/firestore"
 	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/fs_facade"
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/models"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
 	"github.com/k0marov/avencia-backend/lib/features/limits/store/mappers"
 )
 
-func NewWithdrawsGetter(client *firestore.Client, decode mappers.WithdrawsDecoder) store.WithdrawsGetter {
-	return func(userId string) ([]models.Withdrawn, error) {
-		col := client.Collection(fmt.Sprintf("Users/%s/Withdraws", userId))
-		docs, err := col.Documents(context.Background()).GetAll()
+func NewWithdrawsGetter(getDocs db.ColGetter, decode mappers.WithdrawsDecoder) store.WithdrawsGetter {
+	return func(db db.DB, userId string) ([]models.Withdrawn, error) {
+		path := fmt.Sprintf("Users/%s/Withdraws", userId)
+		docs, err := getDocs(db, path)
 		if err != nil {
 			return []models.Withdrawn{}, fmt.Errorf("fetching a list of withdraws documents %w", err)
 		}
-		
-		return decode(fs_facade.NewDocuments(docs)) 
+		return decode(docs) 
 	}
 
 }
 
-func NewWithdrawUpdater(getDoc fs_facade.DocGetter, encode mappers.WithdrawEncoder) store.WithdrawUpdater {
-	return func(update fs_facade.Updater, userId string, withdrawn core.Money) error {
-		doc := getDoc(fmt.Sprintf("Users/%s/Withdraws/%s", userId, string(withdrawn.Currency)))
-		return update(doc, encode(withdrawn.Amount))
+func NewWithdrawUpdater(updDoc db.Setter, encode mappers.WithdrawEncoder) store.WithdrawUpdater {
+	return func(db db.DB, userId string, withdrawn core.Money) error {
+		path := fmt.Sprintf("Users/%s/Withdraws/%s", userId, string(withdrawn.Currency))
+		return updDoc(db, path, encode(withdrawn.Amount))
 	}
 }

@@ -25,16 +25,16 @@ func NewTransactionDBFactory(c *firestore.Client) TransactionDBFactory {
 }
 
 
-func (db TransactionalDB) get(path string) (db.Document, error) {
+func (db TransactionalDB) Get(path string) (db.Document, error) {
 	doc, err := db.t.Get(db.c.Doc(path))
 	return newDocument(doc), err
 }
 
-func (db TransactionalDB) getAll(path string) (db.Documents, error) {
+func (db TransactionalDB) GetAll(path string) (db.Documents, error) {
 	docs, err := db.t.Documents(db.c.Collection(path)).GetAll()
 	return newDocuments(docs), err
 }
 
-func (db TransactionalDB) set(path string, data map[string]any) error {
+func (db TransactionalDB) Set(path string, data map[string]any) error {
 	return db.t.Set(db.c.Doc(path), data, firestore.MergeAll)
 }

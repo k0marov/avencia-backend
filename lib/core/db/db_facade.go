@@ -5,10 +5,19 @@ import (
 )
 
 
-type DB interface {
-  get(path string) (Document, error)
-  getAll(path string) (Documents, error) 
-  set(path string, data map[string]any) error
+type DB struct {
+	db dbInternal
+}
+func NewDB(db dbInternal) DB {
+	return DB{
+		db: db,
+	}
+}
+
+type dbInternal interface {
+  Get(path string) (Document, error)
+  GetAll(path string) (Documents, error) 
+  Set(path string, data map[string]any) error
 }
 
 type Document struct {
@@ -25,12 +34,12 @@ type ColGetter = func(db DB, path string) (Documents, error)
 type Setter = func(db DB, path string, data map[string]any) error
 
 func DocGetterImpl(db DB, path string) (Document, error) {
-  return db.get(path) 
+  return db.db.Get(path) 
 }
 func ColGetterImpl(db DB, path string) (Documents, error) {
-	return db.getAll(path)
+	return db.db.GetAll(path)
 }
 func SetterImpl(db DB, path string, data map[string]any) error {
-  return db.set(path, data)
+  return db.db.Set(path, data)
 }
 

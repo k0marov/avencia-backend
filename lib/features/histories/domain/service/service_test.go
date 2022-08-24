@@ -3,6 +3,7 @@ package service_test
 import (
 	"testing"
 
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/histories/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
@@ -10,14 +11,15 @@ import (
 
 func TestHistoryGetter(t *testing.T) {
 	userId := RandomString()
+	mockDB := NewStubDB() 
 	t.Run("error case - getting history entries from store throws", func(t *testing.T) {
-		getFromStore := func(gotUserId string) ([]entities.TransEntry, error) {
-			if gotUserId == userId {
+		getFromStore := func(gotDB db.DB, gotUserId string) ([]entities.TransEntry, error) {
+			if gotDB == mockDB && gotUserId == userId {
 				return nil, RandomError()
 			}
 			panic("unexpected")
 		}
-		_, err := service.NewHistoryGetter(getFromStore)(userId)
+		_, err := service.NewHistoryGetter(getFromStore)(mockDB, userId)
 		AssertSomeError(t, err)
 	})
 	t.Run("happy case - should returned entries from store sorted by createdAt", func(t *testing.T) {
@@ -41,7 +43,7 @@ func TestHistoryGetter(t *testing.T) {
 			entryNewest, 
 			entryMiddle, 
 		}
-		getFromStore := func(userId string) ([]entities.TransEntry, error) {
+		getFromStore := func(gotDB db.DB, userId string) ([]entities.TransEntry, error) {
 			return storeEntries, nil
 		}
 
@@ -51,7 +53,7 @@ func TestHistoryGetter(t *testing.T) {
 			entryOldest, 
 		}
 
-		gotEntries, err := service.NewHistoryGetter(getFromStore)(userId) 
+		gotEntries, err := service.NewHistoryGetter(getFromStore)(mockDB, userId) 
 		AssertNoError(t, err)
 		Assert(t, gotEntries, wantEntries, "sorted entries")
 	})
