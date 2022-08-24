@@ -12,6 +12,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/core/db/firestore"
+	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/handlers"
 	atmMiddleware "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/middleware"
 	atmService "github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
@@ -57,10 +58,10 @@ func Initialize() http.Handler {
 	if err != nil {
 		log.Fatalf("error while reading atm secret: %v", err)
 	}
-	// jwtSecret, err := ioutil.ReadFile(conf.JWTSecretPath)
-	// if err != nil {
-	// 	log.Fatalf("error while reading jwt secret: %v", err)
-	// }
+	jwtSecret, err := ioutil.ReadFile(conf.JWTSecretPath)
+	if err != nil {
+		log.Fatalf("error while reading jwt secret: %v", err)
+	}
 
 	// ===== FIREBASE =====
 	fbApp := initFirebase(conf)
@@ -118,20 +119,25 @@ func Initialize() http.Handler {
 	codeGenerator := mappers.NewCodeGenerator(jwtIssuer)
 
 	getTransId := tService.NewTransactionIdGetter(codeGenerator, mappers.NewTransIdGenerator())
+	getTrans := tService.NewTransactionGetter(mappers.NewTransIdParser(), codeParser)
 	transact := tService.NewTransactionFinalizer(transValidator, tService.NewTransactionPerformer(updateWithdrawn, storeTrans, updateBalance))
 	multiTransact := tService.NewMultiTransactionFinalizer(transact) 
 
 	// ===== ATM =====
 	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
+	createAtmTrans  := atmService.NewATMTransactionCreator(codeParser, getTransId)
+	cancelTrans := atmService.NewTransactionCanceler()
+	validateWithdrawal := atmValidators.NewDeliveryWithdrawalValidator(atmValidators.NewWithdrawalValidator(getTrans, transValidator))
+
 	insertedBanknoteValidator := atmValidators.NewDeliveryInsertedBanknoteValidator(simpleDB, atmValidators.NewInsertedBanknoteValidator())
 	dispensedBanknoteValidator := atmValidators.NewDeliveryDispensedBanknoteValidator(simpleDB, atmValidators.NewDispensedBanknoteValidator())
-	cancelTrans := atmService.NewTransactionCanceler()
-	createAtmTrans  := atmService.NewATMTransactionCreator(codeParser, getTransId)
 	
 	atmAuthMiddleware := atmMiddleware.NewATMAuthMiddleware(atmSecretValidator)
 
 	createTransHandler := atmHandlers.NewCreateTransactionHandler(createAtmTrans) 
 	onCancelHandler := atmHandlers.NewCancelTransactionHandler(cancelTrans)
+	validateWithdrawalHandler := atmHandlers.NewWithdrawalValidationHandler(validateWithdrawal)
+
 	banknoteEscrowHandler := atmHandlers.NewBanknoteEscrowHandler(insertedBanknoteValidator)
 	banknoteAcceptedHandler := atmHandlers.NewBanknoteAcceptedHandler(insertedBanknoteValidator)
 	preBanknoteDispensedHandler := atmHandlers.NewPreBanknoteDispensedHandler(dispensedBanknoteValidator)
@@ -157,7 +163,7 @@ func Initialize() http.Handler {
 				OnComplete:         nil,
 			},
 			Withdrawal: api.TransactionWithdrawalHandlers{
-				OnStart:                 nil,
+				OnStart:                 validateWithdrawalHandler,
 				OnPreBanknoteDispensed:  preBanknoteDispensedHandler,
 				OnPostBanknoteDispensed: postBanknoteDispensedHandler,
 				OnComplete:              nil,

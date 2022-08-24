@@ -36,7 +36,10 @@ func NewATMTransactionCreator(getTrans tMappers.CodeParser, getTransId tService.
 	}
 }
 
+
+
 // TODO: here the user's current transaction may be reset 
+// TODO: invalidate the transactionId 
 func NewTransactionCanceler() TransactionCanceler {
 	return func(id string) error {
 		return nil

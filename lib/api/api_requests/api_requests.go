@@ -29,6 +29,16 @@ func CancelTransactionDecoder(r *http.Request, _ http_helpers.NoJSONRequest) (tr
 	return id, nil
 }
 
+func WithdrawalDataDecoder(_ *http.Request, w api.StartWithdrawalRequest) (atmValues.WithdrawalData, error) {
+	return atmValues.WithdrawalData{
+		TransactionId: w.TransactionId,
+		Money:         core.Money{
+			Currency: core.Currency(w.Currency),
+			Amount:   core.NewMoneyAmount(w.Amount),
+		},
+	}, nil
+}
+
 func InsertedBanknoteDecoder(_ *http.Request, b api.BanknoteInsertionRequest) (atmValues.InsertedBanknote, error) {
 	return atmValues.InsertedBanknote{
 		TransactionId: b.TransactionId,
@@ -52,6 +62,10 @@ func DispensedBanknoteDecoder(_ *http.Request, b api.BanknoteDispensionRequest) 
 	}, nil
 }
 
+// TODO: get rid of using type x = func() and replace it with type x func() 
+
+
+// TODO: move this to some core package 
 func moneyDecoder(m api.Money) core.Money {
 	return core.Money{
 		Currency: core.Currency(m.Currency),

@@ -3,6 +3,7 @@ package validators
 import (
 	"crypto/subtle"
 
+	"github.com/google/go-cmp/cmp/internal/function"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db"
@@ -61,6 +62,7 @@ func NewWithdrawalValidator(getTrans tService.TransactionGetter, validate tValid
 
 type DeliveryInsertedBanknoteValidator = func(values.InsertedBanknote) error 
 type DeliveryDispensedBanknoteValidator = func(values.DispensedBanknote) error 
+type DeliveryWithdrawalValidator = func(values.WithdrawalData) error 
 
 func NewDeliveryInsertedBanknoteValidator(db db.DB, validate InsertedBanknoteValidator) DeliveryInsertedBanknoteValidator {
 	return func(ib values.InsertedBanknote) error {
@@ -70,6 +72,11 @@ func NewDeliveryInsertedBanknoteValidator(db db.DB, validate InsertedBanknoteVal
 func NewDeliveryDispensedBanknoteValidator(db db.DB, validate DispensedBanknoteValidator) DeliveryDispensedBanknoteValidator {
 	return func(b values.DispensedBanknote) error {
 		return validate(db, b)
+	}
+}
+func NewDeliveryWithdrawalValidator(db db.DB, validate WithdrawalValidator) DeliveryWithdrawalValidator {
+	return func(wd values.WithdrawalData) error {
+		return validate(db, wd)
 	}
 }
 

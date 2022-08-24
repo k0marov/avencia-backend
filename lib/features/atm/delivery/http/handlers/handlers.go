@@ -26,6 +26,14 @@ func NewCancelTransactionHandler(cancel service.TransactionCanceler) http.Handle
 	)
 }
 
+func NewWithdrawalValidationHandler(validate validators.DeliveryWithdrawalValidator) http.HandlerFunc {
+	return http_helpers.NewHandler(
+    apiRequests.WithdrawalDataDecoder, 
+    http_helpers.NoResponseService(validate), 
+    http_helpers.NoResponseConverter,
+	)
+}
+
 func NewBanknoteEscrowHandler(validateBanknote validators.DeliveryInsertedBanknoteValidator) http.HandlerFunc {
 	return http_helpers.NewHandler(
 		apiRequests.InsertedBanknoteDecoder,
