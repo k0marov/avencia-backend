@@ -9,6 +9,12 @@ import (
 type SimpleDB struct {
 	c *firestore.Client
 }
+
+func NewSimpleDB(c *firestore.Client) SimpleDB {
+	return SimpleDB{c: c}
+}
+
+
 func (db SimpleDB) Get(path string) (db.Document, error) {
 	doc, err := db.c.Doc(path).Get(context.Background())
 	return newDocument(doc), err

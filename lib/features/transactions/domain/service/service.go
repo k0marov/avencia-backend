@@ -14,7 +14,6 @@ import (
 
 // TODO: having dots in a transactionId (since it is internally a JWT) may result in having dots in url query params, this may lead to bugs
 
-// TODO: change something so that "u fs_facade.BatchUpdater" is not so long
 
 type TransactionIdGetter = func(trans values.MetaTrans) (id string, err error)
 type TransactionGetter = func(transactionId string) (values.MetaTrans, error)
@@ -52,8 +51,6 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform t
 		return perform(db, bal, t)
 	}
 }
-
-// TODO: rename fs_facade to db_facade 
 
 func NewTransactionPerformer(updateWithdrawn limitsService.WithdrawnUpdater, addHist histService.TransStorer, updBal walletStore.BalanceUpdater) transactionPerformer {
 	return func(db db.DB, curBal core.MoneyAmount, t values.Transaction) error {
