@@ -8,16 +8,13 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
-	"github.com/k0marov/avencia-backend/lib/features/histories/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
 )
 
-func NewGetHistoryHandler(simpleDB db.DB, getHistory service.HistoryGetter) http.HandlerFunc {
+func NewGetHistoryHandler(simpleDB db.DB, getHistory service.DeliveryHistoryGetter) http.HandlerFunc {
   return http_helpers.NewAuthenticatedHandler(
 		func(user auth.User, _ url.Values, _ http_helpers.NoJSONRequest) (string, error) { return user.Id, nil },
-    func(userId string) ([]entities.TransEntry, error){
-    	return getHistory(simpleDB, userId)
-    }, 
+		getHistory,
     apiResponses.HistoryEncoder,
   ) 
 }

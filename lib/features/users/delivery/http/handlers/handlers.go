@@ -9,7 +9,7 @@ import (
 	"net/url"
 )
 
-func NewGetUserInfoHandler(getUserInfo service.UserInfoGetter) http.HandlerFunc {
+func NewGetUserInfoHandler(getUserInfo service.DeliveryUserInfoGetter) http.HandlerFunc {
 	return http_helpers.NewAuthenticatedHandler(
 		func(user auth.User, _ url.Values, _ http_helpers.NoJSONRequest) (string, error) { return user.Id, nil },
 		getUserInfo,

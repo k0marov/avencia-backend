@@ -10,6 +10,15 @@ import (
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
+type DeliveryHistoryGetter = func(userId string) ([]entities.TransEntry, error) 
+
+func NewDeliveryHistoryGetter(simpleDB db.DB, getHistory store.HistoryGetter) DeliveryHistoryGetter {
+	return func(userId string) ([]entities.TransEntry, error) {
+		return NewHistoryGetter(getHistory)(simpleDB, userId)
+	}
+}
+
+
 type HistoryGetter = func(db db.DB, userId string) ([]entities.TransEntry, error)
 type TransStorer = func(db.DB, transValues.Transaction) error
 
