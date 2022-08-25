@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
+	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
@@ -46,10 +47,23 @@ func NewTransactionCanceler() TransactionCanceler {
 
 // TODO: somehow DRY getting metaTrans and validating metaTrans.Type from ATMTransactionCreator, DepositFinalizer, WithdrawalFinalizer. The new function (validator) could also be used in banknote validation services
 
+type generalFinalizer = func(db db.DB, transId string, wantType tValues.TransactionType, m []core.Money) error
 
-func NewDepositFinalizer(validate validators.MetaTransValidator, finalize tService.MultiTransactionFinalizer) DepositFinalizer {
+func NewDepositFinalizer(generalFinalizer generalFinalizer) DepositFinalizer {
 	return func(db db.DB, dd values.DepositData) error {
-		metaTrans, err := validate(dd.TransactionId, tValues.Deposit)
+		return generalFinalizer(db, dd.TransactionId, tValues.Deposit, dd.Received)
+	}
+}
+
+func NewWithdrawalFinalizer(generalFinalizer generalFinalizer) WithdrawalFinalizer {
+	return func(db db.DB, wd values.WithdrawalData) error {
+		return generalFinalizer(db, wd.TransactionId, tValues.Withdrawal, []core.Money{wd.Money})
+	}
+}
+
+func NewGeneralFinalizer(validate validators.MetaTransValidator, finalize tService.MultiTransactionFinalizer) generalFinalizer {
+	return func(db db.DB, transId string, tType tValues.TransactionType, m []core.Money) error {
+		metaTrans, err := validate(transId, tType)
 		if err != nil {
 			return err
 		}
@@ -60,7 +74,7 @@ func NewDepositFinalizer(validate validators.MetaTransValidator, finalize tServi
 		}
 
 		var t []tValues.Transaction
-		for _, m := range dd.Received {
+		for _, m := range m {
 			t = append(t, tValues.Transaction{
 				Source: source,
 				UserId: metaTrans.UserId,
@@ -71,21 +85,3 @@ func NewDepositFinalizer(validate validators.MetaTransValidator, finalize tServi
 	}
 }
 
-func NewWithdrawalFinalizer(validate validators.MetaTransValidator, finalize tService.TransactionFinalizer) WithdrawalFinalizer {
-	return func(db db.DB, wd values.WithdrawalData) error {
-		metaTrans, err := validate(wd.TransactionId, tValues.Withdrawal)
-		if err != nil {
-			return err
-		}
-
-		t := tValues.Transaction{
-			Source: tValues.TransSource{
-				Type: tValues.Cash, 
-				Detail: "", 
-			},
-			UserId: metaTrans.UserId,
-			Money:  wd.Money,
-		}
-		return finalize(db, t)
-	}
-}
