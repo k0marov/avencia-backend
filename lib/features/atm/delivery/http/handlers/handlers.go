@@ -26,7 +26,7 @@ func NewCancelTransactionHandler(cancel service.TransactionCanceler) http.Handle
 	)
 }
 
-func NewWithdrawalValidationHandler(validate validators.DeliveryWithdrawalValidator) http.HandlerFunc {
+func NewWithdrawalValidationHandler(validate service.DeliveryWithdrawalValidator) http.HandlerFunc {
 	return http_helpers.NewHandler(
     apiRequests.WithdrawalDataDecoder, 
     http_helpers.NoResponseService(validate), 
@@ -34,7 +34,7 @@ func NewWithdrawalValidationHandler(validate validators.DeliveryWithdrawalValida
 	)
 }
 
-func NewBanknoteEscrowHandler(validateBanknote validators.DeliveryInsertedBanknoteValidator) http.HandlerFunc {
+func NewBanknoteEscrowHandler(validateBanknote service.DeliveryInsertedBanknoteValidator) http.HandlerFunc {
 	return http_helpers.NewHandler(
 		apiRequests.InsertedBanknoteDecoder,
 		http_helpers.NoResponseService(validateBanknote),
@@ -42,11 +42,11 @@ func NewBanknoteEscrowHandler(validateBanknote validators.DeliveryInsertedBankno
 	)
 }
 
-func NewBanknoteAcceptedHandler(validateBanknote validators.DeliveryInsertedBanknoteValidator) http.HandlerFunc {
+func NewBanknoteAcceptedHandler(validateBanknote service.DeliveryInsertedBanknoteValidator) http.HandlerFunc {
 	return NewBanknoteEscrowHandler(validateBanknote)
 }
 
-func NewPreBanknoteDispensedHandler(validateBanknote validators.DeliveryDispensedBanknoteValidator) http.HandlerFunc {
+func NewPreBanknoteDispensedHandler(validateBanknote service.DeliveryDispensedBanknoteValidator) http.HandlerFunc {
 	return http_helpers.NewHandler(
 		apiRequests.DispensedBanknoteDecoder,
 		http_helpers.NoResponseService(validateBanknote),
@@ -54,6 +54,25 @@ func NewPreBanknoteDispensedHandler(validateBanknote validators.DeliveryDispense
 	)
 }
 
-func NewPostBanknoteDispensedHandler(validateBanknote validators.DeliveryDispensedBanknoteValidator) http.HandlerFunc {
+func NewPostBanknoteDispensedHandler(validateBanknote service.DeliveryDispensedBanknoteValidator) http.HandlerFunc {
 	return NewPreBanknoteDispensedHandler(validateBanknote)
 }
+
+
+func NewCompleteDepostHandler(finalize service.DeliveryDepositFinalizer) http.HandlerFunc {
+	return http_helpers.NewHandler(
+    apiRequests.DepositDataDecoder, 
+    http_helpers.NoResponseService(finalize), 
+    http_helpers.NoResponseConverter, 
+	)
+}
+
+func NewCompleteWithdrawalHandler(finalize service.DeliveryWithdrawalFinalizer) http.HandlerFunc {
+	return http_helpers.NewHandler(
+		apiRequests.WithdrawalDataDecoder, 
+		http_helpers.NoResponseService(finalize), 
+		http_helpers.NoResponseConverter, 
+	)
+}
+
+

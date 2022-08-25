@@ -127,19 +127,24 @@ func Initialize() http.Handler {
 	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
 	metaTransByIdValidator := atmValidators.NewMetaTransByIdValidator(getTrans) 
 	metaTransFromCodeValidator := atmValidators.NewMetaTransFromCodeValidator(codeParser)
-	validateWithdrawal := atmValidators.NewDeliveryWithdrawalValidator(simpleDB, atmValidators.NewWithdrawalValidator(metaTransByIdValidator, transValidator))
+	validateWithdrawal := atmService.NewDeliveryWithdrawalValidator(simpleDB, atmValidators.NewWithdrawalValidator(metaTransByIdValidator, transValidator))
+	insertedBanknoteValidator := atmService.NewDeliveryInsertedBanknoteValidator(simpleDB, atmValidators.NewInsertedBanknoteValidator())
+	dispensedBanknoteValidator := atmService.NewDeliveryDispensedBanknoteValidator(simpleDB, atmValidators.NewDispensedBanknoteValidator())
+
 	createAtmTrans  := atmService.NewATMTransactionCreator(metaTransFromCodeValidator, getTransId)
 	cancelTrans := atmService.NewTransactionCanceler()
-
-	insertedBanknoteValidator := atmValidators.NewDeliveryInsertedBanknoteValidator(simpleDB, atmValidators.NewInsertedBanknoteValidator())
-	dispensedBanknoteValidator := atmValidators.NewDeliveryDispensedBanknoteValidator(simpleDB, atmValidators.NewDispensedBanknoteValidator())
+	generalFinalizer := atmService.NewGeneralFinalizer(metaTransByIdValidator, multiTransact)
+	finalizeDeposit := atmService.NewDeliveryDepositFinalizer(runTransaction, atmService.NewDepositFinalizer(generalFinalizer))
+	finalizeWithdrawal := atmService.NewDeliveryWithdrawalFinalizer(runTransaction, atmService.NewWithdrawalFinalizer(generalFinalizer))
+	
 	
 	atmAuthMiddleware := atmMiddleware.NewATMAuthMiddleware(atmSecretValidator)
 
 	createTransHandler := atmHandlers.NewCreateTransactionHandler(createAtmTrans) 
 	onCancelHandler := atmHandlers.NewCancelTransactionHandler(cancelTrans)
 	validateWithdrawalHandler := atmHandlers.NewWithdrawalValidationHandler(validateWithdrawal)
-
+	completeDepositHandler := atmHandlers.NewCompleteDepostHandler(finalizeDeposit) 
+	completeWithdrawalHandler := atmHandlers.NewCompleteWithdrawalHandler(finalizeWithdrawal)
 	banknoteEscrowHandler := atmHandlers.NewBanknoteEscrowHandler(insertedBanknoteValidator)
 	banknoteAcceptedHandler := atmHandlers.NewBanknoteAcceptedHandler(insertedBanknoteValidator)
 	preBanknoteDispensedHandler := atmHandlers.NewPreBanknoteDispensedHandler(dispensedBanknoteValidator)
@@ -162,13 +167,13 @@ func Initialize() http.Handler {
 			Deposit: api.TransactionDepositHandlers{
 				OnBanknoteEscrow:   banknoteEscrowHandler,
 				OnBanknoteAccepted: banknoteAcceptedHandler,
-				OnComplete:         nil,
+				OnComplete:         completeDepositHandler,
 			},
 			Withdrawal: api.TransactionWithdrawalHandlers{
 				OnStart:                 validateWithdrawalHandler,
 				OnPreBanknoteDispensed:  preBanknoteDispensedHandler,
 				OnPostBanknoteDispensed: postBanknoteDispensedHandler,
-				OnComplete:              nil,
+				OnComplete:              completeWithdrawalHandler,
 			},
 		},
 		App: api.AppHandlers{

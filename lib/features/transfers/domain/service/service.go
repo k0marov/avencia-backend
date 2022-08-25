@@ -5,23 +5,12 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/core/db/firestore"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
 )
-
-type DeliveryTransferer = func(t values.RawTransfer) error 
-
-func NewDeliveryTransferer(runT firestore.TransactionRunner, transfer Transferer) DeliveryTransferer {
-	return func(t values.RawTransfer) error {
-		return runT(func(db db.DB) error {
-			return transfer(db, t)
-		})
-	}
-}
 
 type Transferer = func(transactionalDB db.DB, t values.RawTransfer) error
 

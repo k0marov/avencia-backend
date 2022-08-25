@@ -17,6 +17,7 @@ type ATMSecretValidator = func(gotAtmSecret []byte) error
 type InsertedBanknoteValidator = func(db.DB, values.InsertedBanknote) error 
 type DispensedBanknoteValidator = func(db.DB, values.DispensedBanknote) error 
 type WithdrawalValidator = func(db.DB, values.WithdrawalData) error 
+
 type MetaTransByIdValidator = func(transId string, wantType tValues.TransactionType) (tValues.MetaTrans, error)  
 type MetaTransByCodeValidator = func(code string, wantType tValues.TransactionType) (tValues.MetaTrans, error)
 
@@ -83,30 +84,6 @@ func NewMetaTransByIdValidator(getTransById tService.TransactionGetter) MetaTran
 func NewMetaTransFromCodeValidator(getTransFromCode mappers.CodeParser) MetaTransByCodeValidator {
 	return newMetaTransValidator(getTransFromCode)
 }
-
-
-
-type DeliveryInsertedBanknoteValidator = func(values.InsertedBanknote) error 
-type DeliveryDispensedBanknoteValidator = func(values.DispensedBanknote) error 
-type DeliveryWithdrawalValidator = func(values.WithdrawalData) error 
-
-func NewDeliveryInsertedBanknoteValidator(db db.DB, validate InsertedBanknoteValidator) DeliveryInsertedBanknoteValidator {
-	return func(ib values.InsertedBanknote) error {
-		return validate(db, ib)
-	}
-}
-func NewDeliveryDispensedBanknoteValidator(db db.DB, validate DispensedBanknoteValidator) DeliveryDispensedBanknoteValidator {
-	return func(b values.DispensedBanknote) error {
-		return validate(db, b)
-	}
-}
-func NewDeliveryWithdrawalValidator(db db.DB, validate WithdrawalValidator) DeliveryWithdrawalValidator {
-	return func(wd values.WithdrawalData) error {
-		return validate(db, wd)
-	}
-}
-
-
 
 
 

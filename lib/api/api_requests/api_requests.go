@@ -29,6 +29,13 @@ func CancelTransactionDecoder(r *http.Request, _ http_helpers.NoJSONRequest) (tr
 	return id, nil
 }
 
+func DepositDataDecoder(_ *http.Request, d api.CompleteDepositRequest) (atmValues.DepositData, error) {
+	return atmValues.DepositData{
+		TransactionId: d.TransactionId,
+		Received:      multiMoneyDecoder(d.Receivables),
+	}, nil
+}
+
 func WithdrawalDataDecoder(_ *http.Request, w api.StartWithdrawalRequest) (atmValues.WithdrawalData, error) {
 	return atmValues.WithdrawalData{
 		TransactionId: w.TransactionId,
@@ -62,7 +69,7 @@ func DispensedBanknoteDecoder(_ *http.Request, b api.BanknoteDispensionRequest) 
 	}, nil
 }
 
-// TODO: get rid of using type x = func() and replace it with type x func() 
+// TODO: get rid of using type x = func() and replace it with type x func() everywhere
 
 
 // TODO: move this to some core package 

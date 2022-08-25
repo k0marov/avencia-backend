@@ -12,7 +12,13 @@ func NewDB(db dbInternal) DB {
 	return DB{
 		db: db,
 	}
+
 }
+
+
+type TransactionRunner = func(func(DB) error) error
+
+
 
 type dbInternal interface {
   Get(path string) (Document, error)
