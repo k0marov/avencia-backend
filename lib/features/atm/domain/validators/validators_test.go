@@ -81,3 +81,44 @@ func TestWithdrawalValidator(t *testing.T) {
 		AssertError(t, err, tErr)
 	})
 }
+
+
+
+func TestMetaTransValidator(t *testing.T) {
+	id := RandomString() 
+	metaTrans := tValues.MetaTrans{
+		Type:   tValues.Deposit,
+		UserId: RandomString(),
+	}
+	wantType := tValues.Deposit
+	getTrans := func(gotId string) (tValues.MetaTrans, error) {
+		if gotId == id {
+			return metaTrans, nil
+		}
+		panic("unexpected")
+	}
+
+	t.Run("error case - get trans throws", func(t *testing.T) {
+    getTrans := func(string) (tValues.MetaTrans, error) {
+    	return tValues.MetaTrans{
+    		Type: wantType,
+    	}, RandomError()
+    }
+    _, err := validators.NewMetaTransValidator(getTrans)(id, wantType)
+    AssertSomeError(t, err)
+	})
+
+	t.Run("error case - transaction type is not right", func(t *testing.T) {
+		_, err := validators.NewMetaTransValidator(getTrans)(id, tValues.Withdrawal)
+		AssertError(t, err, client_errors.InvalidTransactionType)
+	})
+
+	t.Run("happy case", func(t *testing.T) {
+		gotTrans, err := validators.NewMetaTransValidator(getTrans)(id, wantType)
+		AssertNoError(t, err)
+		Assert(t, gotTrans, metaTrans, "returned trans")
+	})
+}
+
+
+

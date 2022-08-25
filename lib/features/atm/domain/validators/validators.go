@@ -3,7 +3,6 @@ package validators
 import (
 	"crypto/subtle"
 
-	"github.com/google/go-cmp/cmp/internal/function"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db"
@@ -17,6 +16,7 @@ type ATMSecretValidator = func(gotAtmSecret []byte) error
 type InsertedBanknoteValidator = func(db.DB, values.InsertedBanknote) error 
 type DispensedBanknoteValidator = func(db.DB, values.DispensedBanknote) error 
 type WithdrawalValidator = func(db.DB, values.WithdrawalData) error 
+type MetaTransValidator = func(transId string, wantType tValues.TransactionType) (tValues.MetaTrans, error)  
 
 func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
 	return func(gotAtmSecret []byte) error {
@@ -42,6 +42,7 @@ func NewDispensedBanknoteValidator() DispensedBanknoteValidator {
 	}
 }
 
+// TODO: use MetaTransValidator here
 func NewWithdrawalValidator(getTrans tService.TransactionGetter, validate tValidators.TransactionValidator) WithdrawalValidator {
 	return func(db db.DB, wd values.WithdrawalData) error {
 		metaTrans, err := getTrans(wd.TransactionId)
@@ -59,6 +60,22 @@ func NewWithdrawalValidator(getTrans tService.TransactionGetter, validate tValid
 		return err
 	}
 }
+
+
+func NewMetaTransValidator(getTrans tService.TransactionGetter)  MetaTransValidator {
+	return func(transId string, wantType tValues.TransactionType) (tValues.MetaTrans, error) {
+		trans, err := getTrans(transId) 
+		if err != nil {
+			return tValues.MetaTrans{}, core_err.Rethrow("getting trans from trans id", err)
+		}
+		if trans.Type != wantType {
+			return tValues.MetaTrans{}, client_errors.InvalidTransactionType
+		}
+		return trans, nil 
+	}
+}
+
+
 
 type DeliveryInsertedBanknoteValidator = func(values.InsertedBanknote) error 
 type DeliveryDispensedBanknoteValidator = func(values.DispensedBanknote) error 

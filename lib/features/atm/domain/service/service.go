@@ -16,8 +16,8 @@ type TransactionCanceler = func(id string) error
 type DepositFinalizer = func(db.DB, values.DepositData) error
 type WithdrawalFinalizer = func(db.DB, values.WithdrawalData) error
 
-// TODO: add validation that user doesn't have any active transaction
-func NewATMTransactionCreator(parseCode tMappers.CodeParser, getTransId tService.TransactionIdGetter) ATMTransactionCreator {
+// TODO: add validation that there is no active transaction for this user
+func NewATMTransactionCreator(parseCode tMappers.CodeParser, createTrans tService.TransactionIdGetter) ATMTransactionCreator {
 	return func(nt values.NewTrans) (values.CreatedTransaction, error) {
 		trans, err := parseCode(nt.QRCodeText)
 		if err != nil {
@@ -27,7 +27,7 @@ func NewATMTransactionCreator(parseCode tMappers.CodeParser, getTransId tService
 		if trans.Type != nt.Type {
 			return values.CreatedTransaction{}, client_errors.InvalidTransactionType
 		}
-		transId, err := getTransId(trans)
+		transId, err := createTrans(trans)
 		if err != nil {
 			return values.CreatedTransaction{}, core_err.Rethrow("getting the transaction id", err)
 		}
@@ -43,7 +43,8 @@ func NewTransactionCanceler() TransactionCanceler {
 	}
 }
 
-// TODO: somehow DRY getting metaTrans and validating metaTrans.Type from ATMTransactionCreator, DepositFinalizer, WithdrawalFinalizer 
+// TODO: somehow DRY getting metaTrans and validating metaTrans.Type from ATMTransactionCreator, DepositFinalizer, WithdrawalFinalizer. The new function (validator) could also be used in banknote validation services
+
 
 func NewDepositFinalizer(getTrans tService.TransactionGetter, finalize tService.MultiTransactionFinalizer) DepositFinalizer {
 	return func(db db.DB, dd values.DepositData) error {
