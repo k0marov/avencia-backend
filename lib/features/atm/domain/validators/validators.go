@@ -42,12 +42,11 @@ func NewDispensedBanknoteValidator() DispensedBanknoteValidator {
 	}
 }
 
-// TODO: use MetaTransValidator here
-func NewWithdrawalValidator(getTrans tService.TransactionGetter, validate tValidators.TransactionValidator) WithdrawalValidator {
+func NewWithdrawalValidator(validateMeta MetaTransValidator, validateTrans tValidators.TransactionValidator) WithdrawalValidator {
 	return func(db db.DB, wd values.WithdrawalData) error {
-		metaTrans, err := getTrans(wd.TransactionId)
+		metaTrans, err := validateMeta(wd.TransactionId, tValues.Withdrawal)
 		if err != nil {
-			return core_err.Rethrow("getting transaction data from transaction id", err)
+			return err
 		}
 		t := tValues.Transaction{
 			Source: tValues.TransSource{
@@ -56,7 +55,7 @@ func NewWithdrawalValidator(getTrans tService.TransactionGetter, validate tValid
 			UserId: metaTrans.UserId,
 			Money:  wd.Money,
 		}
-		_, err = validate(db, t) 
+		_, err = validateTrans(db, t) 
 		return err
 	}
 }

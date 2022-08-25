@@ -41,7 +41,7 @@ func TestWithdrawalValidator(t *testing.T) {
 		TransactionId: RandomString(),
 		Money:         RandomNegativeMoney(),
 	}
-	initTrans := tValues.MetaTrans{
+	metaTrans := tValues.MetaTrans{
 		Type: RandomTransactionType(),
 		UserId:    RandomString(),
 	}
@@ -49,24 +49,27 @@ func TestWithdrawalValidator(t *testing.T) {
 	wantTrans := tValues.Transaction{
 		Source: tValues.TransSource{
 			Type: tValues.Cash,
+			Detail: "",
 		},
-		UserId: initTrans.UserId,
+		UserId: metaTrans.UserId,
 		Money:  wd.Money,
 	}
 	mockDB := NewStubDB()
-	
-	transDataGetter := func(string) (tValues.MetaTrans, error) {
-		return initTrans, nil
-	}
-	t.Run("error case - getting trans data throws an error", func(t *testing.T) {
-		transDataGetter := func(transId string) (tValues.MetaTrans, error) {
-			if transId == wd.TransactionId {
-				return tValues.MetaTrans{}, RandomError()
-			}
-			panic("unexpected") 
+
+	metaTransValidator := func(transactionId string, wantType tValues.TransactionType) (tValues.MetaTrans, error) {
+		if transactionId == wd.TransactionId && wantType == tValues.Withdrawal {
+			return metaTrans, nil
 		}
-		err := validators.NewWithdrawalValidator(transDataGetter, nil)(mockDB, wd) 
-		AssertSomeError(t, err)
+		panic("unexpected")
+	}
+	
+	t.Run("error case - validating meta trans throws", func(t *testing.T) {
+		tErr := RandomError()
+		metaTransValidator := func(string, tValues.TransactionType) (tValues.MetaTrans, error) {
+			return tValues.MetaTrans{}, tErr
+		}
+		err := validators.NewWithdrawalValidator(metaTransValidator, nil)(mockDB, wd) 
+		AssertError(t, err, tErr)
 	})
 	
 	t.Run("forward case - forward to TransactionValidator", func(t *testing.T) {
@@ -77,7 +80,7 @@ func TestWithdrawalValidator(t *testing.T) {
 			} 		
 			panic("unexpected")
 		}
-		err := validators.NewWithdrawalValidator(transDataGetter, transValidator)(mockDB, wd)
+		err := validators.NewWithdrawalValidator(metaTransValidator, transValidator)(mockDB, wd)
 		AssertError(t, err, tErr)
 	})
 }
