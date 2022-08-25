@@ -107,17 +107,17 @@ func TestMetaTransValidator(t *testing.T) {
     		Type: wantType,
     	}, RandomError()
     }
-    _, err := validators.NewMetaTransValidator(getTrans)(id, wantType)
+    _, err := validators.NewMetaTransByIdValidator(getTrans)(id, wantType)
     AssertSomeError(t, err)
 	})
 
 	t.Run("error case - transaction type is not right", func(t *testing.T) {
-		_, err := validators.NewMetaTransValidator(getTrans)(id, tValues.Withdrawal)
+		_, err := validators.NewMetaTransByIdValidator(getTrans)(id, tValues.Withdrawal)
 		AssertError(t, err, client_errors.InvalidTransactionType)
 	})
 
 	t.Run("happy case", func(t *testing.T) {
-		gotTrans, err := validators.NewMetaTransValidator(getTrans)(id, wantType)
+		gotTrans, err := validators.NewMetaTransByIdValidator(getTrans)(id, wantType)
 		AssertNoError(t, err)
 		Assert(t, gotTrans, metaTrans, "returned trans")
 	})

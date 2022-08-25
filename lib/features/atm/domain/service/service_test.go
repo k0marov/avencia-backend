@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/db"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
@@ -23,31 +22,19 @@ func TestATMTransactionCreator(t *testing.T) {
 		UserId: RandomString(),
 	}
 	id := RandomString()
-	getTrans := func(code string) (tValues.MetaTrans, error) {
+	validate := func(string, tValues.TransactionType) (tValues.MetaTrans, error) {
 		return metaTrans, nil
 	}
 	t.Run("error case - parsing qr code throws", func(t *testing.T) {
-		getTrans := func(code string) (tValues.MetaTrans, error) {
-			if code == newTrans.QRCodeText {
-				return tValues.MetaTrans{}, RandomError()
+		tErr := RandomError() 
+		validate := func(code string, tType tValues.TransactionType) (tValues.MetaTrans, error) {
+			if code == newTrans.QRCodeText && tType == newTrans.Type {
+				return tValues.MetaTrans{}, tErr
 			}
 			panic("unexpected")
 		}
-		_, err := service.NewATMTransactionCreator(getTrans, nil)(newTrans)
-		AssertSomeError(t, err)
-	})
-	t.Run("error case - transaction type is not right", func(t *testing.T) {
-		var wrongMetaTrans tValues.MetaTrans
-		if newTrans.Type == tValues.Deposit {
-			wrongMetaTrans.Type = tValues.Withdrawal
-		} else {
-			wrongMetaTrans.Type = tValues.Deposit
-		}
-		getTrans := func(string) (tValues.MetaTrans, error) {
-			return wrongMetaTrans, nil
-		}
-		_, err := service.NewATMTransactionCreator(getTrans, nil)(newTrans)
-		AssertError(t, err, client_errors.InvalidTransactionType)
+		_, err := service.NewATMTransactionCreator(validate, nil)(newTrans)
+		AssertError(t, err, tErr)
 	})
 
 	getId := func(tValues.MetaTrans) (string, error) {
@@ -61,12 +48,12 @@ func TestATMTransactionCreator(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		_, err := service.NewATMTransactionCreator(getTrans, getId)(newTrans)
+		_, err := service.NewATMTransactionCreator(validate, getId)(newTrans)
 		AssertSomeError(t, err)
 	})
 
 	t.Run("happy case", func(t *testing.T) {
-		created, err := service.NewATMTransactionCreator(getTrans, getId)(newTrans)
+		created, err := service.NewATMTransactionCreator(validate, getId)(newTrans)
 		AssertNoError(t, err)
 		Assert(t, created.Id, id, "returned id")
 	})

@@ -125,9 +125,10 @@ func Initialize() http.Handler {
 
 	// ===== ATM =====
 	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
-	metaTransValidator := atmValidators.NewMetaTransValidator(getTrans) 
-	validateWithdrawal := atmValidators.NewDeliveryWithdrawalValidator(simpleDB, atmValidators.NewWithdrawalValidator(metaTransValidator, transValidator))
-	createAtmTrans  := atmService.NewATMTransactionCreator(codeParser, getTransId)
+	metaTransByIdValidator := atmValidators.NewMetaTransByIdValidator(getTrans) 
+	metaTransFromCodeValidator := atmValidators.NewMetaTransFromCodeValidator(codeParser)
+	validateWithdrawal := atmValidators.NewDeliveryWithdrawalValidator(simpleDB, atmValidators.NewWithdrawalValidator(metaTransByIdValidator, transValidator))
+	createAtmTrans  := atmService.NewATMTransactionCreator(metaTransFromCodeValidator, getTransId)
 	cancelTrans := atmService.NewTransactionCanceler()
 
 	insertedBanknoteValidator := atmValidators.NewDeliveryInsertedBanknoteValidator(simpleDB, atmValidators.NewInsertedBanknoteValidator())
