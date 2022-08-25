@@ -147,6 +147,64 @@ func TestDepositFinalizer(t *testing.T) {
 }
 
 
+// TODO: think about maybe having a separate db transaction for every HTTP request 
+
+func TestWithdrawalFinalizer(t *testing.T) {
+	mockDB := NewStubDB() 
+	wd := values.WithdrawalData{
+		TransactionId: RandomString(),
+		Money:         RandomNegativeMoney(),
+	}
+	metaTrans := tValues.MetaTrans{
+		Type:   tValues.Withdrawal,
+		UserId: RandomString(),
+	}
+	wantT := tValues.Transaction{
+		Source: tValues.TransSource{
+			Type: tValues.Cash,
+			Detail: "",
+		},
+		UserId: metaTrans.UserId,
+		Money:  wd.Money,
+	}
+	getTrans := func(gotId string) (tValues.MetaTrans, error) {
+		if gotId == wd.TransactionId {
+    	return metaTrans, nil  
+		}
+		panic("unexpected")
+	}
+	t.Run("error case - getting transaction throws", func(t *testing.T) {
+		getTrans := func(string) (tValues.MetaTrans, error) {
+			return tValues.MetaTrans{}, RandomError()
+		}
+		err := service.NewWithdrawalFinalizer(getTrans, nil)(mockDB, wd) 
+		AssertSomeError(t, err)
+
+	})
+	t.Run("error case - meta trans' Type is not Withdrawal", func(t *testing.T) {
+    getTrans := func(string) (tValues.MetaTrans, error) {
+    	return tValues.MetaTrans{
+    		Type: tValues.Deposit,
+    	}, nil
+    }
+    err := service.NewWithdrawalFinalizer(getTrans, nil)(mockDB, wd) 
+    AssertError(t, err, client_errors.InvalidTransactionType)
+	})
+	t.Run("forward case - forward to finalizer", func(t *testing.T) {
+		tErr := RandomError()
+		finalize := func(gotDB db.DB, gotT tValues.Transaction) error {
+			if gotDB == mockDB && gotT == wantT {
+				return tErr 
+			} 	
+			panic("unexpected")
+		}
+
+    err := service.NewWithdrawalFinalizer(getTrans, finalize)(mockDB, wd) 
+    AssertError(t, err, tErr)
+	})
+}
+
+
 
 
 

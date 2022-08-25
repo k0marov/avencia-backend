@@ -74,6 +74,22 @@ func NewDepositFinalizer(getTrans tService.TransactionGetter, finalize tService.
 
 func NewWithdrawalFinalizer(getTrans tService.TransactionGetter, finalize tService.TransactionFinalizer) WithdrawalFinalizer {
 	return func(db db.DB, wd values.WithdrawalData) error {
-		panic("unimplemented")
+		metaTrans, err := getTrans(wd.TransactionId)
+		if err != nil {
+			return core_err.Rethrow("getting transaction from trans id", err)
+		}
+		if metaTrans.Type != tValues.Withdrawal {
+			return client_errors.InvalidTransactionType
+		}
+
+		t := tValues.Transaction{
+			Source: tValues.TransSource{
+				Type: tValues.Cash, 
+				Detail: "", 
+			},
+			UserId: metaTrans.UserId,
+			Money:  wd.Money,
+		}
+		return finalize(db, t)
 	}
 }
