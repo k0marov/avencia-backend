@@ -4,6 +4,7 @@ import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db"
+	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	tMappers "github.com/k0marov/avencia-backend/lib/features/transactions/domain/mappers"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
@@ -46,14 +47,11 @@ func NewTransactionCanceler() TransactionCanceler {
 // TODO: somehow DRY getting metaTrans and validating metaTrans.Type from ATMTransactionCreator, DepositFinalizer, WithdrawalFinalizer. The new function (validator) could also be used in banknote validation services
 
 
-func NewDepositFinalizer(getTrans tService.TransactionGetter, finalize tService.MultiTransactionFinalizer) DepositFinalizer {
+func NewDepositFinalizer(validate validators.MetaTransValidator, finalize tService.MultiTransactionFinalizer) DepositFinalizer {
 	return func(db db.DB, dd values.DepositData) error {
-		metaTrans, err := getTrans(dd.TransactionId)
+		metaTrans, err := validate(dd.TransactionId, tValues.Deposit)
 		if err != nil {
-			return core_err.Rethrow("getting transaction from trans id", err)
-		}
-		if metaTrans.Type != tValues.Deposit {
-			return client_errors.InvalidTransactionType
+			return err
 		}
 
 		source := tValues.TransSource{
@@ -73,14 +71,11 @@ func NewDepositFinalizer(getTrans tService.TransactionGetter, finalize tService.
 	}
 }
 
-func NewWithdrawalFinalizer(getTrans tService.TransactionGetter, finalize tService.TransactionFinalizer) WithdrawalFinalizer {
+func NewWithdrawalFinalizer(validate validators.MetaTransValidator, finalize tService.TransactionFinalizer) WithdrawalFinalizer {
 	return func(db db.DB, wd values.WithdrawalData) error {
-		metaTrans, err := getTrans(wd.TransactionId)
+		metaTrans, err := validate(wd.TransactionId, tValues.Withdrawal)
 		if err != nil {
-			return core_err.Rethrow("getting transaction from trans id", err)
-		}
-		if metaTrans.Type != tValues.Withdrawal {
-			return client_errors.InvalidTransactionType
+			return err
 		}
 
 		t := tValues.Transaction{

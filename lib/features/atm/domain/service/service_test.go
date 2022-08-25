@@ -104,33 +104,23 @@ func TestDepositFinalizer(t *testing.T) {
 		},
 	}
 
-	getTrans := func(gotId string) (tValues.MetaTrans, error) {
-		if gotId == dd.TransactionId {
+	validateMetaTrans := func(gotId string, wantType tValues.TransactionType) (tValues.MetaTrans, error) {
+		if gotId == dd.TransactionId && wantType == tValues.Deposit {
     	return metaTrans, nil  
 		}
 		panic("unexpected")
 	}
 
 
-	t.Run("error case - getting transaction throws", func(t *testing.T) {
-		getTrans := func(string) (tValues.MetaTrans, error) {
-			return tValues.MetaTrans{}, RandomError()
+	t.Run("error case - validating meta trans throws", func(t *testing.T) {
+		tErr := RandomError()
+		validateMetaTrans := func(string, tValues.TransactionType) (tValues.MetaTrans, error) {
+			return tValues.MetaTrans{}, tErr
 		}
-		err := service.NewDepositFinalizer(getTrans, nil)(mockDB, dd) 
-		AssertSomeError(t, err)
+		err := service.NewDepositFinalizer(validateMetaTrans, nil)(mockDB, dd) 
+		AssertError(t, err, tErr)
 
 	})
-
-	t.Run("error case - meta trans' Type is not Deposit", func(t *testing.T) {
-    getTrans := func(string) (tValues.MetaTrans, error) {
-    	return tValues.MetaTrans{
-    		Type: tValues.Withdrawal,
-    	}, nil
-    }
-    err := service.NewDepositFinalizer(getTrans, nil)(mockDB, dd) 
-    AssertError(t, err, client_errors.InvalidTransactionType)
-	})
-
 
 	t.Run("forward case - forward to multifinalizer", func(t *testing.T) {
 		tErr := RandomError()
@@ -141,7 +131,7 @@ func TestDepositFinalizer(t *testing.T) {
 			panic("unexpected")
 		}
 
-    err := service.NewDepositFinalizer(getTrans, finalize)(mockDB, dd) 
+    err := service.NewDepositFinalizer(validateMetaTrans, finalize)(mockDB, dd) 
     AssertError(t, err, tErr)
 	})
 }
@@ -167,28 +157,20 @@ func TestWithdrawalFinalizer(t *testing.T) {
 		UserId: metaTrans.UserId,
 		Money:  wd.Money,
 	}
-	getTrans := func(gotId string) (tValues.MetaTrans, error) {
-		if gotId == wd.TransactionId {
+	validateMetaTrans := func(gotId string, wantType tValues.TransactionType) (tValues.MetaTrans, error) {
+		if gotId == wd.TransactionId && wantType == tValues.Withdrawal {
     	return metaTrans, nil  
 		}
 		panic("unexpected")
 	}
-	t.Run("error case - getting transaction throws", func(t *testing.T) {
-		getTrans := func(string) (tValues.MetaTrans, error) {
-			return tValues.MetaTrans{}, RandomError()
+	t.Run("error case - validating meta transaction throws", func(t *testing.T) {
+		tErr := RandomError()
+		validateMetaTrans := func(string, tValues.TransactionType) (tValues.MetaTrans, error) {
+			return tValues.MetaTrans{}, tErr
 		}
-		err := service.NewWithdrawalFinalizer(getTrans, nil)(mockDB, wd) 
+		err := service.NewWithdrawalFinalizer(validateMetaTrans, nil)(mockDB, wd) 
 		AssertSomeError(t, err)
 
-	})
-	t.Run("error case - meta trans' Type is not Withdrawal", func(t *testing.T) {
-    getTrans := func(string) (tValues.MetaTrans, error) {
-    	return tValues.MetaTrans{
-    		Type: tValues.Deposit,
-    	}, nil
-    }
-    err := service.NewWithdrawalFinalizer(getTrans, nil)(mockDB, wd) 
-    AssertError(t, err, client_errors.InvalidTransactionType)
 	})
 	t.Run("forward case - forward to finalizer", func(t *testing.T) {
 		tErr := RandomError()
@@ -199,7 +181,7 @@ func TestWithdrawalFinalizer(t *testing.T) {
 			panic("unexpected")
 		}
 
-    err := service.NewWithdrawalFinalizer(getTrans, finalize)(mockDB, wd) 
+    err := service.NewWithdrawalFinalizer(validateMetaTrans, finalize)(mockDB, wd) 
     AssertError(t, err, tErr)
 	})
 }
