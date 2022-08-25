@@ -1,9 +1,12 @@
 package service_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
+	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
@@ -66,6 +69,80 @@ func TestATMTransactionCreator(t *testing.T) {
 	  created, err := service.NewATMTransactionCreator(getTrans, getId)(newTrans)
 	  AssertNoError(t, err)
 	  Assert(t, created.Id, id, "returned id")
+	})
+}
+
+func TestDepositFinalizer(t *testing.T) {
+	mockDB := NewStubDB() 
+	dd := values.DepositData{
+		TransactionId: RandomString(),
+		Received:      []core.Money{
+			{Currency: "USD", Amount: core.NewMoneyAmount(42)}, 
+			{Currency: "RUB", Amount: core.NewMoneyAmount(330.33)},
+		},
+	}
+	metaTrans := tValues.MetaTrans{
+		Type:   tValues.Deposit,
+		UserId: RandomString(),
+	}
+	wantT := []tValues.Transaction{
+		{
+			Source: tValues.TransSource{
+				Type:   tValues.Cash,
+				Detail: "",
+			},
+			UserId: metaTrans.UserId,
+			Money:  dd.Received[0],
+		}, 
+		{
+			Source: tValues.TransSource{
+				Type:   tValues.Cash,
+				Detail: "",
+			},
+			UserId: metaTrans.UserId,
+			Money:  dd.Received[1],
+		},
+	}
+
+	getTrans := func(gotId string) (tValues.MetaTrans, error) {
+		if gotId == dd.TransactionId {
+    	return metaTrans, nil  
+		}
+		panic("unexpected")
+	}
+
+
+	t.Run("error case - getting transaction throws", func(t *testing.T) {
+		getTrans := func(string) (tValues.MetaTrans, error) {
+			return tValues.MetaTrans{}, RandomError()
+		}
+		err := service.NewDepositFinalizer(getTrans, nil)(mockDB, dd) 
+		AssertSomeError(t, err)
+
+	})
+
+	t.Run("error case - meta trans' Type is not Deposit", func(t *testing.T) {
+    getTrans := func(string) (tValues.MetaTrans, error) {
+    	return tValues.MetaTrans{
+    		Type: tValues.Withdrawal,
+    	}, nil
+    }
+    err := service.NewDepositFinalizer(getTrans, nil)(mockDB, dd) 
+    AssertError(t, err, client_errors.InvalidTransactionType)
+	})
+
+
+	t.Run("forward case - forward to multifinalizer", func(t *testing.T) {
+		tErr := RandomError()
+		finalize := func(gotDB db.DB, gotT []tValues.Transaction) error {
+			if gotDB == mockDB && reflect.DeepEqual(gotT, wantT) {
+				return tErr 
+			} 	
+			panic("unexpected")
+		}
+
+    err := service.NewDepositFinalizer(getTrans, finalize)(mockDB, dd) 
+    AssertError(t, err, tErr)
 	})
 }
 

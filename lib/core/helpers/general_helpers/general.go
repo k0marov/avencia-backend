@@ -5,14 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
+)
 
-//
-// func DeliveryServiceConverter[Request, Response any](db db.DB, service func(db db.DB, r Request) (Response, error)) func(Request) (Response, error) {
-// 	return func(r Request) (Response, error) {
-// 		return service(db, r)
-// 	}
-// }
-//
 // DecodeFloat is needed because if an integer value is stored in firestore it cannot be decoded as float64 easily
 func DecodeFloat(value any) (float64, error) {
 	asFloat, ok := value.(float64)

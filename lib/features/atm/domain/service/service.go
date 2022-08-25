@@ -3,28 +3,27 @@ package service
 import (
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
 	tMappers "github.com/k0marov/avencia-backend/lib/features/transactions/domain/mappers"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
+	tValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
-
 type ATMTransactionCreator = func(values.NewTrans) (values.CreatedTransaction, error)
-type TransactionCanceler = func(id string) error 
+type TransactionCanceler = func(id string) error
 
-type DepositFinalizer = func(values.DepositData) error 
-type WithdrawalFinalizer = func(values.WithdrawalData) error 
+type DepositFinalizer = func(db.DB, values.DepositData) error
+type WithdrawalFinalizer = func(db.DB, values.WithdrawalData) error
 
-
-
-// TODO: add validation that user doesn't have any active transaction 
-func NewATMTransactionCreator(getTrans tMappers.CodeParser, getTransId tService.TransactionIdGetter) ATMTransactionCreator {
+// TODO: add validation that user doesn't have any active transaction
+func NewATMTransactionCreator(parseCode tMappers.CodeParser, getTransId tService.TransactionIdGetter) ATMTransactionCreator {
 	return func(nt values.NewTrans) (values.CreatedTransaction, error) {
-		trans, err := getTrans(nt.QRCodeText)
+		trans, err := parseCode(nt.QRCodeText)
 		if err != nil {
 			return values.CreatedTransaction{}, core_err.Rethrow("getting transaction from qr code", err)
 		}
-		// TODO: maybe move this to a separate validator 
+		// TODO: maybe move this to a separate validator
 		if trans.Type != nt.Type {
 			return values.CreatedTransaction{}, client_errors.InvalidTransactionType
 		}
@@ -36,35 +35,45 @@ func NewATMTransactionCreator(getTrans tMappers.CodeParser, getTransId tService.
 	}
 }
 
-
-
-// TODO: here the user's current transaction may be reset 
-// TODO: invalidate the transactionId 
+// TODO: here the user's current transaction may be reset
+// TODO: invalidate the transactionId
 func NewTransactionCanceler() TransactionCanceler {
 	return func(id string) error {
 		return nil
 	}
 }
 
-func NewDepositFinalizer(getTrans tService.TransactionGetter, finalize tService.TransactionFinalizer) DepositFinalizer {
-	return func(dd values.DepositData) error {
-    panic("unimplemented")
+// TODO: somehow DRY getting metaTrans and validating metaTrans.Type from ATMTransactionCreator, DepositFinalizer, WithdrawalFinalizer 
+
+func NewDepositFinalizer(getTrans tService.TransactionGetter, finalize tService.MultiTransactionFinalizer) DepositFinalizer {
+	return func(db db.DB, dd values.DepositData) error {
+		metaTrans, err := getTrans(dd.TransactionId)
+		if err != nil {
+			return core_err.Rethrow("getting transaction from trans id", err)
+		}
+		if metaTrans.Type != tValues.Deposit {
+			return client_errors.InvalidTransactionType
+		}
+
+		source := tValues.TransSource{
+			Type:   tValues.Cash,
+			Detail: "",
+		}
+
+		var t []tValues.Transaction
+		for _, m := range dd.Received {
+			t = append(t, tValues.Transaction{
+				Source: source,
+				UserId: metaTrans.UserId,
+				Money:  m,
+			})
+		}
+		return finalize(db, t)
 	}
 }
-
-
 
 func NewWithdrawalFinalizer(getTrans tService.TransactionGetter, finalize tService.TransactionFinalizer) WithdrawalFinalizer {
-	return func(wd values.WithdrawalData) error {
-    panic("unimplemented")
+	return func(db db.DB, wd values.WithdrawalData) error {
+		panic("unimplemented")
 	}
 }
-
-
-
-
-
-
-
-
-
