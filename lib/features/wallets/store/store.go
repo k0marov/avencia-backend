@@ -9,14 +9,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func NewWalletGetter(getDoc db.DocGetter) store.WalletGetter {
+func NewWalletGetter(getDoc db.Getter) store.WalletGetter {
 	return func(db db.DB, userId string) (map[string]any, error) {
 		wallet, err := getDoc(db, "Wallets/"+userId)
-		if status.Code(err) == codes.NotFound {
+		if status.Code(err) == codes.NotFound { // TODO: move such checks to the more low-level code
 			return map[string]any{}, nil
 		}
 		if err != nil {
-			return nil, core_err.Rethrow("while getting users's wallets document", err)
+			return nil, core_err.Rethrow("while getting users's wallet document", err)
 		}
 		return wallet.Data, nil
 	}

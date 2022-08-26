@@ -12,6 +12,9 @@ type TransactionalDB struct {
 	c *firestore.Client
 }
 
+
+// TODO: it turns out, in firestore transactions all reads must happen before writes. Rewrite everything 
+
 func NewTransactionRunner(c *firestore.Client ) db.TransactionRunner {
 	return func(perform func(db.DB) error) error {
 		return c.RunTransaction(context.Background(), func(ctx context.Context, t *firestore.Transaction) error {

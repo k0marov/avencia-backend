@@ -87,7 +87,7 @@ func Initialize() http.Handler {
 	userFromEmail := auth.NewUserFromEmail(fbAuth)
 
 	// ===== WALLETS =====
-	storeGetWallet := storeImpl.NewWalletGetter(db.DocGetterImpl)
+	storeGetWallet := storeImpl.NewWalletGetter(db.GetterImpl)
 	updateBalance := storeImpl.NewBalanceUpdater(db.SetterImpl)
 	getWallet := walletService.NewWalletGetter(storeGetWallet)
 	getBalance := walletService.NewBalanceGetter(getWallet)
