@@ -16,3 +16,4 @@ func Rethrow(description string, err error) error {
 	}
 	return fmt.Errorf("%s: %w", description, err)
 }
+

@@ -22,6 +22,9 @@ func unmarshalDoc(d Document) (JsonDocument, error) {
 	jsonD := JsonDocument{
 		Path: d.Path,
 	}
+	if d.Data == nil {
+		return JsonDocument{}, core_err.ErrNotFound 
+	}
 	err := json.Unmarshal(d.Data, &jsonD.Data)
 	if err != nil {
 		return JsonDocument{}, core_err.Rethrow("unmarshalling json", err)
@@ -65,10 +68,13 @@ func JsonSetterImpl(db DB, path []string, value map[string]any) error {
 func JsonUpdaterImpl(db DB, path []string, value map[string]any) error {
 	return db.db.RunTransaction(func(tDB DB) error {
 		doc, err := JsonGetterImpl(tDB, path)
-		if err != nil {
+		if err != nil && err != core_err.ErrNotFound { 
 			return core_err.Rethrow("getting current doc", err)
 		}
-		data := doc.Data
+		data := map[string]any{} 
+		if doc.Data != nil {
+			data = doc.Data 
+		}
 		for k, v := range value {
 			data[k] = v
 		}

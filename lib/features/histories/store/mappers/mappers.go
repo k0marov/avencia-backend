@@ -2,6 +2,7 @@ package mappers
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
@@ -11,8 +12,8 @@ import (
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
-type TransEntryDecoder = func(db.Document) (entities.TransEntry, error) 
-type TransEntriesDecoder = func(db.Documents) ([]entities.TransEntry, error) 
+type TransEntryDecoder = func(db.JsonDocument) (entities.TransEntry, error) 
+type TransEntriesDecoder = func(db.JsonDocuments) ([]entities.TransEntry, error) 
 
 type TransEntryEncoder = func(transValues.TransSource, core.Money) map[string]any
 
@@ -31,7 +32,7 @@ func TransEntryEncoderImpl(source transValues.TransSource, money core.Money) map
 }
 
 // TODO: replace this nightmare with proper struct tags usage
-func TransEntryDecoderImpl(doc db.Document) (entities.TransEntry, error) {
+func TransEntryDecoderImpl(doc db.JsonDocument) (entities.TransEntry, error) {
 	sourceMap, ok := doc.Data["source"].(map[string]string)
 	if !ok {
 		return entities.TransEntry{}, fmt.Errorf("decoding transaction source of doc: %+v", doc)
@@ -56,6 +57,11 @@ func TransEntryDecoderImpl(doc db.Document) (entities.TransEntry, error) {
 		return entities.TransEntry{}, core_err.Rethrow("decoding money amount", err)
 	}
 
+	createdAt, ok := doc.Data["createdAt"].(int64)
+	if !ok { 
+		return entities.TransEntry{}, fmt.Errorf("")
+	}
+
 	money := core.Money{
 		Currency: core.Currency(currency),
 		Amount:   core.NewMoneyAmount(amount),
@@ -64,12 +70,12 @@ func TransEntryDecoderImpl(doc db.Document) (entities.TransEntry, error) {
 	return entities.TransEntry{
 		Source:    source,
 		Money:     money,
-		CreatedAt: doc.CreatedAt,
+		CreatedAt: time.Unix(createdAt, 0),
 	}, nil
 }
 
 
-func TransEntriesDecoderImpl(docs db.Documents) ([]entities.TransEntry, error) {
+func TransEntriesDecoderImpl(docs db.JsonDocuments) ([]entities.TransEntry, error) {
 	var entries []entities.TransEntry
 	for _, doc := range docs {
 		entry, err := TransEntryDecoderImpl(doc) 

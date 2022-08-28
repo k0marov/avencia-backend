@@ -27,8 +27,7 @@ func pathToKey(path []string) fdb.Key {
 }
 
 func (t transactionalDB) Get(path []string) (db.Document, error) {
-  res := t.t.Get(pathToKey(path))
-  data, err := res.Get()
+  data, err := t.t.Get(pathToKey(path)).Get() 
   if err != nil {
     return db.Document{}, core_err.Rethrow("while getting a doc", err)
   }
@@ -52,6 +51,10 @@ func (t transactionalDB) GetCollection(path []string) (db.Documents, error) {
 		})
 	}
 	return docs, nil
+}
+
+func (t transactionalDB) RunTransaction(perform func(db.DB) error) error {
+	return NewTransactionRunner(t.t)(perform)
 }
 
 

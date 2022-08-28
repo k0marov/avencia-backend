@@ -10,9 +10,9 @@ import (
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
-func NewHistoryGetter(getDocs db.ColGetter, decode mappers.TransEntriesDecoder) store.HistoryGetter {
+func NewHistoryGetter(getDocs db.JsonCollectionGetter, decode mappers.TransEntriesDecoder) store.HistoryGetter {
 	return func(db db.DB, userId string) ([]entities.TransEntry, error) {
-		col := "Users/" + userId + "/History"
+		col := []string{"histories", userId}
 		docs, err := getDocs(db, col)
 		if err != nil {
 			return []entities.TransEntry{}, core_err.Rethrow("fetching history entries from fs", err)
@@ -21,10 +21,10 @@ func NewHistoryGetter(getDocs db.ColGetter, decode mappers.TransEntriesDecoder) 
 	}
 }
 
-func NewTransStorer(updDoc db.Setter, encode mappers.TransEntryEncoder) store.TransStorer {
+func NewTransStorer(updDoc db.JsonSetter, encode mappers.TransEntryEncoder) store.TransStorer {
 	return func(db db.DB, t transValues.Transaction) error {
-		doc := "Users/"+t.UserId+"/History/"+general_helpers.RandomId()
+		path := []string{"histories", t.UserId, general_helpers.RandomId()}
 		value := encode(t.Source, t.Money)
-		return updDoc(db, doc, value)
+		return updDoc(db, path, value)
 	}
 }
