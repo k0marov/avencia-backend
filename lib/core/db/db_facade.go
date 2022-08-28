@@ -20,6 +20,7 @@ type dbInternal interface {
   Get(path []string) (Document, error)
   GetCollection(path []string) (Documents, error)
   Set(path []string, data []byte) error
+  RunTransaction(func(DB) error) error
 }
 
 type Document struct {

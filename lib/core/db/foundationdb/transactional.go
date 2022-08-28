@@ -54,6 +54,7 @@ func (t transactionalDB) GetCollection(path []string) (db.Documents, error) {
 	return docs, nil
 }
 
+
 func (t transactionalDB) Set(path []string, data []byte) error {
   t.t.Set(pathToKey(path), []byte(data))
   return nil 
