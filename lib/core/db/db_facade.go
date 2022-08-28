@@ -24,7 +24,7 @@ type dbInternal interface {
 
 type Document struct {
 	Path        []string
-	Data      []byte
+	Data      []byte // TODO: maybe store this as a pointer
 }
 
 

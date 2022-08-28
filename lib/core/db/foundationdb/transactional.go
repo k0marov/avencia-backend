@@ -10,7 +10,7 @@ import (
 type transactionalDB struct {
   t fdb.Transaction 
 }
-
+// NewTransactionRunner( fDB can be a fdb.Database instance)
 func NewTransactionRunner(fDB fdb.Transaction) db.TransactionRunner {
 	return func(perform func(db.DB) error) error {
     _, err := fDB.Transact(func(t fdb.Transaction) (interface{}, error) {
@@ -39,7 +39,19 @@ func (t transactionalDB) Get(path []string) (db.Document, error) {
 }
 
 func (t transactionalDB) GetCollection(path []string) (db.Documents, error) {
-  panic("unimplemented")
+	res := t.t.GetRange(tuple.Tuple{path}, fdb.RangeOptions{Mode: fdb.StreamingModeWantAll})
+	kvs, err := res.GetSliceWithError()
+	if err != nil {
+		return db.Documents{}, core_err.Rethrow("getting slice of docs", err)
+	}
+	docs := db.Documents{} 
+	for _, kv := range kvs {
+		docs = append(docs, db.Document{
+			Path: path,
+			Data: kv.Value,
+		})
+	}
+	return docs, nil
 }
 
 func (t transactionalDB) Set(path []string, data []byte) error {
