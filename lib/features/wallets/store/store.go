@@ -9,9 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func NewWalletGetter(getDoc db.Getter) store.WalletGetter {
+func NewWalletGetter(getDoc db.JsonGetter) store.WalletGetter {
 	return func(db db.DB, userId string) (map[string]any, error) {
-		wallet, err := getDoc(db, "Wallets/"+userId)
+		path := []string{"wallets", userId}
+		wallet, err := getDoc(db, path)
 		if status.Code(err) == codes.NotFound { // TODO: move such checks to the more low-level code
 			return map[string]any{}, nil
 		}
@@ -22,9 +23,9 @@ func NewWalletGetter(getDoc db.Getter) store.WalletGetter {
 	}
 }
 
-func NewBalanceUpdater(updDoc db.Setter) store.BalanceUpdater {
+func NewBalanceUpdater(updDoc db.JsonUpdater) store.BalanceUpdater {
 	return func(db db.DB, userId string, currency core.Currency, newBalance core.MoneyAmount) error {
-		path := "Wallets/"+userId
+		path := []string{"wallets", userId}
 		newValue := map[string]any{string(currency): newBalance.Num()}
 		return updDoc(db, path, newValue)
 	}

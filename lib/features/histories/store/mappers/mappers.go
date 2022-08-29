@@ -2,7 +2,6 @@ package mappers
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"

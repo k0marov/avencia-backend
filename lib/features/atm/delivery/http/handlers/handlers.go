@@ -7,7 +7,6 @@ import (
 	apiResponses "github.com/k0marov/avencia-backend/lib/api/api_responses"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 )
 
 func NewCreateTransactionHandler(create service.ATMTransactionCreator) http.HandlerFunc {
