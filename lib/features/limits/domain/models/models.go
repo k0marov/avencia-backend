@@ -6,7 +6,9 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core"
 )
 
-type Withdrawn struct {
-	Withdrawn core.Money
-	UpdatedAt time.Time
+type Withdraws = map[core.Currency]WithdrawVal
+
+type WithdrawVal struct{
+	Withdrawn core.MoneyAmount 
+	UpdatedAt time.Time 
 }

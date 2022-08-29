@@ -21,7 +21,7 @@ func TestLimitsGetter(t *testing.T) {
 	user := RandomString()
 	mockDB := NewStubDB()
 	t.Run("error case - getting withdrawns throws", func(t *testing.T) {
-		getWithdrawns := func(gotDB db.DB, userId string) ([]models.Withdrawn, error) {
+		getWithdrawns := func(gotDB db.DB, userId string) (models.Withdraws, error) {
 			if gotDB == mockDB && userId == user {
 				return nil, RandomError()
 			}
@@ -37,34 +37,22 @@ func TestLimitsGetter(t *testing.T) {
 			"ETH": core.NewMoneyAmount(42),
 			"EUR": core.NewMoneyAmount(1000),
 		}
-		getWithdrawns := func(db.DB, string) ([]models.Withdrawn, error) {
-			return []models.Withdrawn{
-				{
-					Withdrawn: core.Money{
-						Currency: core.Currency("BTC"), // not in limited values
-						Amount:   core.NewMoneyAmount(0.001),
-					},
+		getWithdrawns := func(db.DB, string) (models.Withdraws, error) {
+			return models.Withdraws{
+				"BTC": {
+					Withdrawn: core.NewMoneyAmount(0.001),
 					UpdatedAt: time.Now(),
 				},
-				{
-					Withdrawn: core.Money{
-						Currency: core.Currency("RUB"), // withdraw too old
-						Amount:   core.NewMoneyAmount(10000),
-					},
+				"RUB": {
+					Withdrawn: core.NewMoneyAmount(10000),
 					UpdatedAt: time.Date(1999, 0, 0, 0, 0, 0, 0, time.UTC),
 				},
-				{
-					Withdrawn: core.Money{
-						Currency: "ETH",
-						Amount:   core.NewMoneyAmount(41),
-					},
+				"ETH": {
+					Withdrawn: core.NewMoneyAmount(41),
 					UpdatedAt: time.Now().Add(-10 * time.Hour),
 				},
-				{
-					Withdrawn: core.Money{
-						Currency: core.Currency("USD"),
-						Amount:   core.NewMoneyAmount(499),
-					},
+				"USD": {
+					Withdrawn: core.NewMoneyAmount(499),
 					UpdatedAt: time.Now(),
 				},
 			}, nil
@@ -89,7 +77,7 @@ func TestLimitsGetter(t *testing.T) {
 				Max:       core.NewMoneyAmount(40000),
 			},
 		}
-		Assert(t, limits, wantLimits, "returned limits") 
+		Assert(t, limits, wantLimits, "returned limits")
 	})
 }
 

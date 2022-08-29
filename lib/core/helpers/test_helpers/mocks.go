@@ -1,6 +1,10 @@
 package test_helpers
 
-import "github.com/k0marov/avencia-backend/lib/core/db"
+import (
+	"errors"
+
+	"github.com/k0marov/avencia-backend/lib/core/db"
+)
 
 func NewStubDB() db.DB {
 	return db.NewDB(newStubDB())
@@ -16,14 +20,19 @@ func newStubDB() stubDB {
 	}
 }
 
-func (s stubDB) Get(path string) (db.Document, error) {
-	return db.Document{}, nil
+func (s stubDB) Get(path []string) (db.Document, error) {
+	return db.Document{}, errors.New("unimplemented")
+}
+func (s stubDB) GetCollection(path []string) (db.Documents, error) {
+	return db.Documents{}, errors.New("unimplemented")
 }
 
-func (s stubDB) GetAll(path string) (db.Documents, error) {
-	return db.Documents{}, nil
+func (s stubDB) Set(path []string, data []byte) error {
+	return errors.New("unimplemented")
 }
 
-func (s stubDB) Set(path string, data map[string]any) error {
-	return nil
+func (s stubDB) RunTransaction(func(db.DB) error) error {
+	return errors.New("unimplemented")
 }
+
+

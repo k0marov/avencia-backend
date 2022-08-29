@@ -57,9 +57,9 @@ func TransEntryDecoderImpl(doc db.JsonDocument) (entities.TransEntry, error) {
 		return entities.TransEntry{}, core_err.Rethrow("decoding money amount", err)
 	}
 
-	createdAt, ok := doc.Data["createdAt"].(int64)
-	if !ok { 
-		return entities.TransEntry{}, fmt.Errorf("")
+	createdAt, err := general_helpers.DecodeTime(doc.Data["createdAt"])
+	if err != nil { 
+		return entities.TransEntry{}, err
 	}
 
 	money := core.Money{
@@ -70,7 +70,7 @@ func TransEntryDecoderImpl(doc db.JsonDocument) (entities.TransEntry, error) {
 	return entities.TransEntry{
 		Source:    source,
 		Money:     money,
-		CreatedAt: time.Unix(createdAt, 0),
+		CreatedAt: createdAt,
 	}, nil
 }
 
