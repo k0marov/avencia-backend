@@ -6,12 +6,13 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/apple/foundationdb/bindings/go/src/fdb"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/core/db/firestore"
+	"github.com/k0marov/avencia-backend/lib/core/db/foundationdb"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/handlers"
 	atmMiddleware "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/middleware"
@@ -65,18 +66,14 @@ func Initialize() http.Handler {
 
 	// ===== FIREBASE =====
 	fbApp := initFirebase(conf)
-	fsClient, err := fbApp.Firestore(context.Background())
-	if err != nil {
-		log.Fatalf("error while initializing firestore client: %v", err)
-	}
 	fbAuth, err := fbApp.Auth(context.Background())
 	if err != nil {
 		log.Fatalf("error while initializing firebase auth: %v", err)
 	}
 
 	// ===== DB =====
-	simpleDB := db.NewDB(firestore.NewSimpleDB(fsClient))
-	runTransaction := firestore.NewTransactionRunner(fsClient)
+	foundationDB := fdb.MustOpenDefault()
+	runTrans := foundationdb.NewTransactionRunner(foundationDB)
 
 	// ===== JWT =====
 	jwtIssuer := jwt.NewIssuer(jwtSecret)
@@ -87,14 +84,14 @@ func Initialize() http.Handler {
 	userFromEmail := auth.NewUserFromEmail(fbAuth)
 
 	// ===== WALLETS =====
-	storeGetWallet := storeImpl.NewWalletGetter(db.GetterImpl)
-	updateBalance := storeImpl.NewBalanceUpdater(db.SetterImpl)
+	storeGetWallet := storeImpl.NewWalletGetter(db.JsonGetterImpl)
+	updateBalance := storeImpl.NewBalanceUpdater(db.JsonSetterImpl)
 	getWallet := walletService.NewWalletGetter(storeGetWallet)
 	getBalance := walletService.NewBalanceGetter(getWallet)
 
 	// ===== LIMITS =====
-	storeGetWithdraws := limitsStore.NewWithdrawsGetter(db.ColGetterImpl, limitsMappers.WithdrawsDecoderImpl)
-	storeUpdateWithdrawn := limitsStore.NewWithdrawUpdater(db.SetterImpl, limitsMappers.WithdrawEncoderImpl)
+	storeGetWithdraws := limitsStore.NewWithdrawsGetter(db.JsonGetterImpl, limitsMappers.WithdrawsDecoderImpl)
+	storeUpdateWithdrawn := limitsStore.NewWithdrawUpdater(db.JsonSetterImpl, limitsMappers.WithdrawEncoderImpl)
 	getLimits := limitsService.NewLimitsGetter(storeGetWithdraws, configurable.LimitedCurrencies)
 	checkLimit := limitsService.NewLimitChecker(getLimits)
 	getUpdatedWithdrawn := limitsService.NewWithdrawnUpdateGetter(getLimits)
@@ -102,14 +99,14 @@ func Initialize() http.Handler {
 
 	// ===== USERS =====
 	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits)
-	getUserInfoDelivery := userService.NewDeliveryUserInfoGetter(simpleDB, getUserInfo)
+	getUserInfoDelivery := userService.NewDeliveryUserInfoGetter(runTrans, getUserInfo)
 	getUserInfoHandler := userHandlers.NewGetUserInfoHandler(getUserInfoDelivery)
 
 	// ===== HISTORIES =====
-	storeGetHistory := histStore.NewHistoryGetter(db.ColGetterImpl, histMappers.TransEntriesDecoderImpl)
-	storeStoreTrans := histStore.NewTransStorer(db.SetterImpl, histMappers.TransEntryEncoderImpl)
+	storeGetHistory := histStore.NewHistoryGetter(db.JsonCollectionGetterImpl, histMappers.TransEntriesDecoderImpl)
+	storeStoreTrans := histStore.NewTransStorer(db.JsonSetterImpl, histMappers.TransEntryEncoderImpl)
 	getHistory := histService.NewHistoryGetter(storeGetHistory)
-	getHistoryDelivery := histService.NewDeliveryHistoryGetter(simpleDB, getHistory)
+	getHistoryDelivery := histService.NewDeliveryHistoryGetter(runTrans, getHistory)
 	storeTrans := histService.NewTransStorer(storeStoreTrans)
 	getHistoryHandler := histHandlers.NewGetHistoryHandler(getHistoryDelivery)
 
@@ -127,15 +124,15 @@ func Initialize() http.Handler {
 	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
 	metaTransByIdValidator := atmValidators.NewMetaTransByIdValidator(getTrans) 
 	metaTransFromCodeValidator := atmValidators.NewMetaTransFromCodeValidator(codeParser)
-	validateWithdrawal := atmService.NewDeliveryWithdrawalValidator(simpleDB, atmValidators.NewWithdrawalValidator(metaTransByIdValidator, transValidator))
-	insertedBanknoteValidator := atmService.NewDeliveryInsertedBanknoteValidator(simpleDB, atmValidators.NewInsertedBanknoteValidator())
-	dispensedBanknoteValidator := atmService.NewDeliveryDispensedBanknoteValidator(simpleDB, atmValidators.NewDispensedBanknoteValidator())
+	validateWithdrawal := atmService.NewDeliveryWithdrawalValidator(runTrans, atmValidators.NewWithdrawalValidator(metaTransByIdValidator, transValidator))
+	insertedBanknoteValidator := atmService.NewDeliveryInsertedBanknoteValidator(runTrans, atmValidators.NewInsertedBanknoteValidator())
+	dispensedBanknoteValidator := atmService.NewDeliveryDispensedBanknoteValidator(runTrans, atmValidators.NewDispensedBanknoteValidator())
 
 	createAtmTrans  := atmService.NewATMTransactionCreator(metaTransFromCodeValidator, getTransId)
 	cancelTrans := atmService.NewTransactionCanceler()
 	generalFinalizer := atmService.NewGeneralFinalizer(metaTransByIdValidator, multiTransact)
-	finalizeDeposit := atmService.NewDeliveryDepositFinalizer(runTransaction, atmService.NewDepositFinalizer(generalFinalizer))
-	finalizeWithdrawal := atmService.NewDeliveryWithdrawalFinalizer(runTransaction, atmService.NewWithdrawalFinalizer(generalFinalizer))
+	finalizeDeposit := atmService.NewDeliveryDepositFinalizer(runTrans, atmService.NewDepositFinalizer(generalFinalizer))
+	finalizeWithdrawal := atmService.NewDeliveryWithdrawalFinalizer(runTrans, atmService.NewWithdrawalFinalizer(generalFinalizer))
 	
 	
 	atmAuthMiddleware := atmMiddleware.NewATMAuthMiddleware(atmSecretValidator)
@@ -157,7 +154,7 @@ func Initialize() http.Handler {
 	validateTransfer := transValidators.NewTransferValidator()
 	performTransfer := transService.NewTransferPerformer(multiTransact)
 	transfer := transService.NewTransferer(convertTransfer, validateTransfer, performTransfer)
-	transferDelivery := transService.NewDeliveryTransferer(runTransaction, transfer)
+	transferDelivery := transService.NewDeliveryTransferer(runTrans, transfer)
 	transferHandler := transHandlers.NewTransferHandler(transferDelivery)
 
 	apiRouter := api.NewAPIRouter(api.Handlers{

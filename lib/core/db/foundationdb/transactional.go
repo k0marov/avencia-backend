@@ -11,7 +11,7 @@ type transactionalDB struct {
   t fdb.Transaction 
 }
 // NewTransactionRunner( fDB can be a fdb.Database instance)
-func NewTransactionRunner(fDB fdb.Transaction) db.TransactionRunner {
+func NewTransactionRunner(fDB fdb.Database) db.TransactionRunner {
 	return func(perform func(db.DB) error) error {
     _, err := fDB.Transact(func(t fdb.Transaction) (interface{}, error) {
       tDB := transactionalDB{t: t}
@@ -54,7 +54,13 @@ func (t transactionalDB) GetCollection(path []string) (db.Documents, error) {
 }
 
 func (t transactionalDB) RunTransaction(perform func(db.DB) error) error {
-	return NewTransactionRunner(t.t)(perform)
+	_, err := t.t.Transact(func(trans fdb.Transaction) (interface{}, error) {
+    err := perform(db.NewDB(transactionalDB{
+    	t: trans,
+    }))
+    return nil, err
+	})
+	return err 
 }
 
 
