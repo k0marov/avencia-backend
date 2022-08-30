@@ -135,6 +135,7 @@ func Initialize() http.Handler {
 	
 	atmAuthMiddleware := atmMiddleware.NewATMAuthMiddleware(atmSecretValidator)
 
+	genCodeHandler := atmHandlers.NewGenerateQRCodeHandler(codeGenerator)
 	createTransHandler := atmHandlers.NewCreateTransactionHandler(createAtmTrans) 
 	onCancelHandler := atmHandlers.NewCancelTransactionHandler(cancelTrans)
 	validateWithdrawalHandler := atmHandlers.NewWithdrawalValidationHandler(runTrans, validateWithdrawal)
@@ -171,7 +172,7 @@ func Initialize() http.Handler {
 			},
 		},
 		App: api.AppHandlers{
-			GenCode:     nil,
+			GenCode:     genCodeHandler,
 			GetUserInfo: getUserInfoHandler,
 			Transfer:    transferHandler,
 			GetHistory:  getHistoryHandler,

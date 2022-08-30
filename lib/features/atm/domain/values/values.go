@@ -4,7 +4,8 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	tValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
-type NewTrans struct {
+
+type TransFromQRCode struct {
 	Type tValues.TransactionType 
 	QRCodeText string 
 }

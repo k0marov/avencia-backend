@@ -62,7 +62,7 @@ func NewTransferPerformer(transact tService.MultiTransactionFinalizer) transferP
 func NewTransferConverter(userFromEmail auth.UserFromEmail) transferConverter {
 	return func(t values.RawTransfer) (values.Transfer, error) {
 		user, err := userFromEmail(t.ToEmail)
-		if err == core_err.ErrNotFound {
+		if core_err.IsNotFound(err) {
 			return values.Transfer{}, client_errors.NotFound
 		}
 		if err != nil {

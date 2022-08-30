@@ -10,7 +10,16 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/helpers/service_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
+	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/mappers"
 )
+
+func NewGenerateQRCodeHandler(generate mappers.CodeGenerator) http.HandlerFunc {
+  return http_helpers.NewAuthenticatedHandler(
+  	apiRequests.NewTransDecoder, 
+    generate, 
+    apiResponses.TransCodeEncoder,
+  ) 
+}
 
 func NewCreateTransactionHandler(create service.ATMTransactionCreator) http.HandlerFunc {
 	return http_helpers.NewHandler(

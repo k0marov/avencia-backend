@@ -13,7 +13,7 @@ import (
 )
 
 func TestATMTransactionCreator(t *testing.T) {
-	newTrans := values.NewTrans{
+	newTrans := values.TransFromQRCode{
 		Type:       RandomTransactionType(),
 		QRCodeText: RandomString(),
 	}
@@ -59,7 +59,6 @@ func TestATMTransactionCreator(t *testing.T) {
 	})
 }
 
-// TODO: think about maybe having a separate db transaction for every HTTP request
 
 func TestDepositFinalizer(t *testing.T) {
 	mockDB := NewStubDB()

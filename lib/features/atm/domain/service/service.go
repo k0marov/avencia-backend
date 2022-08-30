@@ -10,7 +10,7 @@ import (
 	tValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
-type ATMTransactionCreator = func(values.NewTrans) (values.CreatedTransaction, error)
+type ATMTransactionCreator = func(values.TransFromQRCode) (values.CreatedTransaction, error)
 type TransactionCanceler = func(id string) error
 
 type DepositFinalizer = func(db.DB, values.DepositData) error
@@ -18,7 +18,7 @@ type WithdrawalFinalizer = func(db.DB, values.WithdrawalData) error
 
 // TODO: add validation that there is no active transaction for this user
 func NewATMTransactionCreator(validate validators.MetaTransByCodeValidator, createTrans tService.TransactionIdGetter) ATMTransactionCreator {
-	return func(nt values.NewTrans) (values.CreatedTransaction, error) {
+	return func(nt values.TransFromQRCode) (values.CreatedTransaction, error) {
 		metaTrans, err := validate(nt.QRCodeText, nt.Type)
 		if err != nil {
 			return values.CreatedTransaction{}, err

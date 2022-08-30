@@ -1,8 +1,8 @@
 package core_err
 
 import (
-	"errors"
 	"fmt"
+
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 )
 
@@ -21,6 +21,7 @@ func IsNotFound(err error) bool {
 	return ok 
 }
 
+// TODO: actually this can be a performance bottleneck because of the type conversion
 func Rethrow(description string, err error) error {
 	clientErr, ok := err.(client_errors.ClientError)
 	if ok {

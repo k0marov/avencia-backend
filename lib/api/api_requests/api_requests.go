@@ -14,8 +14,15 @@ import (
 	transferValues "github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
 )
 
-func TransDecoder(_ *http.Request, req api.OnTransactionCreateRequest) (atmValues.NewTrans, error) {
-	return atmValues.NewTrans{
+func NewTransDecoder(user auth.User, _ *http.Request, req api.GenTransCodeRequest) (tValues.MetaTrans, error) {
+	return tValues.MetaTrans{
+		Type:   tValues.TransactionType(req.TransactionType),
+		UserId: user.Id,
+	}, nil
+}
+
+func TransDecoder(_ *http.Request, req api.OnTransactionCreateRequest) (atmValues.TransFromQRCode, error) {
+	return atmValues.TransFromQRCode{
 		Type:       tValues.TransactionType(req.Type),
 		QRCodeText: req.QRCodeText,
 	}, nil
@@ -39,7 +46,7 @@ func DepositDataDecoder(_ *http.Request, d api.CompleteDepositRequest) (atmValue
 func WithdrawalDataDecoder(_ *http.Request, w api.StartWithdrawalRequest) (atmValues.WithdrawalData, error) {
 	return atmValues.WithdrawalData{
 		TransactionId: w.TransactionId,
-		Money:         core.Money{
+		Money: core.Money{
 			Currency: core.Currency(w.Currency),
 			Amount:   core.NewMoneyAmount(w.Amount),
 		},
@@ -49,30 +56,29 @@ func WithdrawalDataDecoder(_ *http.Request, w api.StartWithdrawalRequest) (atmVa
 func InsertedBanknoteDecoder(_ *http.Request, b api.BanknoteInsertionRequest) (atmValues.InsertedBanknote, error) {
 	return atmValues.InsertedBanknote{
 		TransactionId: b.TransactionId,
-		Banknote:      core.Money{
-			Currency: core.Currency(b.Banknote.Currency), 
-			Amount: core.NewMoneyAmount(float64(b.Banknote.Denomination)),
+		Banknote: core.Money{
+			Currency: core.Currency(b.Banknote.Currency),
+			Amount:   core.NewMoneyAmount(float64(b.Banknote.Denomination)),
 		},
-		Received:      multiMoneyDecoder(b.Receivables),
+		Received: multiMoneyDecoder(b.Receivables),
 	}, nil
 }
 
 func DispensedBanknoteDecoder(_ *http.Request, b api.BanknoteDispensionRequest) (atmValues.DispensedBanknote, error) {
 	return atmValues.DispensedBanknote{
 		TransactionId: b.TransactionId,
-		Banknote:      core.Money{
+		Banknote: core.Money{
 			Currency: core.Currency(b.Currency),
 			Amount:   core.NewMoneyAmount(float64(b.BanknoteDenomination)),
 		},
-		Remaining:     core.NewMoneyAmount(b.RemainingAmount),
-		Requested:     core.NewMoneyAmount(b.RequestedAmount),
+		Remaining: core.NewMoneyAmount(b.RemainingAmount),
+		Requested: core.NewMoneyAmount(b.RequestedAmount),
 	}, nil
 }
 
 // TODO: get rid of using type x = func() and replace it with type x func() everywhere
 
-
-// TODO: move this to some core package 
+// TODO: move this to some core package
 func moneyDecoder(m api.Money) core.Money {
 	return core.Money{
 		Currency: core.Currency(m.Currency),
@@ -81,11 +87,11 @@ func moneyDecoder(m api.Money) core.Money {
 }
 
 func multiMoneyDecoder(m []api.Money) []core.Money {
-  var res []core.Money 
-  for _, e := range m {
-  	res = append(res, moneyDecoder(e))
-  }
-  return res
+	var res []core.Money
+	for _, e := range m {
+		res = append(res, moneyDecoder(e))
+	}
+	return res
 }
 
 func TransferDecoder(user auth.User, _ *http.Request, req api.TransferRequest) (transferValues.RawTransfer, error) {
