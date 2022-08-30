@@ -5,15 +5,13 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/features/wallets/domain/store"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func NewWalletGetter(getDoc db.JsonGetter) store.WalletGetter {
 	return func(db db.DB, userId string) (map[string]any, error) {
 		path := []string{"wallets", userId}
 		wallet, err := getDoc(db, path)
-		if status.Code(err) == codes.NotFound { // TODO: move such checks to the more low-level code
+		if core_err.IsNotFound(err) { 
 			return map[string]any{}, nil
 		}
 		if err != nil {

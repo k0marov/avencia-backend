@@ -23,7 +23,7 @@ func unmarshalDoc(d Document) (JsonDocument, error) {
 		Path: d.Path,
 	}
 	if d.Data == nil {
-		return JsonDocument{}, core_err.ErrNotFound 
+		return JsonDocument{}, core_err.ErrNotFound
 	}
 	err := json.Unmarshal(d.Data, &jsonD.Data)
 	if err != nil {
@@ -46,7 +46,7 @@ func JsonCollectionGetterImpl(db DB, path []string) (JsonDocuments, error) {
 	if err != nil {
 		return JsonDocuments{}, core_err.Rethrow("getting raw docs", err)
 	}
-	jDocs := JsonDocuments{} 
+	jDocs := JsonDocuments{}
 	for _, d := range docs {
 		jDoc, err := unmarshalDoc(d)
 		if err != nil {
@@ -68,12 +68,12 @@ func JsonSetterImpl(db DB, path []string, value map[string]any) error {
 func JsonUpdaterImpl(db DB, path []string, value map[string]any) error {
 	return db.db.RunTransaction(func(tDB DB) error {
 		doc, err := JsonGetterImpl(tDB, path)
-		if err != nil && err != core_err.ErrNotFound { 
+		if err != nil && !core_err.IsNotFound(err) {
 			return core_err.Rethrow("getting current doc", err)
 		}
-		data := map[string]any{} 
+		data := map[string]any{}
 		if doc.Data != nil {
-			data = doc.Data 
+			data = doc.Data
 		}
 		for k, v := range value {
 			data[k] = v
