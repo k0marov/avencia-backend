@@ -5,20 +5,14 @@ import (
 	"net/http"
 
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
+	"github.com/k0marov/avencia-backend/lib/core/helpers/service_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/auth"
 )
 
 type NoJSONRequest struct{}
 
-type NoResponse struct{}
 type NoAPIResponse struct{}
-
-func NoResponseConverter(NoResponse) NoAPIResponse { return NoAPIResponse{} }
-func NoResponseService[Request any](service func(Request) error) func(Request) (NoResponse, error) {
-	return func(request Request) (NoResponse, error) {
-		return NoResponse{}, service(request)
-	}
-}
+func NoResponseConverter(service_helpers.Nothing) NoAPIResponse { return NoAPIResponse{} }
 
 func NewAuthenticatedHandler[APIRequest any, Request any, Response any, APIResponse any](
 	convertReq func(auth.User, *http.Request, APIRequest) (Request, error),

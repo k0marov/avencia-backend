@@ -3,7 +3,6 @@ module github.com/k0marov/avencia-backend
 go 1.18
 
 require (
-	cloud.google.com/go/firestore v1.6.1
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/apple/foundationdb/bindings/go v0.0.0-20220825230133-05e463f79fa4
 	github.com/go-chi/chi/v5 v5.0.7
@@ -18,6 +17,7 @@ require (
 require (
 	cloud.google.com/go v0.104.0 // indirect
 	cloud.google.com/go/compute v1.9.0 // indirect
+	cloud.google.com/go/firestore v1.6.1 // indirect
 	cloud.google.com/go/iam v0.3.0 // indirect
 	cloud.google.com/go/storage v1.25.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect

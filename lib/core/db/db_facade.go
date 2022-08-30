@@ -11,7 +11,7 @@ func NewDB(db dbInternal) DB {
 
 }
 
-type TransactionRunner = func(func(DB) error) error
+type TransRunner = func(func(DB) error) error
 
 type dbInternal interface {
 	Get(path []string) (Document, error)

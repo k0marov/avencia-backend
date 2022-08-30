@@ -1,16 +1,19 @@
 package handlers
 
 import (
-	apiRequests "github.com/k0marov/avencia-backend/lib/api/api_requests"
-	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/service"
 	"net/http"
+
+	apiRequests "github.com/k0marov/avencia-backend/lib/api/api_requests"
+	"github.com/k0marov/avencia-backend/lib/core/db"
+	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
+	"github.com/k0marov/avencia-backend/lib/core/helpers/service_helpers"
+	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/service"
 )
 
-func NewTransferHandler(transfer service.DeliveryTransferer) http.HandlerFunc {
+func NewTransferHandler(runT db.TransRunner, transfer service.Transferer) http.HandlerFunc {
 	return http_helpers.NewAuthenticatedHandler(
 		apiRequests.TransferDecoder,
-		http_helpers.NoResponseService(transfer),
+		service_helpers.NewDBNoResultService(runT, transfer), 
 		http_helpers.NoResponseConverter,
 	)
 }

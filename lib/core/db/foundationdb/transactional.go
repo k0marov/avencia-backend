@@ -11,7 +11,7 @@ type transactionalDB struct {
   t fdb.Transaction 
 }
 // NewTransactionRunner( fDB can be a fdb.Database instance)
-func NewTransactionRunner(fDB fdb.Database) db.TransactionRunner {
+func NewTransactionRunner(fDB fdb.Database) db.TransRunner {
 	return func(perform func(db.DB) error) error {
     _, err := fDB.Transact(func(t fdb.Transaction) (interface{}, error) {
       tDB := transactionalDB{t: t}

@@ -5,8 +5,11 @@ import (
 
 	apiRequests "github.com/k0marov/avencia-backend/lib/api/api_requests"
 	apiResponses "github.com/k0marov/avencia-backend/lib/api/api_responses"
+	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
+	"github.com/k0marov/avencia-backend/lib/core/helpers/service_helpers"
 	"github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
+	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
 )
 
 func NewCreateTransactionHandler(create service.ATMTransactionCreator) http.HandlerFunc {
@@ -20,56 +23,58 @@ func NewCreateTransactionHandler(create service.ATMTransactionCreator) http.Hand
 func NewCancelTransactionHandler(cancel service.TransactionCanceler) http.HandlerFunc {
 	return http_helpers.NewHandler(
 		apiRequests.CancelTransactionDecoder,
-		http_helpers.NoResponseService(cancel),
+		service_helpers.NewNoResultService(cancel),
 		http_helpers.NoResponseConverter,
 	)
 }
 
-func NewWithdrawalValidationHandler(validate service.DeliveryWithdrawalValidator) http.HandlerFunc {
+func NewWithdrawalValidationHandler(runT db.TransRunner, validate validators.WithdrawalValidator) http.HandlerFunc {
 	return http_helpers.NewHandler(
     apiRequests.WithdrawalDataDecoder, 
-    http_helpers.NoResponseService(validate), 
+    service_helpers.NewDBNoResultService(runT, validate),
     http_helpers.NoResponseConverter,
 	)
 }
 
-func NewBanknoteEscrowHandler(validateBanknote service.DeliveryInsertedBanknoteValidator) http.HandlerFunc {
+func NewBanknoteEscrowHandler(runT db.TransRunner, validateBanknote validators.InsertedBanknoteValidator) http.HandlerFunc {
 	return http_helpers.NewHandler(
 		apiRequests.InsertedBanknoteDecoder,
-		http_helpers.NoResponseService(validateBanknote),
+		service_helpers.NewDBNoResultService(runT, validateBanknote),
 		http_helpers.NoResponseConverter,
 	)
 }
 
-func NewBanknoteAcceptedHandler(validateBanknote service.DeliveryInsertedBanknoteValidator) http.HandlerFunc {
-	return NewBanknoteEscrowHandler(validateBanknote)
+func NewBanknoteAcceptedHandler(runT db.TransRunner, validateBanknote validators.InsertedBanknoteValidator) http.HandlerFunc {
+	return NewBanknoteEscrowHandler(runT, validateBanknote)
 }
 
-func NewPreBanknoteDispensedHandler(validateBanknote service.DeliveryDispensedBanknoteValidator) http.HandlerFunc {
+// TODO: use context.Context instead db.DB for the services
+
+func NewPreBanknoteDispensedHandler(runT db.TransRunner, validateBanknote validators.DispensedBanknoteValidator) http.HandlerFunc {
 	return http_helpers.NewHandler(
 		apiRequests.DispensedBanknoteDecoder,
-		http_helpers.NoResponseService(validateBanknote),
+		service_helpers.NewDBNoResultService(runT, validateBanknote),
 		http_helpers.NoResponseConverter,
 	)
 }
 
-func NewPostBanknoteDispensedHandler(validateBanknote service.DeliveryDispensedBanknoteValidator) http.HandlerFunc {
-	return NewPreBanknoteDispensedHandler(validateBanknote)
+func NewPostBanknoteDispensedHandler(runT db.TransRunner, validateBanknote validators.DispensedBanknoteValidator) http.HandlerFunc {
+	return NewPreBanknoteDispensedHandler(runT, validateBanknote)
 }
 
 
-func NewCompleteDepostHandler(finalize service.DeliveryDepositFinalizer) http.HandlerFunc {
+func NewCompleteDepostHandler(runT db.TransRunner, finalize service.DepositFinalizer) http.HandlerFunc {
 	return http_helpers.NewHandler(
     apiRequests.DepositDataDecoder, 
-    http_helpers.NoResponseService(finalize), 
+    service_helpers.NewDBNoResultService(runT, finalize),   
     http_helpers.NoResponseConverter, 
 	)
 }
 
-func NewCompleteWithdrawalHandler(finalize service.DeliveryWithdrawalFinalizer) http.HandlerFunc {
+func NewCompleteWithdrawalHandler(runT db.TransRunner, finalize service.WithdrawalFinalizer) http.HandlerFunc {
 	return http_helpers.NewHandler(
 		apiRequests.WithdrawalDataDecoder, 
-		http_helpers.NoResponseService(finalize), 
+    service_helpers.NewDBNoResultService(runT, finalize),   
 		http_helpers.NoResponseConverter, 
 	)
 }
