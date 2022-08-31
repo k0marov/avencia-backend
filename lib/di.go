@@ -72,6 +72,7 @@ func Initialize() http.Handler {
 	}
 
 	// ===== DB =====
+	fdb.MustAPIVersion(710) 
 	foundationDB := fdb.MustOpenDefault()
 	runTrans := foundationdb.NewTransactionRunner(foundationDB)
 
@@ -116,37 +117,37 @@ func Initialize() http.Handler {
 	getTransId := tService.NewTransactionIdGetter(codeGenerator, mappers.NewTransIdGenerator())
 	getTrans := tService.NewTransactionGetter(mappers.NewTransIdParser(), codeParser)
 	transact := tService.NewTransactionFinalizer(transValidator, tService.NewTransactionPerformer(updateWithdrawn, storeTrans, updateBalance))
-	multiTransact := tService.NewMultiTransactionFinalizer(transact) 
+	multiTransact := tService.NewMultiTransactionFinalizer(transact)
+
+
+	// TODO: write tests for the store layers 
 
 	// ===== ATM =====
 	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
-	metaTransByIdValidator := atmValidators.NewMetaTransByIdValidator(getTrans) 
+	metaTransByIdValidator := atmValidators.NewMetaTransByIdValidator(getTrans)
 	metaTransFromCodeValidator := atmValidators.NewMetaTransFromCodeValidator(codeParser)
 	validateWithdrawal := atmValidators.NewWithdrawalValidator(metaTransByIdValidator, transValidator)
 	insertedBanknoteValidator := atmValidators.NewInsertedBanknoteValidator()
 	dispensedBanknoteValidator := atmValidators.NewDispensedBanknoteValidator()
 
-	createAtmTrans  := atmService.NewATMTransactionCreator(metaTransFromCodeValidator, getTransId)
+	createAtmTrans := atmService.NewATMTransactionCreator(metaTransFromCodeValidator, getTransId)
 	cancelTrans := atmService.NewTransactionCanceler()
 	generalFinalizer := atmService.NewGeneralFinalizer(metaTransByIdValidator, multiTransact)
 	finalizeDeposit := atmService.NewDepositFinalizer(generalFinalizer)
 	finalizeWithdrawal := atmService.NewWithdrawalFinalizer(generalFinalizer)
-	
-	
+
 	atmAuthMiddleware := atmMiddleware.NewATMAuthMiddleware(atmSecretValidator)
 
 	genCodeHandler := atmHandlers.NewGenerateQRCodeHandler(codeGenerator)
-	createTransHandler := atmHandlers.NewCreateTransactionHandler(createAtmTrans) 
+	createTransHandler := atmHandlers.NewCreateTransactionHandler(createAtmTrans)
 	onCancelHandler := atmHandlers.NewCancelTransactionHandler(cancelTrans)
 	validateWithdrawalHandler := atmHandlers.NewWithdrawalValidationHandler(runTrans, validateWithdrawal)
-	completeDepositHandler := atmHandlers.NewCompleteDepostHandler(runTrans, finalizeDeposit) 
+	completeDepositHandler := atmHandlers.NewCompleteDepostHandler(runTrans, finalizeDeposit)
 	completeWithdrawalHandler := atmHandlers.NewCompleteWithdrawalHandler(runTrans, finalizeWithdrawal)
 	banknoteEscrowHandler := atmHandlers.NewBanknoteEscrowHandler(runTrans, insertedBanknoteValidator)
 	banknoteAcceptedHandler := atmHandlers.NewBanknoteAcceptedHandler(runTrans, insertedBanknoteValidator)
 	preBanknoteDispensedHandler := atmHandlers.NewPreBanknoteDispensedHandler(runTrans, dispensedBanknoteValidator)
 	postBanknoteDispensedHandler := atmHandlers.NewPostBanknoteDispensedHandler(runTrans, dispensedBanknoteValidator)
-	
-
 
 	// ===== TRANSFERS =====
 	convertTransfer := transService.NewTransferConverter(userFromEmail)
