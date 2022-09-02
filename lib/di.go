@@ -52,7 +52,12 @@ func initFirebase(config config.Config) *firebase.App {
 
 // TODO: write some integration tests (later)
 
-func Initialize() http.Handler {
+type ExternalDeps struct {
+  AtmSecret, JwtSecret string
+
+}
+
+func InitializeBusiness() http.Handler {
 	conf := config.LoadConfig()
 	// ===== CONFIG =====
 	atmSecret, err := ioutil.ReadFile(conf.ATMSecretPath)
