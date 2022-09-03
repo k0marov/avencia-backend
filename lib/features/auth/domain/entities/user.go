@@ -1,4 +1,4 @@
-package auth 
+package entities 
 
 type User struct {
   Id string 

@@ -7,7 +7,7 @@ import (
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/features/auth"
+	authEntities "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
 	limitsEntities "github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
 	limitsValues "github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
@@ -61,8 +61,8 @@ func RandomAPIMoney() api.Money {
 	}
 }
 
-func RandomUser() auth.User {
-	return auth.User{Id: RandomString()}
+func RandomUser() authEntities.User {
+	return authEntities.User{Id: RandomString()}
 }
 func RandomUserInfo() userEntities.UserInfo {
 	return userEntities.UserInfo{Id: RandomString(), Wallet: RandomWallet(), Limits: RandomLimits()}

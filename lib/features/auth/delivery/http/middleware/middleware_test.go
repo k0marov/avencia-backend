@@ -1,4 +1,4 @@
-package auth_test
+package middleware_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/auth"
+	"github.com/k0marov/avencia-backend/lib/features/auth/delivery/http/middleware"
 )
 
 func TestAuthMiddleware(t *testing.T) {
@@ -31,6 +31,7 @@ func TestAuthMiddleware(t *testing.T) {
 		Assert(t, r.Context(), returnedCtx, "added ctx")
 	}
 
-	auth.NewAuthMiddleware(adder)(http.HandlerFunc(handler)).ServeHTTP(httptest.NewRecorder(), r)
+	mw := middleware.NewAuthMiddleware(adder)
+	mw(http.HandlerFunc(handler)).ServeHTTP(httptest.NewRecorder(), r)
 	Assert(t, called, true, "next handler was called")
 }

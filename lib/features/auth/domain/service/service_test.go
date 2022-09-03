@@ -1,17 +1,17 @@
-package auth_test
+package service_test
 
 import (
 	"testing"
 
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/auth"
+	"github.com/k0marov/avencia-backend/lib/features/auth/domain/service"
 	"golang.org/x/net/context"
 )
 
 func TestUserInfoAdder(t *testing.T) {
 	t.Run("error case - there is no token in the header", func(t *testing.T) {
 		ctx := context.Background()
-		gotCtx := auth.NewUserInfoAdder(nil)(ctx, "asdf")
+		gotCtx := service.NewUserInfoAdder(nil)(ctx, "asdf")
 		Assert(t, gotCtx, ctx, "returned context")
 	})
 	token := RandomString()
@@ -24,7 +24,7 @@ func TestUserInfoAdder(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		gotCtx := auth.NewUserInfoAdder(verify)(ctx, header)
+		gotCtx := service.NewUserInfoAdder(verify)(ctx, header)
 		Assert(t, gotCtx, ctx, "returned context")
 	})
 
@@ -34,8 +34,8 @@ func TestUserInfoAdder(t *testing.T) {
 	  verify := func(string) string {
       return user.Id
 	  }
-	  gotCtx := auth.NewUserInfoAdder(verify)(ctx, header) 
-	  gotUser, err := auth.UserFromCtx(gotCtx)
+	  gotCtx := service.NewUserInfoAdder(verify)(ctx, header) 
+	  gotUser, err := service.UserFromCtx(gotCtx)
 	  AssertNoError(t, err)
 	  Assert(t, gotUser, user, "user that was put in ctx")
 	})

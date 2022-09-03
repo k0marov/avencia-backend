@@ -1,9 +1,11 @@
-package auth
+package service
 
 import (
 	"context"
 	"errors"
 	"strings"
+
+	"github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
 )
 
 // UserInfoAdder parses the provided auth header and adds corresponding user info to the context
@@ -15,32 +17,32 @@ type TokenVerifier = func(token string) (userId string)
 
 func NewUserInfoAdder(verify TokenVerifier) UserInfoAdder {
 	return func(ctx context.Context, authHeader string) context.Context {
-		token:= tokenFromHeader(authHeader)
+		token := tokenFromHeader(authHeader)
 		if token == "" {
-		  return ctx
+			return ctx
 		}
 		userId := verify(token)
 		if userId == "" {
 			return ctx
 		}
 
-		return context.WithValue(ctx, userContextKey, User{Id: userId})
+		return context.WithValue(ctx, userContextKey, entities.User{Id: userId})
 	}
 }
 
-func UserFromCtx(ctx context.Context) (User, error) {
-	u, ok := ctx.Value(userContextKey).(User)
+func UserFromCtx(ctx context.Context) (entities.User, error) {
+	u, ok := ctx.Value(userContextKey).(entities.User)
 	if ok {
 		return u, nil
 	}
 
-	return User{}, ErrNoUserInContext
+	return entities.User{}, ErrNoUserInContext
 }
 
 var ErrNoUserInContext = errors.New("there is no user data in the provided context")
 
 // AddUserToCtx is only for usage in tests
-func AddUserToCtx(user User, ctx context.Context) context.Context {
+func AddUserToCtx(user entities.User, ctx context.Context) context.Context {
 	return context.WithValue(ctx, userContextKey, user)
 }
 
