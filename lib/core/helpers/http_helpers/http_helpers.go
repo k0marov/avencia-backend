@@ -2,10 +2,12 @@ package http_helpers
 
 import (
 	"encoding/json"
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"log"
 	"net/http"
+
+	"github.com/k0marov/avencia-api-contract/api/client_errors"
+	authEntities "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
+	authService "github.com/k0marov/avencia-backend/lib/features/auth/domain/service"
 )
 
 func setJsonHeader(w http.ResponseWriter) {
@@ -21,11 +23,11 @@ func WriteJson(w http.ResponseWriter, obj any) {
 	}
 }
 
-func GetUserOrAddUnauthorized(w http.ResponseWriter, r *http.Request) (auth.User, bool) {
-	authUser, err := auth.UserFromCtx(r.Context())
+func GetUserOrAddUnauthorized(w http.ResponseWriter, r *http.Request) (authEntities.User, bool) {
+	authUser, err := authService.UserFromCtx(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		return auth.User{}, false
+		return authEntities.User{}, false
 	}
 	return authUser, true
 }

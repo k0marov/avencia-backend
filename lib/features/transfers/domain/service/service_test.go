@@ -9,7 +9,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/auth"
+	authEntities "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
@@ -116,22 +116,22 @@ func TestTransferConverter(t *testing.T) {
 	}
 	user := RandomUser()
 
-	userFromEmail := func(gotEmail string) (auth.User, error) {
+	userFromEmail := func(gotEmail string) (authEntities.User, error) {
 		if gotEmail == rawTrans.ToEmail {
 			return user, nil
 		}
 		panic("unexpected")
 	}
 	t.Run("error case - auth getter throws ErrNotFound", func(t *testing.T) {
-		userFromEmail := func(string) (auth.User, error) {
-			return auth.User{}, core_err.ErrNotFound
+		userFromEmail := func(string) (authEntities.User, error) {
+			return authEntities.User{}, core_err.ErrNotFound
 		}
 		_, err := service.NewTransferConverter(userFromEmail)(rawTrans)
 		AssertError(t, err, client_errors.NotFound)
 	})
 	t.Run("error case - auth getter throws some other error", func(t *testing.T) {
-		userFromEmail := func(string) (auth.User, error) {
-			return auth.User{}, RandomError()
+		userFromEmail := func(string) (authEntities.User, error) {
+			return authEntities.User{}, RandomError()
 		}
 		_, err := service.NewTransferConverter(userFromEmail)(rawTrans)
 		AssertSomeError(t, err)

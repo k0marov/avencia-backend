@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/features/auth/domain/service"
 )
 
 func NewAuthMiddleware(addUserInfo service.UserInfoAdder) core.Middleware {

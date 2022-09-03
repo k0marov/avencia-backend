@@ -6,7 +6,7 @@ import (
 
 	"github.com/k0marov/avencia-api-contract/api/client_errors"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/service_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/auth"
+	authEntities "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
 )
 
 type NoJSONRequest struct{}
@@ -15,7 +15,7 @@ type NoAPIResponse struct{}
 func NoResponseConverter(service_helpers.Nothing) NoAPIResponse { return NoAPIResponse{} }
 
 func NewAuthenticatedHandler[APIRequest any, Request any, Response any, APIResponse any](
-	convertReq func(auth.User, *http.Request, APIRequest) (Request, error),
+	convertReq func(authEntities.User, *http.Request, APIRequest) (Request, error),
 	service func(Request) (Response, error),
 	convertResp func(Response) APIResponse,
 ) http.HandlerFunc {

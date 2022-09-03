@@ -5,7 +5,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/features/auth"
+	authStore "github.com/k0marov/avencia-backend/lib/features/auth/domain/store"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/validators"
@@ -59,7 +59,7 @@ func NewTransferPerformer(transact tService.MultiTransactionFinalizer) transferP
 	}
 }
 
-func NewTransferConverter(userFromEmail auth.UserFromEmail) transferConverter {
+func NewTransferConverter(userFromEmail authStore.UserByEmailGetter) transferConverter {
 	return func(t values.RawTransfer) (values.Transfer, error) {
 		user, err := userFromEmail(t.ToEmail)
 		if core_err.IsNotFound(err) {

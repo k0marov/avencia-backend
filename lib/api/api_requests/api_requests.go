@@ -9,12 +9,12 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
 	atmValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
-	"github.com/k0marov/avencia-backend/lib/features/auth"
+	authEntities "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
 	tValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 	transferValues "github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
 )
 
-func NewTransDecoder(user auth.User, _ *http.Request, req api.GenTransCodeRequest) (tValues.MetaTrans, error) {
+func NewTransDecoder(user authEntities.User, _ *http.Request, req api.GenTransCodeRequest) (tValues.MetaTrans, error) {
 	return tValues.MetaTrans{
 		Type:   tValues.TransactionType(req.TransactionType),
 		UserId: user.Id,
@@ -94,7 +94,7 @@ func multiMoneyDecoder(m []api.Money) []core.Money {
 	return res
 }
 
-func TransferDecoder(user auth.User, _ *http.Request, req api.TransferRequest) (transferValues.RawTransfer, error) {
+func TransferDecoder(user authEntities.User, _ *http.Request, req api.TransferRequest) (transferValues.RawTransfer, error) {
 	return transferValues.RawTransfer{
 		FromId:  user.Id,
 		ToEmail: req.RecipientIdentifier,
