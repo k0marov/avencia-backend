@@ -6,8 +6,9 @@ import (
 	"firebase.google.com/go/auth"
 )
 
+// AuthFacade Verify returns "" if the provided token is invalid
 type AuthFacade interface {
-	Verify(token string) (userId string, ok bool)
+	Verify(token string) (userId string)
 }
 
 type FBAuthFacade struct {
@@ -20,10 +21,10 @@ func NewFBAuthFacade(client *auth.Client) FBAuthFacade {
   }
 }
 
-func (a FBAuthFacade) Verify(token string) (string, bool) {
+func (a FBAuthFacade) Verify(token string) string {
   info, err := a.client.VerifyIDTokenAndCheckRevoked(context.Background(), token)
   if err != nil {
-    return "", false
+    return ""
   }
-  return info.UID, true
+  return info.UID
 }

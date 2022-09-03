@@ -18,6 +18,7 @@ import (
 	atmMiddleware "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/middleware"
 	atmService "github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	atmValidators "github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
+	"github.com/k0marov/avencia-backend/lib/features/auth/facade"
 	histHandlers "github.com/k0marov/avencia-backend/lib/features/histories/delivery/http/handlers"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
 	histStore "github.com/k0marov/avencia-backend/lib/features/histories/store"
@@ -54,7 +55,8 @@ func initFirebase(config config.Config) *firebase.App {
 
 type ExternalDeps struct {
   AtmSecret, JwtSecret string
-
+  Auth facade.AuthFacade		
+  TransRunner db.TransRunner
 }
 
 func InitializeBusiness() http.Handler {
