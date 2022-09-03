@@ -1,18 +1,12 @@
-package lib
+package di
 
 import (
-	"context"
-	"io/ioutil"
-	"log"
 	"net/http"
 
-	"github.com/apple/foundationdb/bindings/go/src/fdb"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/k0marov/avencia-api-contract/api"
-	"github.com/k0marov/avencia-backend/lib/config"
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
 	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/core/db/foundationdb"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/handlers"
 	atmMiddleware "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/middleware"
@@ -21,7 +15,6 @@ import (
 	authMiddleware "github.com/k0marov/avencia-backend/lib/features/auth/delivery/http/middleware"
 	authService "github.com/k0marov/avencia-backend/lib/features/auth/domain/service"
 	authStore "github.com/k0marov/avencia-backend/lib/features/auth/domain/store"
-	authStoreImpl "github.com/k0marov/avencia-backend/lib/features/auth/store"
 	histHandlers "github.com/k0marov/avencia-backend/lib/features/histories/delivery/http/handlers"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
 	histStore "github.com/k0marov/avencia-backend/lib/features/histories/store"
@@ -39,14 +32,7 @@ import (
 	userService "github.com/k0marov/avencia-backend/lib/features/users/domain/service"
 	walletService "github.com/k0marov/avencia-backend/lib/features/wallets/domain/service"
 	storeImpl "github.com/k0marov/avencia-backend/lib/features/wallets/store"
-
-	firebase "firebase.google.com/go"
-	"google.golang.org/api/option"
 )
-
-func Initialize() http.Handler {
-	return InitializeBusiness(InitializeExternal())
-}
 
 // TODO: write some integration tests (later)
 
@@ -54,49 +40,6 @@ type ExternalDeps struct {
 	AtmSecret, JwtSecret []byte
 	Auth                 authStore.AuthFacade
 	TRunner              db.TransRunner
-}
-
-func initFirebase(config config.Config) *firebase.App {
-	opt := option.WithCredentialsFile(config.FirebaseSecretPath)
-	fbApp, err := firebase.NewApp(context.Background(), nil, opt)
-	if err != nil {
-		log.Fatalf("error initializing Firebase app: %v", err)
-	}
-	return fbApp
-}
-func InitializeExternal() ExternalDeps {
-	conf := config.LoadConfig()
-	// ===== CONFIG =====
-	atmSecret, err := ioutil.ReadFile(conf.ATMSecretPath)
-	if err != nil {
-		log.Fatalf("error while reading atm secret: %v", err)
-	}
-	jwtSecret, err := ioutil.ReadFile(conf.JWTSecretPath)
-	if err != nil {
-		log.Fatalf("error while reading jwt secret: %v", err)
-	}
-
-	// ===== FIREBASE =====
-	fbApp := initFirebase(conf)
-	fbAuth, err := fbApp.Auth(context.Background())
-	if err != nil {
-		log.Fatalf("error while initializing firebase auth: %v", err)
-	}
-
-	// ===== DB =====
-	fdb.MustAPIVersion(710)
-	foundationDB := fdb.MustOpenDefault()
-	runTrans := foundationdb.NewTransactionRunner(foundationDB)
-
-	authFacade := authStoreImpl.NewFBAuthFacade(fbAuth)
-
-	return ExternalDeps{
-		AtmSecret: atmSecret,
-		JwtSecret: jwtSecret,
-		Auth:      authFacade,
-		TRunner:   runTrans,
-	}
-
 }
 
 func InitializeBusiness(deps ExternalDeps) http.Handler {

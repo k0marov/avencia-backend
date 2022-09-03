@@ -3,9 +3,10 @@ package main
 import (
 	"net/http"
 
-	"github.com/k0marov/avencia-backend/lib"
+	"github.com/k0marov/avencia-backend/lib/di"
+	"github.com/k0marov/avencia-backend/lib/di/external"
 )
 
 func main() {
-	http.ListenAndServe(":4244", lib.Initialize())
+	http.ListenAndServe(":4244", di.InitializeBusiness(external.InitializeExternal()))
 }
