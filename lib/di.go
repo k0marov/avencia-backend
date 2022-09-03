@@ -18,9 +18,9 @@ import (
 	atmMiddleware "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/middleware"
 	atmService "github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	atmValidators "github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
-	"github.com/k0marov/avencia-backend/lib/features/auth/facade"
 	histHandlers "github.com/k0marov/avencia-backend/lib/features/histories/delivery/http/handlers"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
+	authStore "github.com/k0marov/avencia-backend/lib/features/auth/domain/store"
 	histStore "github.com/k0marov/avencia-backend/lib/features/histories/store"
 	histMappers "github.com/k0marov/avencia-backend/lib/features/histories/store/mappers"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
@@ -38,7 +38,6 @@ import (
 	storeImpl "github.com/k0marov/avencia-backend/lib/features/wallets/store"
 
 	firebase "firebase.google.com/go"
-	"github.com/k0marov/avencia-backend/lib/features/auth"
 	"google.golang.org/api/option"
 )
 
@@ -55,7 +54,7 @@ func initFirebase(config config.Config) *firebase.App {
 
 type ExternalDeps struct {
   AtmSecret, JwtSecret string
-  Auth facade.AuthFacade		
+  Auth authStore.AuthFacade
   TransRunner db.TransRunner
 }
 

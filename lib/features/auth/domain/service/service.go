@@ -6,16 +6,14 @@ import (
 	"strings"
 
 	"github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
+	"github.com/k0marov/avencia-backend/lib/features/auth/domain/store"
 )
 
 // UserInfoAdder parses the provided auth header and adds corresponding user info to the context
 // if the token is valid. Otherwise, leaves the ctx unchanged.
 type UserInfoAdder = func(ctx context.Context, authHeader string) context.Context
 
-// TokenVerifier should return "" if the provided token is invalid
-type TokenVerifier = func(token string) (userId string)
-
-func NewUserInfoAdder(verify TokenVerifier) UserInfoAdder {
+func NewUserInfoAdder(verify store.TokenVerifier) UserInfoAdder {
 	return func(ctx context.Context, authHeader string) context.Context {
 		token := tokenFromHeader(authHeader)
 		if token == "" {
