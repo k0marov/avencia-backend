@@ -18,9 +18,12 @@ import (
 	atmMiddleware "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/middleware"
 	atmService "github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
 	atmValidators "github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
+	authMiddleware "github.com/k0marov/avencia-backend/lib/features/auth/delivery/http/middleware"
+	authService "github.com/k0marov/avencia-backend/lib/features/auth/domain/service"
+	authStore "github.com/k0marov/avencia-backend/lib/features/auth/domain/store"
+	authStoreImpl "github.com/k0marov/avencia-backend/lib/features/auth/store"
 	histHandlers "github.com/k0marov/avencia-backend/lib/features/histories/delivery/http/handlers"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
-	authStore "github.com/k0marov/avencia-backend/lib/features/auth/domain/store"
 	histStore "github.com/k0marov/avencia-backend/lib/features/histories/store"
 	histMappers "github.com/k0marov/avencia-backend/lib/features/histories/store/mappers"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
@@ -41,6 +44,18 @@ import (
 	"google.golang.org/api/option"
 )
 
+func Initialize() http.Handler {
+	return InitializeBusiness(InitializeExternal())
+}
+
+// TODO: write some integration tests (later)
+
+type ExternalDeps struct {
+	AtmSecret, JwtSecret []byte
+	Auth                 authStore.AuthFacade
+	TRunner              db.TransRunner
+}
+
 func initFirebase(config config.Config) *firebase.App {
 	opt := option.WithCredentialsFile(config.FirebaseSecretPath)
 	fbApp, err := firebase.NewApp(context.Background(), nil, opt)
@@ -49,16 +64,7 @@ func initFirebase(config config.Config) *firebase.App {
 	}
 	return fbApp
 }
-
-// TODO: write some integration tests (later)
-
-type ExternalDeps struct {
-  AtmSecret, JwtSecret string
-  Auth authStore.AuthFacade
-  TransRunner db.TransRunner
-}
-
-func InitializeBusiness() http.Handler {
+func InitializeExternal() ExternalDeps {
 	conf := config.LoadConfig()
 	// ===== CONFIG =====
 	atmSecret, err := ioutil.ReadFile(conf.ATMSecretPath)
@@ -78,17 +84,30 @@ func InitializeBusiness() http.Handler {
 	}
 
 	// ===== DB =====
-	fdb.MustAPIVersion(710) 
+	fdb.MustAPIVersion(710)
 	foundationDB := fdb.MustOpenDefault()
 	runTrans := foundationdb.NewTransactionRunner(foundationDB)
 
-	// ===== JWT =====
-	jwtIssuer := jwt.NewIssuer(jwtSecret)
-	jwtVerifier := jwt.NewVerifier(jwtSecret)
+	authFacade := authStoreImpl.NewFBAuthFacade(fbAuth)
 
+	return ExternalDeps{
+		AtmSecret: atmSecret,
+		JwtSecret: jwtSecret,
+		Auth:      authFacade,
+		TRunner:   runTrans,
+	}
+
+}
+
+func InitializeBusiness(deps ExternalDeps) http.Handler {
 	// ===== AUTH =====
-	authMiddleware := auth.NewAuthMiddleware(fbAuth)
-	userFromEmail := auth.NewUserFromEmail(fbAuth)
+	userAdder := authService.NewUserInfoAdder(deps.Auth.Verify)
+	authMW := authMiddleware.NewAuthMiddleware(userAdder)
+	userFromEmail := deps.Auth.UserByEmail
+
+	// ===== JWT =====
+	jwtIssuer := jwt.NewIssuer(deps.JwtSecret)
+	jwtVerifier := jwt.NewVerifier(deps.JwtSecret)
 
 	// ===== WALLETS =====
 	storeGetWallet := storeImpl.NewWalletGetter(db.JsonGetterImpl)
@@ -106,14 +125,14 @@ func InitializeBusiness() http.Handler {
 
 	// ===== USERS =====
 	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits)
-	getUserInfoHandler := userHandlers.NewGetUserInfoHandler(runTrans, getUserInfo)
+	getUserInfoHandler := userHandlers.NewGetUserInfoHandler(deps.TRunner, getUserInfo)
 
 	// ===== HISTORIES =====
 	storeGetHistory := histStore.NewHistoryGetter(db.JsonCollectionGetterImpl, histMappers.TransEntriesDecoderImpl)
 	storeStoreTrans := histStore.NewTransStorer(db.JsonSetterImpl, histMappers.TransEntryEncoderImpl)
 	getHistory := histService.NewHistoryGetter(storeGetHistory)
 	storeTrans := histService.NewTransStorer(storeStoreTrans)
-	getHistoryHandler := histHandlers.NewGetHistoryHandler(runTrans, getHistory)
+	getHistoryHandler := histHandlers.NewGetHistoryHandler(deps.TRunner, getHistory)
 
 	// ===== TRANSACTIONS =====
 	transValidator := tValidators.NewTransactionValidator(checkLimit, getBalance)
@@ -125,11 +144,10 @@ func InitializeBusiness() http.Handler {
 	transact := tService.NewTransactionFinalizer(transValidator, tService.NewTransactionPerformer(updateWithdrawn, storeTrans, updateBalance))
 	multiTransact := tService.NewMultiTransactionFinalizer(transact)
 
-
-	// TODO: write tests for the store layers 
+	// TODO: write tests for the store layers
 
 	// ===== ATM =====
-	atmSecretValidator := atmValidators.NewATMSecretValidator(atmSecret)
+	atmSecretValidator := atmValidators.NewATMSecretValidator(deps.AtmSecret)
 	metaTransByIdValidator := atmValidators.NewMetaTransByIdValidator(getTrans)
 	metaTransFromCodeValidator := atmValidators.NewMetaTransFromCodeValidator(codeParser)
 	validateWithdrawal := atmValidators.NewWithdrawalValidator(metaTransByIdValidator, transValidator)
@@ -147,20 +165,20 @@ func InitializeBusiness() http.Handler {
 	genCodeHandler := atmHandlers.NewGenerateQRCodeHandler(codeGenerator)
 	createTransHandler := atmHandlers.NewCreateTransactionHandler(createAtmTrans)
 	onCancelHandler := atmHandlers.NewCancelTransactionHandler(cancelTrans)
-	validateWithdrawalHandler := atmHandlers.NewWithdrawalValidationHandler(runTrans, validateWithdrawal)
-	completeDepositHandler := atmHandlers.NewCompleteDepostHandler(runTrans, finalizeDeposit)
-	completeWithdrawalHandler := atmHandlers.NewCompleteWithdrawalHandler(runTrans, finalizeWithdrawal)
-	banknoteEscrowHandler := atmHandlers.NewBanknoteEscrowHandler(runTrans, insertedBanknoteValidator)
-	banknoteAcceptedHandler := atmHandlers.NewBanknoteAcceptedHandler(runTrans, insertedBanknoteValidator)
-	preBanknoteDispensedHandler := atmHandlers.NewPreBanknoteDispensedHandler(runTrans, dispensedBanknoteValidator)
-	postBanknoteDispensedHandler := atmHandlers.NewPostBanknoteDispensedHandler(runTrans, dispensedBanknoteValidator)
+	validateWithdrawalHandler := atmHandlers.NewWithdrawalValidationHandler(deps.TRunner, validateWithdrawal)
+	completeDepositHandler := atmHandlers.NewCompleteDepostHandler(deps.TRunner, finalizeDeposit)
+	completeWithdrawalHandler := atmHandlers.NewCompleteWithdrawalHandler(deps.TRunner, finalizeWithdrawal)
+	banknoteEscrowHandler := atmHandlers.NewBanknoteEscrowHandler(deps.TRunner, insertedBanknoteValidator)
+	banknoteAcceptedHandler := atmHandlers.NewBanknoteAcceptedHandler(deps.TRunner, insertedBanknoteValidator)
+	preBanknoteDispensedHandler := atmHandlers.NewPreBanknoteDispensedHandler(deps.TRunner, dispensedBanknoteValidator)
+	postBanknoteDispensedHandler := atmHandlers.NewPostBanknoteDispensedHandler(deps.TRunner, dispensedBanknoteValidator)
 
 	// ===== TRANSFERS =====
 	convertTransfer := transService.NewTransferConverter(userFromEmail)
 	validateTransfer := transValidators.NewTransferValidator()
 	performTransfer := transService.NewTransferPerformer(multiTransact)
 	transfer := transService.NewTransferer(convertTransfer, validateTransfer, performTransfer)
-	transferHandler := transHandlers.NewTransferHandler(runTrans, transfer)
+	transferHandler := transHandlers.NewTransferHandler(deps.TRunner, transfer)
 
 	apiRouter := api.NewAPIRouter(api.Handlers{
 		Transaction: api.TransactionHandlers{
@@ -184,6 +202,6 @@ func InitializeBusiness() http.Handler {
 			Transfer:    transferHandler,
 			GetHistory:  getHistoryHandler,
 		},
-	}, authMiddleware, atmAuthMiddleware)
+	}, authMW, atmAuthMiddleware)
 	return middleware.Recoverer(apiRouter)
 }
