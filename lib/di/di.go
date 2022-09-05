@@ -41,8 +41,14 @@ type ExternalDeps struct {
 	Auth                 authStore.AuthFacade
 	TRunner              db.TransRunner
 }
+type APIDeps struct {
+  Handlers api.Handlers 
+  AuthMW api.Middleware
+  AtmAuthMW api.Middleware
+}
 
-func InitializeBusiness(deps ExternalDeps) http.Handler {
+
+func InitializeBusiness(deps ExternalDeps) APIDeps {
 	// ===== AUTH =====
 	userAdder := authService.NewUserInfoAdder(deps.Auth.Verify)
 	authMW := authMiddleware.NewAuthMiddleware(userAdder)
@@ -123,7 +129,8 @@ func InitializeBusiness(deps ExternalDeps) http.Handler {
 	transfer := transService.NewTransferer(convertTransfer, validateTransfer, performTransfer)
 	transferHandler := transHandlers.NewTransferHandler(deps.TRunner, transfer)
 
-	apiRouter := api.NewAPIRouter(api.Handlers{
+	return APIDeps{
+		Handlers:  api.Handlers{
 		Transaction: api.TransactionHandlers{
 			OnCreate: createTransHandler,
 			OnCancel: onCancelHandler,
@@ -145,6 +152,13 @@ func InitializeBusiness(deps ExternalDeps) http.Handler {
 			Transfer:    transferHandler,
 			GetHistory:  getHistoryHandler,
 		},
-	}, authMW, atmAuthMiddleware)
+	},
+		AuthMW:    authMW,
+		AtmAuthMW: atmAuthMiddleware,
+	}
+}
+
+func InitializeHandler(deps APIDeps) http.Handler {
+	apiRouter := api.NewAPIRouter(deps.Handlers, deps.AuthMW, deps.AtmAuthMW) 
 	return middleware.Recoverer(apiRouter)
 }

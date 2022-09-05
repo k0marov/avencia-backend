@@ -8,5 +8,5 @@ import (
 )
 
 func main() {
-	http.ListenAndServe(":4244", di.InitializeBusiness(external.InitializeExternal()))
+	http.ListenAndServe(":4244", di.InitializeHandler(di.InitializeBusiness(external.InitializeExternal())))
 }
