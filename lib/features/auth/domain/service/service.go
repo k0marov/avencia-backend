@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
 	"github.com/k0marov/avencia-backend/lib/features/auth/domain/store"
@@ -46,11 +45,7 @@ func AddUserToCtx(user entities.User, ctx context.Context) context.Context {
 
 // tokenFromHeader returns "" if header cannot be parsed
 func tokenFromHeader(header string) string {
-	if len(header) > 7 && strings.ToLower(header[0:6]) == "bearer" {
-		return header[7:]
-	}
-
-	return ""
+	return header
 }
 
 type ctxKey int
