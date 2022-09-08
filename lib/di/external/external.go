@@ -44,6 +44,7 @@ func InitializeExternal() di.ExternalDeps {
 	// ===== DB =====
 	fdb.MustAPIVersion(710)
 	foundationDB := fdb.MustOpenDefault()
+
 	runTrans := foundationdb.NewTransactionRunner(foundationDB)
 
 	authFacade := authStoreImpl.NewFBAuthFacade(fbAuth)

@@ -10,8 +10,13 @@ import (
 type transactionalDB struct {
   t fdb.Transaction 
 }
+// FoundationDB interface is implemented both by fdb.Database and fdb.Transaction
+type FoundationDB interface {
+	Transact(func (fdb.Transaction) (interface{}, error)) (r interface{}, e error)
+}
+
 // NewTransactionRunner( fDB can be a fdb.Database instance)
-func NewTransactionRunner(fDB fdb.Transaction) db.TransRunner {
+func NewTransactionRunner(fDB FoundationDB) db.TransRunner {
 	return func(perform func(db.DB) error) error {
     _, err := fDB.Transact(func(t fdb.Transaction) (interface{}, error) {
       tDB := transactionalDB{t: t}
