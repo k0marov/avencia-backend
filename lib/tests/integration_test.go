@@ -50,7 +50,7 @@ func TestIntegration(t *testing.T) {
 		return httptest.NewRequest("", "/asdf", bytes.NewReader(body))
 	}
 	addAuth := func(req *http.Request, authHeader string) *http.Request {
-		req.Header.Add("Authorication", authHeader)
+		req.Header.Add("Authorization", authHeader)
 		return req
 	}
 

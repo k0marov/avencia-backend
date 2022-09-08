@@ -38,6 +38,7 @@ func (a MockAuth) UserByEmail(email string) (authEntities.User, error) {
 }
 
 func prepareExternalDeps(t *testing.T, users []MockUser) (d di.ExternalDeps, cancelTrans func()) {
+	fdb.MustAPIVersion(710) 
 	db := fdb.MustOpenDefault()
 	trans, err := db.CreateTransaction()
 	AssertNoError(t, err)
