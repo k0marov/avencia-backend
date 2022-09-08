@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	firebase.google.com/go v3.13.0+incompatible
-	github.com/apple/foundationdb/bindings/go v0.0.0-20220831103107-9fb45f349fd0
+	github.com/apple/foundationdb/bindings/go v0.0.0-20220906193540-8adf931d5c56
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.3.0
