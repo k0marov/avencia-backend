@@ -28,7 +28,15 @@ func NewTransactionRunner(fDB FoundationDB) db.TransRunner {
 }
 
 func pathToKey(path []string) fdb.Key {
-  return fdb.Key(tuple.Tuple{path}.Pack())
+  return fdb.Key(convTuple(path).Pack())
+}
+
+func convTuple(strElems []string) tuple.Tuple {
+	var elems []tuple.TupleElement
+	for _, strElem := range strElems {
+		elems = append(elems, tuple.TupleElement(strElem))
+	}
+	return tuple.Tuple(elems)
 }
 
 func (t transactionalDB) Get(path []string) (db.Document, error) {
@@ -43,7 +51,7 @@ func (t transactionalDB) Get(path []string) (db.Document, error) {
 }
 
 func (t transactionalDB) GetCollection(path []string) (db.Documents, error) {
-	res := t.t.GetRange(tuple.Tuple{path}, fdb.RangeOptions{Mode: fdb.StreamingModeWantAll})
+	res := t.t.GetRange(convTuple(path), fdb.RangeOptions{Mode: fdb.StreamingModeWantAll})
 	kvs, err := res.GetSliceWithError()
 	if err != nil {
 		return db.Documents{}, core_err.Rethrow("getting slice of docs", err)
