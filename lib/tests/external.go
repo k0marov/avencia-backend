@@ -43,7 +43,6 @@ func prepareExternalDeps(t *testing.T, users []MockUser) (d di.ExternalDeps, can
 	db := fdb.MustOpenDefault()
 	trans, err := db.CreateTransaction()
 	AssertNoError(t, err)
-	trans.SetReadVersion(1)
 	trans.ClearRange(general_helpers.ConvTuple([]string{"", "\xFF"}))
 	runner := foundationdb.NewTransactionRunner(trans)
 	
