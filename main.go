@@ -1,8 +1,8 @@
 package main
 
 import (
-	"net/http"
 	"log"
+	"net/http"
 
 	"github.com/k0marov/avencia-backend/lib/di"
 	"github.com/k0marov/avencia-backend/lib/di/external"

@@ -2,7 +2,6 @@ package foundationdb
 
 import (
 	"github.com/apple/foundationdb/bindings/go/src/fdb"
-	"github.com/apple/foundationdb/bindings/go/src/fdb/tuple"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/core/helpers/general_helpers"
