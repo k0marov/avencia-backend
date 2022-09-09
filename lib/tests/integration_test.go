@@ -14,7 +14,6 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
-// TODO: maybe get rid of separation between atm auth and user auth and just use atm secret as a special auth token
 // TODO: maybe stop testing the handlers layer in here, but just call services directly
 
 const (

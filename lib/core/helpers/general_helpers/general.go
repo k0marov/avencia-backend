@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/apple/foundationdb/bindings/go/src/fdb/tuple"
 	"github.com/google/uuid"
 )
 
@@ -26,6 +27,15 @@ func DecodeTime(value any) (time.Time, error) {
     return time.Time{}, fmt.Errorf("failed to convert %v to int64", value)
 	}
 	return time.Unix(asInt, 0), nil
+}
+
+
+func ConvTuple(strElems []string) tuple.Tuple {
+	var elems []tuple.TupleElement
+	for _, strElem := range strElems {
+		elems = append(elems, tuple.TupleElement(strElem))
+	}
+	return tuple.Tuple(elems)
 }
 
 

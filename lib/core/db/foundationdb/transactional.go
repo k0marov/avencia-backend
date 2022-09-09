@@ -5,6 +5,7 @@ import (
 	"github.com/apple/foundationdb/bindings/go/src/fdb/tuple"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db"
+	"github.com/k0marov/avencia-backend/lib/core/helpers/general_helpers"
 )
 
 type transactionalDB struct {
@@ -28,16 +29,9 @@ func NewTransactionRunner(fDB FoundationDB) db.TransRunner {
 }
 
 func pathToKey(path []string) fdb.Key {
-  return fdb.Key(convTuple(path).Pack())
+  return fdb.Key(general_helpers.ConvTuple(path).Pack())
 }
 
-func convTuple(strElems []string) tuple.Tuple {
-	var elems []tuple.TupleElement
-	for _, strElem := range strElems {
-		elems = append(elems, tuple.TupleElement(strElem))
-	}
-	return tuple.Tuple(elems)
-}
 
 func (t transactionalDB) Get(path []string) (db.Document, error) {
   data, err := t.t.Get(pathToKey(path)).Get() 
@@ -51,7 +45,7 @@ func (t transactionalDB) Get(path []string) (db.Document, error) {
 }
 
 func (t transactionalDB) GetCollection(path []string) (db.Documents, error) {
-	res := t.t.GetRange(convTuple(path), fdb.RangeOptions{Mode: fdb.StreamingModeWantAll})
+	res := t.t.GetRange(general_helpers.ConvTuple(path), fdb.RangeOptions{Mode: fdb.StreamingModeWantAll})
 	kvs, err := res.GetSliceWithError()
 	if err != nil {
 		return db.Documents{}, core_err.Rethrow("getting slice of docs", err)

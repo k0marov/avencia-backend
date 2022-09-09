@@ -4,8 +4,10 @@ import (
 	"testing"
 
 	"github.com/apple/foundationdb/bindings/go/src/fdb"
+	"github.com/apple/foundationdb/bindings/go/src/fdb/tuple"
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db/foundationdb"
+	"github.com/k0marov/avencia-backend/lib/core/helpers/general_helpers"
 	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/k0marov/avencia-backend/lib/di"
 	authEntities "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
@@ -43,7 +45,7 @@ func prepareExternalDeps(t *testing.T, users []MockUser) (d di.ExternalDeps, can
 	trans, err := db.CreateTransaction()
 	AssertNoError(t, err)
 	trans.SetReadVersion(1)
-
+	trans.ClearRange(general_helpers.ConvTuple([]string{"", "\xFF"}))
 	runner := foundationdb.NewTransactionRunner(trans)
 	
 
