@@ -48,7 +48,9 @@ func WithdrawalDataDecoder(_ *http.Request, w api.StartWithdrawalRequest) (atmVa
 		TransactionId: w.TransactionId,
 		Money: core.Money{
 			Currency: core.Currency(w.Currency),
-			Amount:   core.NewMoneyAmount(w.Amount),
+			// in the business logic, it is assumed that a withdrawal's amount is negative
+			// but in the api, it is always positive, so here we must negate the value
+			Amount:   core.NewMoneyAmount(-w.Amount),
 		},
 	}, nil
 }

@@ -3,7 +3,6 @@ package integration_test
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -44,7 +43,6 @@ func deposit(t *testing.T, user MockUser, dep core.Money) {
 func withdraw(t *testing.T, user MockUser, w core.Money) {
 	code := generateQRCode(t, user, values.Withdrawal)
 	tId := startTrans(t, values.Withdrawal, code.TransactionCode)
-	fmt.Printf("new withdrawal's transaction id: %v", tId)
 	checkWithdrawal(t, tId, w)
 	if w.Amount.Neg().Num() > 1 {
 		dispenseBanknote(t, tId, api.Banknote{

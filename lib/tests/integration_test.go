@@ -52,7 +52,7 @@ func TestIntegration(t *testing.T) {
 	fmt.Println("transfer 10.5$ from user1 to user2")
 	transfer(t, users[0], users[1], newMoney("USD", 10.5))
 	fmt.Println("assert that balance of user1 is 40$")
-	assertBalance(t, users[0], newMoney("USD", 40.5))
+	assertBalance(t, users[0], newMoney("USD", 40))
 	fmt.Println("assert that balance of user2 is 10.5$")
 	assertBalance(t, users[1], newMoney("USD", 10.5))
 	fmt.Println("withdraw 4.2$ from user2")
