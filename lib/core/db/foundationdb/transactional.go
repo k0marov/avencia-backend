@@ -37,6 +37,9 @@ func (t transactionalDB) Get(path []string) (db.Document, error) {
   if err != nil {
     return db.Document{}, core_err.Rethrow("while getting a doc", err)
   }
+  if data == nil {
+  	return db.Document{}, core_err.ErrNotFound
+  }
   return db.Document{
   	Path: path,
   	Data: data,

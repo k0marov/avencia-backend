@@ -14,6 +14,7 @@ func NewDB(db dbInternal) DB {
 type TransRunner = func(func(DB) error) error
 
 type dbInternal interface {
+	// Get should return core_err.NotFound if not found
 	Get(path []string) (Document, error)
 	GetCollection(path []string) (Documents, error)
 	Set(path []string, data []byte) error
@@ -27,6 +28,7 @@ type Document struct {
 
 type Documents []Document
 
+// Getter should return core_err.NotFound if not found
 type Getter = func(db DB, path []string) (Document, error)
 type CollectionGetter = func(db DB, colPath []string) (Documents, error)
 type Setter = func(db DB, path []string, data map[string]any) error
