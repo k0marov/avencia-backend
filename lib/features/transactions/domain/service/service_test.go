@@ -147,14 +147,17 @@ func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount
 		AssertSomeError(t, err)
 	})
 
-	updBal := func(gotDB db.DB, user string, currency core.Currency, newBal core.MoneyAmount) error {
-		if gotDB == mockDB && user == trans.UserId && currency == trans.Money.Currency && newBal.IsEqual(wantNewBal) {
+	updBal := func(gotDB db.DB, user string, newBal core.Money) error {
+		if gotDB == mockDB && 
+		   user == trans.UserId && 
+		   newBal.Currency == trans.Money.Currency && 
+		   newBal.Amount.IsEqual(wantNewBal) {
 			return nil
 		}
 		panic("unexpected")
 	}
 	t.Run("updating balance throws", func(t *testing.T) {
-		updBal := func(db.DB, string, core.Currency, core.MoneyAmount) error {
+		updBal := func(db.DB, string, core.Money) error {
 			return RandomError()
 		}
 		err := service.NewTransactionPerformer(updateWithdrawn, addHist, updBal)(mockDB, curBalance, trans)

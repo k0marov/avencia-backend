@@ -5,13 +5,13 @@ import (
 	"github.com/k0marov/avencia-backend/lib/core/db"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	"github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
-	walletService "github.com/k0marov/avencia-backend/lib/features/wallets/domain/service"
+	walletStore "github.com/k0marov/avencia-backend/lib/features/wallets/domain/store"
 )
 
 
 type UserInfoGetter = func(db db.DB, userId string) (entities.UserInfo, error)
 
-func NewUserInfoGetter(getWallet walletService.WalletGetter, getLimits limitsService.LimitsGetter) UserInfoGetter {
+func NewUserInfoGetter(getWallet walletStore.WalletGetter, getLimits limitsService.LimitsGetter) UserInfoGetter {
 	return func(db db.DB, userId string) (entities.UserInfo, error) {
 		wallet, err := getWallet(db, userId)
 		if err != nil {

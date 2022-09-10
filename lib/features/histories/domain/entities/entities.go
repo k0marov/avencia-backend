@@ -7,8 +7,8 @@ import (
 	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 type TransEntry struct {
-	Source    transValues.TransSource
-	Money     core.Money
-	CreatedAt time.Time
+	Source    transValues.TransSource `json:"source"`
+	Money     core.Money `json:"money"`
+	CreatedAt time.Time `json:"created_at"`
 }
 

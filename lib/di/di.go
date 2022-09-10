@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/k0marov/avencia-api-contract/api"
 	"github.com/k0marov/avencia-backend/lib/config/configurable"
+	"github.com/k0marov/avencia-backend/lib/core"
 	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/core/jwt"
 	atmHandlers "github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/handlers"
@@ -16,12 +17,12 @@ import (
 	authService "github.com/k0marov/avencia-backend/lib/features/auth/domain/service"
 	authStore "github.com/k0marov/avencia-backend/lib/features/auth/domain/store"
 	histHandlers "github.com/k0marov/avencia-backend/lib/features/histories/delivery/http/handlers"
+	histEntities "github.com/k0marov/avencia-backend/lib/features/histories/domain/entities"
 	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
 	histStore "github.com/k0marov/avencia-backend/lib/features/histories/store"
-	histMappers "github.com/k0marov/avencia-backend/lib/features/histories/store/mappers"
+	"github.com/k0marov/avencia-backend/lib/features/limits/domain/models"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
 	limitsStore "github.com/k0marov/avencia-backend/lib/features/limits/store"
-	limitsMappers "github.com/k0marov/avencia-backend/lib/features/limits/store/mappers"
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/mappers"
 	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
 	tValidators "github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
@@ -30,6 +31,7 @@ import (
 	transValidators "github.com/k0marov/avencia-backend/lib/features/transfers/domain/validators"
 	userHandlers "github.com/k0marov/avencia-backend/lib/features/users/delivery/http/handlers"
 	userService "github.com/k0marov/avencia-backend/lib/features/users/domain/service"
+	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallets/domain/entities"
 	walletService "github.com/k0marov/avencia-backend/lib/features/wallets/domain/service"
 	storeImpl "github.com/k0marov/avencia-backend/lib/features/wallets/store"
 )
@@ -59,14 +61,13 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	jwtVerifier := jwt.NewVerifier(deps.JwtSecret)
 
 	// ===== WALLETS =====
-	storeGetWallet := storeImpl.NewWalletGetter(db.JsonGetterImpl)
-	updateBalance := storeImpl.NewBalanceUpdater(db.JsonSetterImpl)
-	getWallet := walletService.NewWalletGetter(storeGetWallet)
+	updateBalance := storeImpl.NewBalanceUpdater(db.JsonUpdaterImpl[core.MoneyAmount])
+	getWallet := storeImpl.NewWalletGetter(db.JsonGetterImpl[walletEntities.Wallet])
 	getBalance := walletService.NewBalanceGetter(getWallet)
 
 	// ===== LIMITS =====
-	storeGetWithdraws := limitsStore.NewWithdrawsGetter(db.JsonGetterImpl, limitsMappers.WithdrawsDecoderImpl)
-	storeUpdateWithdrawn := limitsStore.NewWithdrawUpdater(db.JsonSetterImpl, limitsMappers.WithdrawEncoderImpl)
+	storeGetWithdraws := limitsStore.NewWithdrawsGetter(db.JsonGetterImpl[models.Withdraws])
+	storeUpdateWithdrawn := limitsStore.NewWithdrawUpdater(db.JsonUpdaterImpl[models.WithdrawVal])
 	getLimits := limitsService.NewLimitsGetter(storeGetWithdraws, configurable.LimitedCurrencies)
 	checkLimit := limitsService.NewLimitChecker(getLimits)
 	getUpdatedWithdrawn := limitsService.NewWithdrawnUpdateGetter(getLimits)
@@ -77,8 +78,8 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	getUserInfoHandler := userHandlers.NewGetUserInfoHandler(deps.TRunner, getUserInfo)
 
 	// ===== HISTORIES =====
-	storeGetHistory := histStore.NewHistoryGetter(db.JsonCollectionGetterImpl, histMappers.TransEntriesDecoderImpl)
-	storeStoreTrans := histStore.NewTransStorer(db.JsonSetterImpl, histMappers.TransEntryEncoderImpl)
+	storeGetHistory := histStore.NewHistoryGetter(db.JsonColGetterImpl[histEntities.TransEntry])
+	storeStoreTrans := histStore.NewTransStorer(db.JsonSetterImpl[histEntities.TransEntry])
 	getHistory := histService.NewHistoryGetter(storeGetHistory)
 	storeTrans := histService.NewTransStorer(storeStoreTrans)
 	getHistoryHandler := histHandlers.NewGetHistoryHandler(deps.TRunner, getHistory)

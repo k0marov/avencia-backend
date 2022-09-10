@@ -11,61 +11,46 @@ type JsonColGetter[T any] func(db DB, path []string) ([]T, error)
 type JsonSetter[T any] func(db DB, path []string, val T) error
 type JsonUpdater[T any] func(db DB, path []string, key string, val T) error
 
-func NewJsonGetter[T any]() JsonGetter[T] {
-	return func(db DB, path []string) (res T, err error) {
-		d, err := db.db.Get(path)
+func JsonGetterImpl[T any](db DB, path []string) (res T, err error) {
+	d, err := db.db.Get(path)
+	if err != nil {
+		return res, core_err.Rethrow("getting raw doc", err)
+	}
+	return parseDoc[T](d.Data)
+}
+
+func JsonColGetterImpl[T any](db DB, path []string) (res []T, err error) {
+	docs, err := db.db.GetCollection(path)
+	if err != nil {
+		return res, core_err.Rethrow("getting raw collection elems", err)
+	}
+	for _, d := range docs {
+		parsed, err := parseDoc[T](d.Data)
 		if err != nil {
-			return res, core_err.Rethrow("getting raw doc", err)
+			return res, core_err.Rethrow("parsing one of the raw col docs", err)
 		}
-		return parseDoc[T](d.Data)
+		res = append(res, parsed)
 	}
+	return res, nil
 }
 
-func NewJsonColGetter[T any]() JsonColGetter[T] {
-	return func(db DB, path []string) (res []T, err error) {
-		docs, err := db.db.GetCollection(path)
-		if err != nil {
-			return res, core_err.Rethrow("getting raw collection elems", err)
-		}
-		for _, d := range docs {
-			parsed, err := parseDoc[T](d.Data)
-			if err != nil {
-				return res, core_err.Rethrow("parsing one of the raw col docs", err)
-			}
-			res = append(res, parsed)
-		}
-		return res, nil
+func JsonSetterImpl[T any](db DB, path []string, val T) error {
+	valEncoded, err := json.Marshal(val)
+	if err != nil {
+		return core_err.Rethrow("marshalling val", err)
 	}
+	return db.db.Set(path, valEncoded)
 }
 
-func NewJsonSetter[T any]() JsonSetter[T] {
-	return func(db DB, path []string, val T) error {
-		valEncoded, err := json.Marshal(val)
-		if err != nil {
-			return core_err.Rethrow("marshalling val", err)
-		}
-		return db.db.Set(path, valEncoded)
+func JsonUpdaterImpl[T any](db DB, path []string, key string, val T) error {
+	current, err := JsonGetterImpl[map[string]any](db, path)
+	if err != nil {
+		return core_err.Rethrow("getting current doc", err)
 	}
+	current[key] = val
+
+	return JsonSetterImpl(db, path, current)
 }
-
-func NewJsonUpdater[T any](get JsonGetter[map[string]any], set JsonSetter[map[string]any]) JsonUpdater[T] {
-	return func(db DB, path []string, key string, val T) error {
-    current, err := get(db, path) 
-    if err != nil {
-    	return core_err.Rethrow("getting current doc", err)
-    }
-    valJson, err := structToMap(val)
-    if err != nil {
-    	return core_err.Rethrow("converting val to map", err)
-    }
-    current[key] = valJson
-
-    return set(db, path, current)
-	}
-}
-
-
-
 
 func parseDoc[T any](doc []byte) (T, error) {
 	var res T
@@ -75,20 +60,3 @@ func parseDoc[T any](doc []byte) (T, error) {
 	}
 	return res, nil
 }
-
-
-// structToMap is currently implemented as a hack of marshalling and then unmarshalling the struct. 
-// This can be a performance bottleneck.
-func structToMap(s any) (map[string]any, error) {
-	var inMap map[string]any
-	inJson, err := json.Marshal(s)
-	if err != nil {
-		return inMap, core_err.Rethrow("marshalling the struct", err)
-	}
-	err = json.Unmarshal(inJson, &inMap)
-	if err != nil {
-		return inMap, core_err.Rethrow("unmarshalling the struct", err)
-	}
-	return inMap, nil
-}
-

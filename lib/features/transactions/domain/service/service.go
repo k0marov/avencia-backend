@@ -79,6 +79,9 @@ func NewTransactionPerformer(updateWithdrawn limitsService.WithdrawnUpdater, add
 			return core_err.Rethrow("adding trans to history", err)
 		}
 
-		return updBal(db, t.UserId, t.Money.Currency, curBal.Add(t.Money.Amount))
+		return updBal(db, t.UserId, core.Money{
+			Currency: t.Money.Currency,
+			Amount:   curBal.Add(t.Money.Amount),
+		})
 	}
 }

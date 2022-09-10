@@ -1,6 +1,8 @@
 package core
 
 import (
+	"encoding/json"
+
 	"github.com/shopspring/decimal"
 )
 
@@ -10,6 +12,18 @@ type MoneyAmount struct {
 
 func NewMoneyAmount(num float64) MoneyAmount {
 	return MoneyAmount{num: decimal.NewFromFloat(num)}
+}
+
+func (m MoneyAmount) MarshalJSON() ([]byte, error) {
+	return json.Marshal(m.Num())
+}
+func (m *MoneyAmount) UnmarshalJSON(b []byte) error {
+	var num float64
+	if err := json.Unmarshal(b, &num); err != nil {
+		return err
+	}
+	m.num = decimal.NewFromFloat(num)
+	return nil
 }
 
 func (a MoneyAmount) Num() float64 {
