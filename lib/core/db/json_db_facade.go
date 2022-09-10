@@ -47,6 +47,9 @@ func JsonUpdaterImpl[T any](db DB, path []string, key string, val T) error {
 	if err != nil && !core_err.IsNotFound(err){
 		return core_err.Rethrow("getting current doc", err)
 	}
+	if current == nil {
+		current = map[string]any{} 
+	}
 	current[key] = val
 
 	return JsonSetterImpl(db, path, current)
