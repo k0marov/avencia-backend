@@ -62,6 +62,12 @@ func NewWithdrawalValidator(validateMeta MetaTransByIdValidator, validateTrans t
 		return err
 	}
 }
+func NewMetaTransByIdValidator(getTransById tService.TransactionGetter) MetaTransByIdValidator{
+	return newMetaTransValidator(getTransById)
+}
+func NewMetaTransFromCodeValidator(getTransFromCode mappers.CodeParser) MetaTransByCodeValidator {
+	return newMetaTransValidator(getTransFromCode)
+}
 
 type anyTransactionGetter = func(someIdentifier string) (tValues.MetaTrans, error) 
 type metaTransValidator = func(someIdentifier string, wantType tValues.TransactionType) (tValues.MetaTrans, error)
@@ -78,12 +84,6 @@ func newMetaTransValidator(getTrans anyTransactionGetter)  metaTransValidator {
 	}
 }
 
-func NewMetaTransByIdValidator(getTransById tService.TransactionGetter) MetaTransByIdValidator{
-	return newMetaTransValidator(getTransById)
-}
-func NewMetaTransFromCodeValidator(getTransFromCode mappers.CodeParser) MetaTransByCodeValidator {
-	return newMetaTransValidator(getTransFromCode)
-}
 
 
 

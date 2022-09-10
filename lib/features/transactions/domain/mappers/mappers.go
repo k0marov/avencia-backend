@@ -1,7 +1,6 @@
 package mappers
 
 import (
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -59,12 +58,12 @@ func NewCodeParser(parseJWT jwt.Verifier) CodeParser {
 func NewTransIdGenerator() TransIdGenerator {
 	return func(transCode string) string {
 		uuid, _ := uuid.NewUUID()
-		return uuid.String() + "_" + transCode
+		return uuid.String() + transCode
 	}
 }
 
 func NewTransIdParser() TransIdParser {
 	return func(transactionId string) string {
-		return strings.Split(transactionId, "_")[1] // TODO: maybe add a check for out-of-bounds index
+		return transactionId[36:]
 	}
 }

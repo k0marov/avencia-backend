@@ -15,7 +15,7 @@ type WithdrawsDecoder = func(db.JsonDocument) (models.Withdraws, error)
 type WithdrawEncoder = func(w core.Money, curTime time.Time) map[string]any 
 
 func WithdrawsDecoderImpl(doc db.JsonDocument) (models.Withdraws, error) {
-  var withdraws models.Withdraws 
+  withdraws := models.Withdraws{}
   for k, v := range doc.Data {
   	withdraw, ok := v.(map[string]any)
   	if !ok {
