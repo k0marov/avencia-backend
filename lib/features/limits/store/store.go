@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/models"
 	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
@@ -12,7 +13,14 @@ import (
 func NewWithdrawsGetter(getDoc db.JsonGetter[models.Withdraws]) store.WithdrawsGetter {
 	return func(db db.DB, userId string) (models.Withdraws, error) {
 		path := []string{"withdrawn", userId}
-		return getDoc(db, path)
+		withdraws, err := getDoc(db, path)
+		if core_err.IsNotFound(err) {
+			return models.Withdraws{}, nil
+		} 
+		if err != nil {
+			return models.Withdraws{}, core_err.Rethrow("getting withdraws doc", err)
+		}
+		return withdraws, nil
 	}
 
 }

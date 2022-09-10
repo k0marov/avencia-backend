@@ -7,17 +7,17 @@ import (
 )
 
 // ErrNotFound is an error that is passed from store layer to domain layer so that a 404 Client Error is thrown
-type errNotFound struct {
+type ErrNotFoundTmp struct {
 
 }
-func (e errNotFound) Error() string {
+func (e ErrNotFoundTmp) Error() string {
 	return "not found"
 }
 
-var ErrNotFound = errNotFound{} 
+var ErrNotFound = ErrNotFoundTmp{} 
 
 func IsNotFound(err error) bool {
-	_, ok := err.(errNotFound)
+	_, ok := err.(ErrNotFoundTmp)
 	return ok 
 }
 
@@ -26,6 +26,10 @@ func Rethrow(description string, err error) error {
 	clientErr, ok := err.(client_errors.ClientError)
 	if ok {
 		return clientErr
+	}
+	notFound, ok := err.(ErrNotFoundTmp)
+	if ok {
+		return notFound
 	}
 	return fmt.Errorf("%s: %w", description, err)
 }

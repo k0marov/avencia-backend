@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/k0marov/avencia-backend/lib/core/core_err"
 	"github.com/k0marov/avencia-backend/lib/core/db"
 	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
@@ -15,10 +17,12 @@ func NewUserInfoGetter(getWallet walletStore.WalletGetter, getLimits limitsServi
 	return func(db db.DB, userId string) (entities.UserInfo, error) {
 		wallet, err := getWallet(db, userId)
 		if err != nil {
+			fmt.Printf("while getting wallets for users info: %v", err)
 			return entities.UserInfo{}, core_err.Rethrow("getting wallets for users info", err)
 		}
 		limits, err := getLimits(db, userId)
 		if err != nil {
+			fmt.Printf("while getting limits for users info: %v", err)
 			return entities.UserInfo{}, core_err.Rethrow("getting limits for users info", err)
 		}
 		return entities.UserInfo{
