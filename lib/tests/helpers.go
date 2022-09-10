@@ -3,6 +3,7 @@ package integration_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,7 +15,7 @@ import (
 	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
 )
 
-// apiDeps is for simplicity a global variable instead of an argument to every helper 
+// apiDeps is for simplicity a global variable instead of an argument to every helper
 var (
 	apiDeps di.APIDeps 
 	atmAuthSecret string
@@ -26,6 +27,57 @@ func initApiDeps(deps di.APIDeps, atmAuthSecr, jwtSecr string) {
 	apiDeps = deps 
 	atmAuthSecret = atmAuthSecr
 	jwtSecret = jwtSecr
+}
+
+func deposit(t *testing.T, user MockUser, dep core.Money) {
+	code := generateQRCode(t, user, values.Deposit)
+	// TODO: verify code.ExpiresAt
+	tId := startTrans(t, values.Deposit, code.TransactionCode)
+	if dep.Amount.Num() > 1 {
+		insertBanknote(t, tId, api.Banknote{
+			Currency:     string(dep.Currency),
+			Denomination: 1,
+		})
+	}
+	finishDeposit(t, tId, dep)
+}
+func withdraw(t *testing.T, user MockUser, w core.Money) {
+	code := generateQRCode(t, user, values.Withdrawal)
+	tId := startTrans(t, values.Withdrawal, code.TransactionCode)
+	fmt.Printf("new withdrawal's transaction id: %v", tId)
+	checkWithdrawal(t, tId, w)
+	if w.Amount.Neg().Num() > 1 {
+		dispenseBanknote(t, tId, api.Banknote{
+			Currency:     string(w.Currency),
+			Denomination: 1,
+		})
+	}
+	finishWithdrawal(t, tId, w)
+}
+func transfer(t *testing.T, from, to MockUser, w core.Money) {
+	reqBody := api.TransferRequest{
+		RecipientIdentifier: to.Email,
+		Money: api.Money{
+			Currency: string(w.Currency),
+			Amount:   w.Amount.Num(),
+		},
+	}
+	request := addAuth(encodeRequest(t, reqBody), from.Token)
+	response := httptest.NewRecorder()
+	handler := apiDeps.AuthMW(apiDeps.Handlers.App.Transfer)
+	handler.ServeHTTP(response, request)
+	AssertStatusCode(t, response, http.StatusOK)
+}
+func assertBalance(t *testing.T, user MockUser, balance core.Money) {
+	request := addAuth(encodeRequest(t, nil), user.Token)
+	response := httptest.NewRecorder()
+	handler := apiDeps.AuthMW(apiDeps.Handlers.App.GetUserInfo)
+	handler.ServeHTTP(response, request)
+	AssertStatusCode(t, response, http.StatusOK)
+	var userInfo api.UserInfoResponse
+	err := json.Unmarshal(response.Body.Bytes(), &userInfo)
+	AssertNoError(t, err)
+	Assert(t, userInfo.Wallet[string(balance.Currency)], balance.Amount.Num(), "balance")
 }
 
 
@@ -40,18 +92,6 @@ func addAuth(req *http.Request, authHeader string) *http.Request {
 	return req
 }
 
-func assertBalance(t testing.TB, user MockUser, balance core.Money) {
-	t.Helper()
-	request := addAuth(encodeRequest(t, nil), user.Token)
-	response := httptest.NewRecorder()
-	handler := apiDeps.AuthMW(apiDeps.Handlers.App.GetUserInfo)
-	handler.ServeHTTP(response, request)
-	AssertStatusCode(t, response, http.StatusOK)
-	var userInfo api.UserInfoResponse
-	err := json.Unmarshal(response.Body.Bytes(), &userInfo)
-	AssertNoError(t, err)
-	Assert(t, userInfo.Wallet[string(balance.Currency)], balance.Amount.Num(), "balance")
-}
 func generateQRCode(t testing.TB, user MockUser, transType values.TransactionType) api.GenTransCodeResponse {
 	t.Helper()
 	reqBody := api.GenTransCodeRequest{
@@ -160,44 +200,3 @@ func finishWithdrawal(t testing.TB, tId string, w core.Money) {
 	AssertStatusCode(t, response, http.StatusOK)
 }
 
-func deposit(t testing.TB, user MockUser, dep core.Money) {
-	t.Helper()
-	code := generateQRCode(t, user, values.Deposit)
-	// TODO: verify code.ExpiresAt
-	tId := startTrans(t, values.Deposit, code.TransactionCode)
-	if dep.Amount.Num() > 1 {
-		insertBanknote(t, tId, api.Banknote{
-			Currency:     string(dep.Currency),
-			Denomination: 1,
-		})
-	}
-	finishDeposit(t, tId, dep)
-}
-func withdraw(t testing.TB, user MockUser, w core.Money) {
-	t.Helper()
-	code := generateQRCode(t, user, values.Withdrawal)
-	tId := startTrans(t, values.Withdrawal, code.TransactionCode)
-	checkWithdrawal(t, tId, w)
-	if w.Amount.Neg().Num() > 1 {
-		dispenseBanknote(t, tId, api.Banknote{
-			Currency:     string(w.Currency),
-			Denomination: 1,
-		})
-	}
-	finishWithdrawal(t, tId, w)
-}
-func transfer(t testing.TB, from, to MockUser, w core.Money) {
-	t.Helper()
-	reqBody := api.TransferRequest{
-		RecipientIdentifier: to.Email,
-		Money: api.Money{
-			Currency: string(w.Currency),
-			Amount:   w.Amount.Num(),
-		},
-	}
-	request := addAuth(encodeRequest(t, reqBody), from.Token)
-	response := httptest.NewRecorder()
-	handler := apiDeps.AtmAuthMW(apiDeps.Handlers.App.Transfer)
-	handler.ServeHTTP(response, request)
-	AssertStatusCode(t, response, http.StatusOK)
-}
