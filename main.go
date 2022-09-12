@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/k0marov/avencia-backend/lib/di"
-	"github.com/k0marov/avencia-backend/lib/di/external"
+	"github.com/AvenciaLab/avencia-backend/lib/di"
+	"github.com/AvenciaLab/avencia-backend/lib/di/external"
 )
 
 func main() {
