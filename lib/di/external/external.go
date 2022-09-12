@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	firebase "firebase.google.com/go"
+	firebase "firebase.google.com/go/v4"
 	"github.com/apple/foundationdb/bindings/go/src/fdb"
 	"github.com/AvenciaLab/avencia-backend/lib/config"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db/foundationdb"

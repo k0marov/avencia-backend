@@ -1,11 +1,11 @@
 package service_test
 
 import (
+	"context"
 	"testing"
 
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/service"
-	"golang.org/x/net/context"
 )
 
 func TestUserInfoAdder(t *testing.T) {

@@ -3,7 +3,7 @@ package store
 import (
 	"context"
 
-	"firebase.google.com/go/auth"
+	"firebase.google.com/go/v4/auth"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 )
