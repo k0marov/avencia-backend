@@ -3,7 +3,7 @@ package test_helpers
 import (
 	"errors"
 
-	"github.com/k0marov/avencia-backend/lib/core/db"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 )
 
 func NewStubDB() db.DB {

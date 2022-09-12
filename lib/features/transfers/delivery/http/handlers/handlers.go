@@ -3,11 +3,11 @@ package handlers
 import (
 	"net/http"
 
-	apiRequests "github.com/k0marov/avencia-backend/lib/api/api_requests"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
-	"github.com/k0marov/avencia-backend/lib/core/helpers/service_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/service"
+	apiRequests "github.com/AvenciaLab/avencia-backend/lib/api/api_requests"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/http_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/service_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/service"
 )
 
 func NewTransferHandler(runT db.TransRunner, transfer service.Transferer) http.HandlerFunc {

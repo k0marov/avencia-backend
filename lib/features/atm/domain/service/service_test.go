@@ -4,12 +4,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
-	tValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/service"
+	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
+	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
 func TestATMTransactionCreator(t *testing.T) {

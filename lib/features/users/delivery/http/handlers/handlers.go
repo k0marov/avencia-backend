@@ -3,12 +3,12 @@ package handlers
 import (
 	"net/http"
 
-	apiResponses "github.com/k0marov/avencia-backend/lib/api/api_responses"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
-	"github.com/k0marov/avencia-backend/lib/core/helpers/service_helpers"
-	authEntities "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
-	"github.com/k0marov/avencia-backend/lib/features/users/domain/service"
+	apiResponses "github.com/AvenciaLab/avencia-backend/lib/api/api_responses"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/http_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/service_helpers"
+	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
+	"github.com/AvenciaLab/avencia-backend/lib/features/users/domain/service"
 )
 
 func NewGetUserInfoHandler(runT db.TransRunner, getUserInfo service.UserInfoGetter) http.HandlerFunc {

@@ -3,7 +3,7 @@ package core_err
 import (
 	"fmt"
 
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
 )
 
 // ErrNotFound is an error that is passed from store layer to domain layer so that a 404 Client Error is thrown

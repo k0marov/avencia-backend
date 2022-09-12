@@ -3,8 +3,8 @@ package entities
 import (
 	"time"
 
-	"github.com/k0marov/avencia-backend/lib/core"
-	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 type TransEntry struct {
 	Source    transValues.TransSource `json:"source"`

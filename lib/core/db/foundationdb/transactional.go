@@ -2,9 +2,9 @@ package foundationdb
 
 import (
 	"github.com/apple/foundationdb/bindings/go/src/fdb"
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/core/helpers/general_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/general_helpers"
 )
 
 type transactionalDB struct {

@@ -3,12 +3,12 @@ package service_test
 import (
 	"testing"
 
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	limitsEntities "github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
-	userEntities "github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
-	"github.com/k0marov/avencia-backend/lib/features/users/domain/service"
-	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallets/domain/entities"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	limitsEntities "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/entities"
+	userEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
+	"github.com/AvenciaLab/avencia-backend/lib/features/users/domain/service"
+	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
 
 func TestUserInfoGetter(t *testing.T) {

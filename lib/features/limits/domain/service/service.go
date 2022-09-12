@@ -3,15 +3,15 @@ package service
 import (
 	"fmt"
 
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	"github.com/k0marov/avencia-backend/lib/config/configurable"
-	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
-	"github.com/k0marov/avencia-backend/lib/features/limits/domain/store"
-	"github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
-	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/config/configurable"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	"github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/entities"
+	"github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/store"
+	"github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/values"
+	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
 // LimitChecker returns a client error if rejected; simple error if server error; nil if accepted

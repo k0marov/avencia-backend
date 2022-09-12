@@ -3,9 +3,9 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/http_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/validators"
 )
 
 

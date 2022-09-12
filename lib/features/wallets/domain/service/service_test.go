@@ -3,11 +3,11 @@ package service_test
 import (
 	"testing"
 
-	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/wallets/domain/entities"
-	"github.com/k0marov/avencia-backend/lib/features/wallets/domain/service"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
+	"github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 )
 
 func TestBalanceGetter(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/auth/delivery/http/middleware"
+	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/auth/delivery/http/middleware"
 )
 
 func TestAuthMiddleware(t *testing.T) {

@@ -3,14 +3,14 @@ package handlers
 import (
 	"net/http"
 
-	apiRequests "github.com/k0marov/avencia-backend/lib/api/api_requests"
-	apiResponses "github.com/k0marov/avencia-backend/lib/api/api_responses"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
-	"github.com/k0marov/avencia-backend/lib/core/helpers/service_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/mappers"
+	apiRequests "github.com/AvenciaLab/avencia-backend/lib/api/api_requests"
+	apiResponses "github.com/AvenciaLab/avencia-backend/lib/api/api_responses"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/http_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/service_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/service"
+	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/validators"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/mappers"
 )
 
 func NewGenerateQRCodeHandler(generate mappers.CodeGenerator) http.HandlerFunc {

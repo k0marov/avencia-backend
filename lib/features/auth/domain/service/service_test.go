@@ -3,8 +3,8 @@ package service_test
 import (
 	"testing"
 
-	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/auth/domain/service"
+	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/service"
 	"golang.org/x/net/context"
 )
 

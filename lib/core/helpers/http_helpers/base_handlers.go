@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	"github.com/k0marov/avencia-backend/lib/core/helpers/service_helpers"
-	authEntities "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/service_helpers"
+	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 )
 
 type NoJSONRequest struct{}

@@ -1,13 +1,13 @@
 package apiResponses
 
 import (
-	"github.com/k0marov/avencia-api-contract/api"
-	atmValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
-	histEntities "github.com/k0marov/avencia-backend/lib/features/histories/domain/entities"
-	limitsEntities "github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
-	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
-	userEntities "github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
-	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallets/domain/entities"
+	"github.com/AvenciaLab/avencia-api-contract/api"
+	atmValues "github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
+	histEntities "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
+	limitsEntities "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/entities"
+	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	userEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
+	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
 
 

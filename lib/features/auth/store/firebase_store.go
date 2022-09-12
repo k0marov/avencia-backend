@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"firebase.google.com/go/auth"
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 )
 
 type FBAuthFacade struct {

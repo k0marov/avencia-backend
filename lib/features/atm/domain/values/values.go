@@ -1,8 +1,8 @@
 package values
 
 import (
-	"github.com/k0marov/avencia-backend/lib/core"
-	tValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
 type TransFromQRCode struct {

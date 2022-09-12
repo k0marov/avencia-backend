@@ -2,7 +2,7 @@ package test_helpers
 
 import (
 	"encoding/json"
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
 	"net/http"
 	"net/http/httptest"
 	"reflect"

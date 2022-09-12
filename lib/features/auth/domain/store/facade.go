@@ -1,6 +1,6 @@
 package store
 
-import "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
+import "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 
 // TokenVerifier should return "" if the provided token is invalid
 type TokenVerifier = func(token string) (userId string)

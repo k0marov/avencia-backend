@@ -3,7 +3,7 @@ package db
 import (
 	"encoding/json"
 
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 )
 
 type JsonGetter[T any] func(db DB, path []string) (T, error)

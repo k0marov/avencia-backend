@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	authEntities "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
-	authService "github.com/k0marov/avencia-backend/lib/features/auth/domain/service"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
+	authService "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/service"
 )
 
 func setJsonHeader(w http.ResponseWriter) {

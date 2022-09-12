@@ -1,9 +1,9 @@
 package validators
 
 import (
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
 )
 
 // TransferValidator error may be a ClientError

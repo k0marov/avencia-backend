@@ -4,14 +4,14 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/k0marov/avencia-api-contract/api"
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/helpers/http_helpers"
-	atmValues "github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
-	authEntities "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
-	tValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
-	transferValues "github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
+	"github.com/AvenciaLab/avencia-api-contract/api"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/http_helpers"
+	atmValues "github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
+	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
+	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	transferValues "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
 )
 
 func NewTransDecoder(user authEntities.User, _ *http.Request, req api.GenTransCodeRequest) (tValues.MetaTrans, error) {

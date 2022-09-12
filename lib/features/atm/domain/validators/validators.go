@@ -3,14 +3,14 @@ package validators
 import (
 	"crypto/subtle"
 
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/mappers"
-	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
-	tValidators "github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
-	tValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/mappers"
+	tService "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
+	tValidators "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
+	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
 type ATMSecretValidator = func(gotAtmSecret []byte) error

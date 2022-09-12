@@ -1,6 +1,6 @@
 package service_helpers
 
-import "github.com/k0marov/avencia-backend/lib/core/db"
+import "github.com/AvenciaLab/avencia-backend/lib/core/db"
 
 type DBService[INP, OUT any] func(db.DB, INP) (OUT, error)
 type Service[INP, OUT any] func(INP) (OUT, error)

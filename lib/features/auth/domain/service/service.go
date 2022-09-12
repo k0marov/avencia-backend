@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
-	"github.com/k0marov/avencia-backend/lib/features/auth/domain/store"
+	"github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
+	"github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/store"
 )
 
 // UserInfoAdder parses the provided auth header and adds corresponding user info to the context

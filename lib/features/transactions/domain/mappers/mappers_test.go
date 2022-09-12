@@ -5,11 +5,11 @@ import (
 	"testing/quick"
 	"time"
 
-	"github.com/k0marov/avencia-backend/lib/config/configurable"
-	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/core/jwt"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/mappers"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/config/configurable"
+	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/core/jwt"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/mappers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
 func TestPropertiesOfCodeMapping(t *testing.T) {

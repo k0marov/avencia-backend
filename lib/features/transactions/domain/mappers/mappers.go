@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	"github.com/k0marov/avencia-backend/lib/config/configurable"
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/jwt"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/config/configurable"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/core/jwt"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
 type CodeGenerator = func(values.MetaTrans) (values.GeneratedCode, error)

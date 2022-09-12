@@ -7,11 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/k0marov/avencia-api-contract/api"
-	"github.com/k0marov/avencia-backend/lib/core"
-	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/di"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-api-contract/api"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/di"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
 // apiDeps is for simplicity a global variable instead of an argument to every helper

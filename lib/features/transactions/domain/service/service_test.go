@@ -3,12 +3,12 @@ package service_test
 import (
 	"testing"
 
-	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	limitsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/service"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
 func TestTransactionIdGetter(t *testing.T) {

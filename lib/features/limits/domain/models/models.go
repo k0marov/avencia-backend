@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/k0marov/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
 )
 
 type Withdraws = map[core.Currency]WithdrawVal

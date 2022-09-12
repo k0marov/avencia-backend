@@ -3,13 +3,13 @@ package validators
 import (
 	"math"
 
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
-	walletService "github.com/k0marov/avencia-backend/lib/features/wallets/domain/service"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	limitsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/service"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	walletService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 )
 
 type TransactionValidator = func(db db.DB, t values.Transaction) (curBalance core.MoneyAmount, err error)

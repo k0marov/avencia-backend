@@ -1,11 +1,11 @@
 package validators_test
 
 import (
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	"github.com/k0marov/avencia-backend/lib/core"
-	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/validators"
-	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/validators"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
 	"testing"
 )
 

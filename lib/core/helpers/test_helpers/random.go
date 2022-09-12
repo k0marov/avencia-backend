@@ -4,16 +4,16 @@ import (
 	"errors"
 	"time"
 
-	"github.com/k0marov/avencia-api-contract/api"
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	"github.com/k0marov/avencia-backend/lib/core"
-	authEntities "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
-	limitsEntities "github.com/k0marov/avencia-backend/lib/features/limits/domain/entities"
-	limitsValues "github.com/k0marov/avencia-backend/lib/features/limits/domain/values"
-	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
-	transferValues "github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
-	userEntities "github.com/k0marov/avencia-backend/lib/features/users/domain/entities"
-	walletEntities "github.com/k0marov/avencia-backend/lib/features/wallets/domain/entities"
+	"github.com/AvenciaLab/avencia-api-contract/api"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
+	limitsEntities "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/entities"
+	limitsValues "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/values"
+	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	transferValues "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
+	userEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
+	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
 
 

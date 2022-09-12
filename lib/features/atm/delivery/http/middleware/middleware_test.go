@@ -5,9 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/k0marov/avencia-backend/lib/features/atm/delivery/http/middleware"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/atm/delivery/http/middleware"
 )
 
 func TestATMAuthMiddleware(t *testing.T) {

@@ -1,11 +1,11 @@
 package store
 
 import (
-	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/features/wallets/domain/entities"
-	"github.com/k0marov/avencia-backend/lib/features/wallets/domain/store"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	"github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
+	"github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/store"
 )
 
 func NewWalletGetter(getDoc db.JsonGetter[entities.Wallet]) store.WalletGetter {

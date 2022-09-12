@@ -7,10 +7,10 @@ import (
 
 	firebase "firebase.google.com/go"
 	"github.com/apple/foundationdb/bindings/go/src/fdb"
-	"github.com/k0marov/avencia-backend/lib/config"
-	"github.com/k0marov/avencia-backend/lib/core/db/foundationdb"
-	"github.com/k0marov/avencia-backend/lib/di"
-	authStoreImpl "github.com/k0marov/avencia-backend/lib/features/auth/store"
+	"github.com/AvenciaLab/avencia-backend/lib/config"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db/foundationdb"
+	"github.com/AvenciaLab/avencia-backend/lib/di"
+	authStoreImpl "github.com/AvenciaLab/avencia-backend/lib/features/auth/store"
 	"google.golang.org/api/option"
 )
 

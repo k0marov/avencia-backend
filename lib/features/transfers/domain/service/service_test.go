@@ -4,15 +4,15 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/k0marov/avencia-api-contract/api/client_errors"
-	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	. "github.com/k0marov/avencia-backend/lib/core/helpers/test_helpers"
-	authEntities "github.com/k0marov/avencia-backend/lib/features/auth/domain/entities"
-	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
-	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/transfers/domain/values"
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
+	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/service"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
 )
 
 func TestTransferer(t *testing.T) {

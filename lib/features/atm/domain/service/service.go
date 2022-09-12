@@ -1,13 +1,13 @@
 package service
 
 import (
-	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/validators"
-	"github.com/k0marov/avencia-backend/lib/features/atm/domain/values"
-	tService "github.com/k0marov/avencia-backend/lib/features/transactions/domain/service"
-	tValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/validators"
+	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
+	tService "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
+	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
 type ATMTransactionCreator = func(values.TransFromQRCode) (values.CreatedTransaction, error)

@@ -3,7 +3,7 @@ package jwt
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt"
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"time"
 )
 

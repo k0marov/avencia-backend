@@ -3,11 +3,11 @@ package service
 import (
 	"sort"
 
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	"github.com/k0marov/avencia-backend/lib/features/histories/domain/entities"
-	"github.com/k0marov/avencia-backend/lib/features/histories/domain/store"
-	transValues "github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	"github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
+	"github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/store"
+	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
 type HistoryGetter = func(db db.DB, userId string) ([]entities.TransEntry, error)

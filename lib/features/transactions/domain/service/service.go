@@ -1,15 +1,15 @@
 package service
 
 import (
-	"github.com/k0marov/avencia-backend/lib/core"
-	"github.com/k0marov/avencia-backend/lib/core/core_err"
-	"github.com/k0marov/avencia-backend/lib/core/db"
-	histService "github.com/k0marov/avencia-backend/lib/features/histories/domain/service"
-	limitsService "github.com/k0marov/avencia-backend/lib/features/limits/domain/service"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/mappers"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/validators"
-	"github.com/k0marov/avencia-backend/lib/features/transactions/domain/values"
-	walletStore "github.com/k0marov/avencia-backend/lib/features/wallets/domain/store"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
+	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	histService "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/service"
+	limitsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/service"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/mappers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	walletStore "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/store"
 )
 
 // TODO: having dots in a transactionId (since it is internally a JWT) may result in having dots in url query params, this may lead to bugs
