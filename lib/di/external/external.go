@@ -2,7 +2,6 @@ package external
 
 import (
 	"context"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -16,12 +15,12 @@ import (
 	"google.golang.org/api/option"
 )
 
-func readSecret(filepath string) string {
+func readSecret(filepath string) []byte {
 	contents, err := os.ReadFile(filepath)
 	if err != nil {
-	  log.Fatalf("while reading the contents of the %v secret file: %w", filepath, err)	
+	  log.Fatalf("while reading the contents of the %v secret file: %v", filepath, err)	
 	}
-	return strings.TrimSpace(string(contents))
+	return []byte(strings.TrimSpace(string(contents)))
 }
 
 func initFirebase(config config.Config) *firebase.App {
