@@ -2,7 +2,6 @@ package validators
 
 import (
 	"crypto/subtle"
-	"fmt"
 
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
