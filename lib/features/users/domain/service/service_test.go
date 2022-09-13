@@ -5,6 +5,7 @@ import (
 
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	userEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
 	"github.com/AvenciaLab/avencia-backend/lib/features/users/domain/service"
 	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
@@ -13,7 +14,7 @@ import (
 func TestUserInfoGetter(t *testing.T) {
 	userId := RandomString()
 	wallet := RandomWallet()
-	limits := RandomLimits()
+	tLimits := RandomLimits()
 	mockDB := NewStubDB()
 
 	getWallet := func(db.DB, string) (walletEntities.Wallet, error) {
@@ -30,7 +31,7 @@ func TestUserInfoGetter(t *testing.T) {
 		AssertSomeError(t, err)
 	})
 	getLimits := func(db.DB, string) (limits.Limits, error) {
-		return limits, nil
+		return tLimits, nil
 	}
 	t.Run("error case - getting limits throws", func(t *testing.T) {
 		getLimits := func(gotDB db.DB, user string) (limits.Limits, error) {
@@ -48,7 +49,7 @@ func TestUserInfoGetter(t *testing.T) {
 		Assert(t, gotInfo, userEntities.UserInfo{
 			Id:     userId,
 			Wallet: wallet,
-			Limits: limits,
+			Limits: tLimits,
 		}, "returned users info")
 	})
 }

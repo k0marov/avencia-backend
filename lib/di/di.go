@@ -3,7 +3,6 @@ package di
 import (
 	"net/http"
 
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/AvenciaLab/avencia-api-contract/api"
 	"github.com/AvenciaLab/avencia-backend/lib/config/configurable"
 	"github.com/AvenciaLab/avencia-backend/lib/core"
@@ -20,9 +19,10 @@ import (
 	histEntities "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
 	histService "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/service"
 	histStore "github.com/AvenciaLab/avencia-backend/lib/features/histories/store"
-	"github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/models"
-	limitsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/service"
-	limitsStore "github.com/AvenciaLab/avencia-backend/lib/features/limits/store"
+	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
+	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/models"
+	withdrawsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/service"
+	withdrawsStore "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/store"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/mappers"
 	tService "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
 	tValidators "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
@@ -34,6 +34,7 @@ import (
 	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 	walletService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 	storeImpl "github.com/AvenciaLab/avencia-backend/lib/features/wallets/store"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 // TODO: write some integration tests (later)
@@ -66,12 +67,12 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	getBalance := walletService.NewBalanceGetter(getWallet)
 
 	// ===== LIMITS =====
-	storeGetWithdraws := limitsStore.NewWithdrawsGetter(db.JsonGetterImpl[models.Withdraws])
-	storeUpdateWithdrawn := limitsStore.NewWithdrawUpdater(db.JsonUpdaterImpl[models.WithdrawVal])
-	getLimits := limitsService.NewLimitsGetter(storeGetWithdraws, configurable.LimitedCurrencies)
-	checkLimit := limitsService.NewLimitChecker(getLimits)
-	getUpdatedWithdrawn := limitsService.NewWithdrawnUpdateGetter(getLimits)
-	updateWithdrawn := limitsService.NewWithdrawnUpdater(getUpdatedWithdrawn, storeUpdateWithdrawn)
+	storeGetWithdraws := withdrawsStore.NewWithdrawsGetter(db.JsonGetterImpl[models.Withdraws])
+	storeUpdateWithdrawn := withdrawsStore.NewWithdrawUpdater(db.JsonUpdaterImpl[models.WithdrawVal])
+	getUpdatedWithdrawn := withdrawsService.NewWithdrawnUpdateGetter(storeGetWithdraws)
+	updateWithdrawn := withdrawsService.NewWithdrawnUpdater(getUpdatedWithdrawn, storeUpdateWithdrawn)
+	getLimits := limits.NewLimitsGetter(storeGetWithdraws, configurable.LimitedCurrencies)
+	checkLimit := limits.NewLimitChecker(getLimits)
 
 	// ===== USERS =====
 	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits)

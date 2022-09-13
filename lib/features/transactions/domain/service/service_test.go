@@ -6,7 +6,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
-	limitsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/service"
+	withdrawsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/service"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
@@ -116,7 +116,7 @@ func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount
 
 	wantNewBal := curBalance.Add(transAmount)
 
-	var updateWithdrawn limitsService.WithdrawnUpdater
+	var updateWithdrawn withdrawsService.WithdrawnUpdater
 	if transAmount.IsNeg() {
 		updateWithdrawn = func(db.DB, values.Transaction) error {
 			return nil

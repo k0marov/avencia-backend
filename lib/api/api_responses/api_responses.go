@@ -4,7 +4,7 @@ import (
 	"github.com/AvenciaLab/avencia-api-contract/api"
 	atmValues "github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
 	histEntities "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
-	limitsEntities "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/entities"
+	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 	userEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
 	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
@@ -33,7 +33,7 @@ func UserInfoEncoder(u userEntities.UserInfo) api.UserInfoResponse {
 	}
 }
 
-func LimitsEncoder(l limitsEntities.Limits) map[string]api.LimitResponse {
+func LimitsEncoder(l limits.Limits) map[string]api.LimitResponse {
 	resp := map[string]api.LimitResponse{}
 	for curr, limit := range l {
 		resp[string(curr)] = api.LimitResponse{

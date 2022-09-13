@@ -8,8 +8,7 @@ import (
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
-	limitsEntities "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/entities"
-	limitsValues "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 	transferValues "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
 	userEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
@@ -129,12 +128,14 @@ func RandomMoney() core.Money {
 	}
 }
 
-func RandomLimits() limitsEntities.Limits {
-	return limitsEntities.Limits{RandomCurrency(): RandomLimit(), RandomCurrency(): RandomLimit()}
+// TODO: maybe use less packages (i.e have only one namespace for every feature)
+
+func RandomLimits() limits.Limits {
+	return limits.Limits{RandomCurrency(): RandomLimit(), RandomCurrency(): RandomLimit()}
 }
 
-func RandomLimit() limitsValues.Limit {
-	return limitsValues.Limit{
+func RandomLimit() limits.Limit {
+	return limits.Limit{
 		Withdrawn: RandomPosMoneyAmount(),
 		Max:       RandomPosMoneyAmount(),
 	}

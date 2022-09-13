@@ -5,7 +5,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	histService "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/service"
-	limitsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/service"
+	withdrawsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/service"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/mappers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
@@ -65,7 +65,7 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform t
 	}
 }
 
-func NewTransactionPerformer(updateWithdrawn limitsService.WithdrawnUpdater, addHist histService.TransStorer, updBal walletStore.BalanceUpdater) transactionPerformer {
+func NewTransactionPerformer(updateWithdrawn withdrawsService.WithdrawnUpdater, addHist histService.TransStorer, updBal walletStore.BalanceUpdater) transactionPerformer {
 	return func(db db.DB, curBal core.MoneyAmount, t values.Transaction) error {
 		// TODO: maybe move this check inside updateWithdrawn
 		if t.Money.Amount.IsNeg() {

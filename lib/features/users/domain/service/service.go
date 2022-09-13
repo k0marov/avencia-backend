@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
-	limitsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/service"
+	limitsService "github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	"github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
 	walletStore "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/store"
 )
