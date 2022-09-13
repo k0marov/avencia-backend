@@ -7,14 +7,14 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
-	limitsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/service"
+	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 	walletService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 )
 
 type TransactionValidator = func(db db.DB, t values.Transaction) (curBalance core.MoneyAmount, err error)
 
-func NewTransactionValidator(checkLimits limitsService.LimitChecker, getBalance walletService.BalanceGetter) TransactionValidator {
+func NewTransactionValidator(checkLimits limits.LimitChecker, getBalance walletService.BalanceGetter) TransactionValidator {
 	return func(db db.DB, t values.Transaction) (curBalance core.MoneyAmount, err error) {
 		if err := checkLimits(db,t); err != nil {
 			return core.NewMoneyAmount(0), err

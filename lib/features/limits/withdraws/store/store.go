@@ -6,8 +6,8 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
-	"github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/models"
-	"github.com/AvenciaLab/avencia-backend/lib/features/limits/domain/store"
+	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/models"
+	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/store"
 )
 
 func NewWithdrawsGetter(getDoc db.JsonGetter[models.Withdraws]) store.WithdrawsGetter {
