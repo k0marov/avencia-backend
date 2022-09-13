@@ -4,15 +4,25 @@ import (
 	"context"
 	"io/ioutil"
 	"log"
+	"os"
+	"strings"
 
 	firebase "firebase.google.com/go/v4"
-	"github.com/apple/foundationdb/bindings/go/src/fdb"
 	"github.com/AvenciaLab/avencia-backend/lib/config"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db/foundationdb"
 	"github.com/AvenciaLab/avencia-backend/lib/di"
 	authStoreImpl "github.com/AvenciaLab/avencia-backend/lib/features/auth/store"
+	"github.com/apple/foundationdb/bindings/go/src/fdb"
 	"google.golang.org/api/option"
 )
+
+func readSecret(filepath string) string {
+	contents, err := os.ReadFile(filepath)
+	if err != nil {
+	  log.Fatalf("while reading the contents of the %v secret file: %w", filepath, err)	
+	}
+	return strings.TrimSpace(string(contents))
+}
 
 func initFirebase(config config.Config) *firebase.App {
 	opt := option.WithCredentialsFile(config.FirebaseSecretPath)
@@ -25,14 +35,8 @@ func initFirebase(config config.Config) *firebase.App {
 func InitializeExternal() di.ExternalDeps {
 	conf := config.LoadConfig()
 	// ===== CONFIG =====
-	atmSecret, err := ioutil.ReadFile(conf.ATMSecretPath)
-	if err != nil {
-		log.Fatalf("error while reading atm secret: %v", err)
-	}
-	jwtSecret, err := ioutil.ReadFile(conf.JWTSecretPath)
-	if err != nil {
-		log.Fatalf("error while reading jwt secret: %v", err)
-	}
+	atmSecret := readSecret(conf.ATMSecretPath)
+	jwtSecret := readSecret(conf.JWTSecretPath)
 
 	// ===== FIREBASE =====
 	fbApp := initFirebase(conf)
