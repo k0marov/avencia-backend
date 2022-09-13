@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
@@ -15,21 +16,21 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 	tWithdraws := models.Withdraws{
 		"USD": {
 			Withdrawn: core.NewMoneyAmount(400),
+			UpdatedAt: time.Now(), // still relevant
+		},
+		"RUB": {
+			Withdrawn: core.NewMoneyAmount(1000),
+			UpdatedAt: TimeWithYear(2000), // no longer relevant
 		},
 	}
 	userId := RandomString()
 	mockDB := NewStubDB()
 
-	t.Run("error case - provided transaction is not a withdrawal", func(t *testing.T) {
-		trans := transValues.Transaction{Money: core.Money{Amount: core.NewMoneyAmount(1000)}}
-		_, err := service.NewWithdrawnUpdateGetter(nil)(mockDB, trans)
-		AssertSomeError(t, err)
-	})
-
 	getWithdraws := func(db.DB, string) (models.Withdraws, error) {
 		return tWithdraws, nil
 	}
-	t.Run("error case - getting limits throws", func(t *testing.T) {
+
+	t.Run("error case - getting withdraws throws", func(t *testing.T) {
 		getWithdraws := func(gotDB db.DB, user string) (models.Withdraws, error) {
 			if gotDB == mockDB && user == userId {
 				return nil, RandomError()
@@ -40,15 +41,24 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 		_, err := service.NewWithdrawnUpdateGetter(getWithdraws)(mockDB, trans)
 		AssertSomeError(t, err)
 	})
-	t.Run("happy case - previous withdrawn value exists", func(t *testing.T) {
-		trans := transValues.Transaction{
+	getTestTrans := func(w core.Money) transValues.Transaction {
+		return transValues.Transaction{
 			Source: RandomTransactionSource(),
 			UserId: userId,
-			Money: core.Money{
-				Currency: "USD",
-				Amount:   core.NewMoneyAmount(-300),
-			},
+			Money:  w,
 		}
+	}
+	negate := func(w core.Money) core.Money {
+		return core.Money{
+			Currency: w.Currency,
+			Amount:   w.Amount.Neg(),
+		}
+	}
+	t.Run("happy case - previous withdrawn value exists", func(t *testing.T) {
+		trans := getTestTrans(core.Money{
+			Currency: "USD",
+			Amount:   core.NewMoneyAmount(-300),
+		})
 		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getWithdraws)(mockDB, trans)
 		AssertNoError(t, err)
 		Assert(t, newWithdrawn, core.Money{
@@ -57,20 +67,24 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 		}, "returned withdrawn value")
 	})
 	t.Run("happy case - there is no previous withdrawn value", func(t *testing.T) {
-		trans := transValues.Transaction{
-			Source: RandomTransactionSource(),
-			UserId: userId,
-			Money: core.Money{
-				Currency: "BTC",
-				Amount:   core.NewMoneyAmount(-0.01),
-			},
+		w := core.Money{
+			Currency: "BTC",
+			Amount:   core.NewMoneyAmount(-0.01),
 		}
+		trans := getTestTrans(w)
 		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getWithdraws)(mockDB, trans)
 		AssertNoError(t, err)
-		Assert(t, newWithdrawn, core.Money{
-			Currency: "BTC",
-			Amount:   core.NewMoneyAmount(0.01),
-		}, "returned withdrawn value")
+		Assert(t, newWithdrawn, negate(w), "returned withdrawn value")
+	})
+	t.Run("happy case - previous withdrawn value is not relevant anymore (according to configurable.IsWithdrawLimitRelevant)", func(t *testing.T) {
+		w := core.Money{
+			Currency: "RUB",
+			Amount:   core.NewMoneyAmount(420),
+		}
+		trans := getTestTrans(w)
+		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getWithdraws)(mockDB, trans)
+		AssertNoError(t, err)
+		Assert(t, newWithdrawn, negate(w), "returned withdraw value") 
 	})
 }
 

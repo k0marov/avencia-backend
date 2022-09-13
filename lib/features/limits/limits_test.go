@@ -2,7 +2,6 @@ package limits_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
 	"github.com/AvenciaLab/avencia-backend/lib/core"
@@ -41,19 +40,15 @@ func TestLimitsGetter(t *testing.T) {
 			return models.Withdraws{
 				"BTC": {
 					Withdrawn: core.NewMoneyAmount(0.001),
-					UpdatedAt: time.Now(),
 				},
 				"RUB": {
 					Withdrawn: core.NewMoneyAmount(10000),
-					UpdatedAt: time.Date(1999, 0, 0, 0, 0, 0, 0, time.UTC),
 				},
 				"ETH": {
 					Withdrawn: core.NewMoneyAmount(41),
-					UpdatedAt: time.Now().Add(-10 * time.Hour),
 				},
 				"USD": {
 					Withdrawn: core.NewMoneyAmount(499),
-					UpdatedAt: time.Now(),
 				},
 			}, nil
 		}
@@ -73,7 +68,7 @@ func TestLimitsGetter(t *testing.T) {
 				Max:       core.NewMoneyAmount(1000),
 			},
 			"RUB": {
-				Withdrawn: core.NewMoneyAmount(0),
+				Withdrawn: core.NewMoneyAmount(10000),
 				Max:       core.NewMoneyAmount(40000),
 			},
 		}

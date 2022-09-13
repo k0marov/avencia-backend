@@ -1,8 +1,7 @@
 package service
 
 import (
-	"fmt"
-
+	"github.com/AvenciaLab/avencia-backend/lib/config/configurable"
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
@@ -25,23 +24,23 @@ func NewWithdrawnUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUp
 	}
 }
 
-// TODO: move usage of IsWithdrawLimitRelevant from the limits feature to the WithdrawUpdateGetter, 
-// since if withdraw value is not relevant anymore, it should not only be ignored, but also reset to 0
-
 func NewWithdrawnUpdateGetter(getWithdraws store.WithdrawsGetter) withdrawnUpdateGetter {
 	return func(db db.DB, t transValues.Transaction) (core.Money, error) {
-		if t.Money.Amount.IsPos() {
-			return core.Money{}, fmt.Errorf("expected withdrawal; got deposit")
-		}
 		withdraws, err := getWithdraws(db, t.UserId)
 		if err != nil {
 			return core.Money{}, core_err.Rethrow("getting limits", err)
 		}
-		withdraw := t.Money.Amount.Neg()
-		newWithdrawn := withdraws[t.Money.Currency].Withdrawn.Add(withdraw)
+		newWithdraw := t.Money.Amount.Neg()
+		curWithdrawn := withdraws[t.Money.Currency] 
+		var resWithdraw core.MoneyAmount 
+		if configurable.IsWithdrawLimitRelevant(curWithdrawn.UpdatedAt) {
+			resWithdraw = curWithdrawn.Withdrawn.Add(newWithdraw)
+		} else {
+			resWithdraw = newWithdraw
+		}
 		return core.Money{
 			Currency: t.Money.Currency,
-			Amount:   newWithdrawn,
+			Amount:   resWithdraw,
 		}, nil
 	}
 }
