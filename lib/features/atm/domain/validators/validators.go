@@ -24,7 +24,6 @@ type MetaTransByCodeValidator = func(code string, wantType tValues.TransactionTy
 
 func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
 	return func(gotAtmSecret []byte) error {
-		fmt.Printf("got secret %v want secret %v", gotAtmSecret, trueATMSecret)
 		if subtle.ConstantTimeCompare(gotAtmSecret, trueATMSecret) == 0 {
 			return client_errors.InvalidATMSecret
 		}

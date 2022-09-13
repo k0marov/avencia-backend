@@ -36,7 +36,7 @@ func NewCodeParser(parseJWT jwt.Verifier) CodeParser {
 	return func(code string) (values.MetaTrans, error) {
 		claims, err := parseJWT(code) 
 		if err != nil {
-			return values.MetaTrans{}, core_err.Rethrow("parsing jwt", err)
+			return values.MetaTrans{}, client_errors.InvalidCode
 		}
 
 		tType, ok := claims[values.TransactionTypeClaim].(string) 
