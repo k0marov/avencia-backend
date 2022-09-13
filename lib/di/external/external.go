@@ -15,12 +15,17 @@ import (
 	"google.golang.org/api/option"
 )
 
+func removeEOF(contents []byte) []byte {
+	var eof = string([]byte{10})
+	return []byte(strings.TrimSuffix(string(contents), eof))
+}
+
 func readSecret(filepath string) []byte {
 	contents, err := os.ReadFile(filepath)
 	if err != nil {
 	  log.Fatalf("while reading the contents of the %v secret file: %v", filepath, err)	
 	}
-	return []byte(strings.TrimSpace(string(contents)))
+	return removeEOF(contents)
 }
 
 func initFirebase(config config.Config) *firebase.App {
