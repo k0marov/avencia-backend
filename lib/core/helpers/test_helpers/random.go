@@ -33,7 +33,7 @@ func RandomGeneratedCode() transValues.GeneratedCode {
 
 func RandomClientError() client_errors.ClientError {
 	return client_errors.ClientError{
-		DetailCode: RandomString(),
+		DisplayMessage: RandomString(),
 		HTTPCode:   400 + RandomInt(),
 	}
 }
