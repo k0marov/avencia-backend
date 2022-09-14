@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/AvenciaLab/avencia-api-contract/api"
-	"github.com/AvenciaLab/avencia-backend/lib/config/configurable"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/config/configurable"
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/core/jwt"

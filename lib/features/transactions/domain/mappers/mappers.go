@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
-	"github.com/AvenciaLab/avencia-backend/lib/config/configurable"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/config/configurable"
 	"github.com/AvenciaLab/avencia-backend/lib/core/jwt"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )

@@ -12,9 +12,6 @@ import (
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
-// TODO: refactor the lib directory
-
-// TODO: simplify or split this file - it's too big
 
 func TestLimitsGetter(t *testing.T) {
 	user := RandomString()

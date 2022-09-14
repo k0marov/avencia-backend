@@ -10,7 +10,7 @@ import (
 	"github.com/AvenciaLab/avencia-api-contract/api"
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/AvenciaLab/avencia-backend/lib/di"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/di"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 

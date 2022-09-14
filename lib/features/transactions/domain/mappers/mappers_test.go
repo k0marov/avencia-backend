@@ -5,7 +5,7 @@ import (
 	"testing/quick"
 	"time"
 
-	"github.com/AvenciaLab/avencia-backend/lib/config/configurable"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/config/configurable"
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/core/jwt"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/mappers"

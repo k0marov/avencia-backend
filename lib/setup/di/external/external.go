@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	firebase "firebase.google.com/go/v4"
-	"github.com/AvenciaLab/avencia-backend/lib/config"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/config"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db/foundationdb"
-	"github.com/AvenciaLab/avencia-backend/lib/di"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/di"
 	authStoreImpl "github.com/AvenciaLab/avencia-backend/lib/features/auth/store"
 	"github.com/apple/foundationdb/bindings/go/src/fdb"
 	"google.golang.org/api/option"

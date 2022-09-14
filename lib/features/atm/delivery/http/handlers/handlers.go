@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	apiRequests "github.com/AvenciaLab/avencia-backend/lib/api/api_requests"
-	apiResponses "github.com/AvenciaLab/avencia-backend/lib/api/api_responses"
+	apiRequests "github.com/AvenciaLab/avencia-backend/lib/setup/api/api_requests"
+	apiResponses "github.com/AvenciaLab/avencia-backend/lib/setup/api/api_responses"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/http_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/service_helpers"

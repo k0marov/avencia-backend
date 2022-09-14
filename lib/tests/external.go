@@ -8,7 +8,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/db/foundationdb"
 	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/general_helpers"
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/AvenciaLab/avencia-backend/lib/di"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/di"
 	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 )
 

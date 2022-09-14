@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/AvenciaLab/avencia-backend/lib/di"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/di"
 )
 
 // TODO: maybe stop testing the handlers layer in here, but just call services directly
