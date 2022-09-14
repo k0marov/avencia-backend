@@ -60,7 +60,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	jwtVerifier := jwt.NewVerifier(deps.JwtSecret)
 
 	// ===== WALLETS =====
-	updateBalance := storeImpl.NewBalanceUpdater(db.JsonUpdaterImpl[core.MoneyAmount])
+	updBal := storeImpl.NewBalanceUpdater(db.JsonUpdaterImpl[core.MoneyAmount])
 	getWallet := storeImpl.NewWalletGetter(db.JsonGetterImpl[walletEntities.Wallet])
 	getBalance := walletService.NewBalanceGetter(getWallet)
 
@@ -84,13 +84,15 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	getHistoryHandler := histHandlers.NewGetHistoryHandler(deps.TRunner, getHistory)
 
 	// ===== TRANSACTIONS =====
-	transValidator := tValidators.NewTransactionValidator(checkLimit, getBalance)
+  
+	transValidator := tValidators.NewTransactionValidator(checkLimit, tValidators.NewEnoughBalanceValidator(getBalance))
 	codeParser := mappers.NewCodeParser(jwtVerifier)
 	codeGenerator := mappers.NewCodeGenerator(jwtIssuer)
 
 	getTransId := tService.NewTransactionIdGetter(codeGenerator, mappers.NewTransIdGenerator())
 	getTrans := tService.NewTransactionGetter(mappers.NewTransIdParser(), codeParser)
-	transact := tService.NewTransactionFinalizer(transValidator, tService.NewTransactionPerformer(updateWithdrawn, storeTrans, updateBalance))
+	transPerformer := tService.NewTransactionPerformer(updateWithdrawn, storeTrans, tService.NewTransBalUpdater(updBal))
+	transact := tService.NewTransactionFinalizer(transValidator, transPerformer)
 	multiTransact := tService.NewMultiTransactionFinalizer(transact)
 
 	// TODO: write tests for the store layers
