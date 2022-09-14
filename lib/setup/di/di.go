@@ -37,8 +37,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-// TODO: write some integration tests (later)
-
 type ExternalDeps struct {
 	AtmSecret, JwtSecret []byte
 	Auth                 authStore.AuthFacade

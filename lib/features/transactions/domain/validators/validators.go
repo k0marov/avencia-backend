@@ -13,17 +13,20 @@ import (
 )
 
 type TransactionValidator = func(db db.DB, t values.Transaction) (curBalance core.MoneyAmount, err error)
+type enoughBalanceValidator = func(db db.DB, t values.Transaction) (curBalance core.MoneyAmount, err error)
 
-func NewTransactionValidator(checkLimits limits.LimitChecker, getBalance walletService.BalanceGetter) TransactionValidator {
+func NewTransactionValidator(checkLimits limits.LimitChecker, checkBalance enoughBalanceValidator) TransactionValidator {
 	return func(db db.DB, t values.Transaction) (curBalance core.MoneyAmount, err error) {
-		if err := checkLimits(db,t); err != nil {
+		if err := checkLimits(db, t); err != nil {
 			return core.NewMoneyAmount(0), err
 		}
 
+		return checkBalance(db, t)
+	}
+}
 
-		// TODO: move this block to a separate enoughBalanceValidator  
-
-		// ===== 
+func NewEnoughBalanceValidator(getBalance walletService.BalanceGetter) enoughBalanceValidator {
+	return func(db db.DB, t values.Transaction) (curBalance core.MoneyAmount, err error) {
 		bal, err := getBalance(db, t.UserId, t.Money.Currency)
 		if err != nil {
 			return core.NewMoneyAmount(0), core_err.Rethrow("getting current balance", err)
@@ -33,8 +36,6 @@ func NewTransactionValidator(checkLimits limits.LimitChecker, getBalance walletS
 				return core.NewMoneyAmount(0), client_errors.InsufficientFunds
 			}
 		}
-		// ===== 
-		
 		return bal, nil
 	}
 }
