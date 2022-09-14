@@ -9,7 +9,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/mappers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
-	walletStore "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/store"
+	"github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/store"
 )
 
 // TODO: having dots in a transactionId (since it is internally a JWT) may result in having dots in url query params, this may lead to bugs
@@ -65,9 +65,11 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform t
 	}
 }
 
-func NewTransactionPerformer(updateWithdrawn withdrawsService.WithdrawnUpdater, addHist histService.TransStorer, updBal walletStore.BalanceUpdater) transactionPerformer {
+type transBalUpdater = func(db db.DB, curBal core.MoneyAmount, t values.Transaction) error
+
+func NewTransactionPerformer(updWithdrawn withdrawsService.WithdrawnUpdater, addHist histService.TransStorer, updBal transBalUpdater) transactionPerformer {
 	return func(db db.DB, curBal core.MoneyAmount, t values.Transaction) error {
-		err := updateWithdrawn(db, t)
+		err := updWithdrawn(db, t)
 		if err != nil {
 			return core_err.Rethrow("updating withdrawn", err)
 		}
@@ -76,9 +78,17 @@ func NewTransactionPerformer(updateWithdrawn withdrawsService.WithdrawnUpdater, 
 			return core_err.Rethrow("adding trans to history", err)
 		}
 
+		return updBal(db, curBal, t)
+	}
+}
+
+func NewTransBalUpdater(updBal store.BalanceUpdater) transBalUpdater {
+	return func(db db.DB, curBal core.MoneyAmount, t values.Transaction) error {
 		return updBal(db, t.UserId, core.Money{
 			Currency: t.Money.Currency,
 			Amount:   curBal.Add(t.Money.Amount),
 		})
 	}
 }
+
+
