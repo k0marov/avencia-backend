@@ -22,7 +22,7 @@ func TestHistoryGetter(t *testing.T) {
 		_, err := service.NewHistoryGetter(getFromStore)(mockDB, userId)
 		AssertSomeError(t, err)
 	})
-	t.Run("happy case - should returned entries from store sorted by createdAt", func(t *testing.T) {
+	t.Run("happy case - should return entries from store sorted by createdAt", func(t *testing.T) {
 		entryNewest := entities.TransEntry{
 			Source:    RandomTransactionSource(),
 			Money:     RandomMoney(),

@@ -15,7 +15,10 @@ type WithdrawnUpdater = func(db.DB, transValues.Transaction) error
 type withdrawnUpdateGetter = func(db.DB, transValues.Transaction) (core.Money, error)
 
 func NewWithdrawnUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUpdater) WithdrawnUpdater {
-	return func(db db.DB, t transValues.Transaction) error {
+	return func(db db.DB, t transValues.Transaction) error { 
+		if t.Money.Amount.IsPos() { // it is a deposit - no update needed
+			return nil
+		}
 		newWithdrawn, err := getValue(db, t)
 		if err != nil {
 			return core_err.Rethrow("getting new withdrawn value", err)
@@ -30,18 +33,16 @@ func NewWithdrawnUpdateGetter(getWithdraws store.WithdrawsGetter) withdrawnUpdat
 		if err != nil {
 			return core.Money{}, core_err.Rethrow("getting limits", err)
 		}
-		newWithdraw := t.Money.Amount.Neg()
 		curWithdrawn := withdraws[t.Money.Currency] 
-		var resWithdraw core.MoneyAmount 
+		newWithdraw := t.Money.Amount.Neg()
+    
+    result := core.Money{Currency: t.Money.Currency}
 		if configurable.IsWithdrawLimitRelevant(curWithdrawn.UpdatedAt) {
-			resWithdraw = curWithdrawn.Withdrawn.Add(newWithdraw)
+			result.Amount = curWithdrawn.Withdrawn.Add(newWithdraw)
 		} else {
-			resWithdraw = newWithdraw
+			result.Amount = newWithdraw
 		}
-		return core.Money{
-			Currency: t.Money.Currency,
-			Amount:   resWithdraw,
-		}, nil
+		return result, nil
 	}
 }
 

@@ -96,6 +96,13 @@ func TestWithdrawnUpdater(t *testing.T) {
 	}
 	newWithdrawn := RandomPositiveMoney()
 	mockDB := NewStubDB()
+  t.Run("early return case - the provided transaction is not a withdrawal", func(t *testing.T) {
+  	trans := transValues.Transaction{
+  		Money: RandomPositiveMoney(),
+  	}
+  	err := service.NewWithdrawnUpdater(nil, nil)(mockDB, trans) 
+  	AssertNoError(t, err)
+  })
 	t.Run("error case - getting new value throws", func(t *testing.T) {
 		getValue := func(gotDB db.DB, gotTrans transValues.Transaction) (core.Money, error) {
 			if gotDB == mockDB && gotTrans == trans {

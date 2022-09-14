@@ -20,7 +20,7 @@ func TestBalanceGetter(t *testing.T) {
 		_, err := service.NewBalanceGetter(getWallet)(mockDB, userId, RandomCurrency())
 		AssertSomeError(t, err)
 	})
-	t.Run("should return 0 if there is no such currency in wallets", func(t *testing.T) {
+	t.Run("should return 0 if there is no such currency in the wallet", func(t *testing.T) {
 		wallet := entities.Wallet{}
 		getWallet := func(gotDB db.DB, user string) (entities.Wallet, error) {
 			if gotDB == mockDB && user == userId {

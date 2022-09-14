@@ -67,14 +67,11 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform t
 
 func NewTransactionPerformer(updateWithdrawn withdrawsService.WithdrawnUpdater, addHist histService.TransStorer, updBal walletStore.BalanceUpdater) transactionPerformer {
 	return func(db db.DB, curBal core.MoneyAmount, t values.Transaction) error {
-		// TODO: maybe move this check inside updateWithdrawn
-		if t.Money.Amount.IsNeg() {
-			err := updateWithdrawn(db, t)
-			if err != nil {
-				return core_err.Rethrow("updating withdrawn", err)
-			}
+		err := updateWithdrawn(db, t)
+		if err != nil {
+			return core_err.Rethrow("updating withdrawn", err)
 		}
-		err := addHist(db, t) 
+		err = addHist(db, t) 
 		if err != nil {
 			return core_err.Rethrow("adding trans to history", err)
 		}

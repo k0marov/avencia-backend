@@ -6,7 +6,6 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
-	withdrawsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/service"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
@@ -101,37 +100,25 @@ func TestTransactionFinalizer(t *testing.T) {
 	})
 }
 
-func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount) {
+func TestTransactionPerformer(t *testing.T) {
 	mockDB := NewStubDB() 
-	curBalance := core.NewMoneyAmount(100)
+	curBalance := RandomPosMoneyAmount()
+	trans := RandomTransactionData()
+	wantNewBal := curBalance.Add(trans.Money.Amount)
 
-	trans := values.Transaction{
-		Source: RandomTransactionSource(),
-		UserId: RandomString(),
-		Money: core.Money{
-			Currency: RandomCurrency(),
-			Amount:   transAmount,
-		},
+	updateWithdrawn := func(db.DB, values.Transaction) error {
+		return nil
 	}
-
-	wantNewBal := curBalance.Add(transAmount)
-
-	var updateWithdrawn withdrawsService.WithdrawnUpdater
-	if transAmount.IsNeg() {
-		updateWithdrawn = func(db.DB, values.Transaction) error {
-			return nil
-		}
-		t.Run("updating withdrawn throws", func(t *testing.T) {
-			updateWithdrawn := func(gotDB db.DB, gotTrans values.Transaction) error {
-				if gotDB == mockDB && gotTrans == trans {
-					return RandomError()
-				}
-				panic("unexpected")
+	t.Run("updating withdrawn throws", func(t *testing.T) {
+		updateWithdrawn := func(gotDB db.DB, gotTrans values.Transaction) error {
+			if gotDB == mockDB && gotTrans == trans {
+				return RandomError()
 			}
-			err := service.NewTransactionPerformer(updateWithdrawn, nil, nil)(mockDB, curBalance, trans)
-			AssertSomeError(t, err)
-		})
-	}
+			panic("unexpected")
+		}
+		err := service.NewTransactionPerformer(updateWithdrawn, nil, nil)(mockDB, curBalance, trans)
+		AssertSomeError(t, err)
+	})
 
 	addHist := func(gotDB db.DB, gotTrans values.Transaction) error {
 		if gotDB == mockDB && gotTrans == trans {
@@ -167,14 +154,5 @@ func testTransactionPerfomerForAmount(t *testing.T, transAmount core.MoneyAmount
 	t.Run("happy case", func(t *testing.T) {
 		err := service.NewTransactionPerformer(updateWithdrawn, addHist, updBal)(mockDB, curBalance, trans)
 		AssertNoError(t, err)
-	})
-}
-
-func TestTransactionPerformer(t *testing.T) {
-	t.Run("deposit", func(t *testing.T) {
-		testTransactionPerfomerForAmount(t, RandomPosMoneyAmount())
-	})
-	t.Run("withdrawal", func(t *testing.T) {
-		testTransactionPerfomerForAmount(t, RandomNegMoneyAmount())
 	})
 }
