@@ -9,6 +9,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
+	wModels "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/models"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 	transferValues "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
 	userEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
@@ -132,6 +133,25 @@ func RandomMoney() core.Money {
 
 func RandomLimits() limits.Limits {
 	return limits.Limits{RandomCurrency(): RandomLimit(), RandomCurrency(): RandomLimit()}
+}
+func RandomWithdraws() wModels.Withdraws {
+	return wModels.Withdraws{
+		RandomCurrency(): RandomWithdrawVal(), 
+		RandomCurrency(): RandomWithdrawVal(), 
+		RandomCurrency(): RandomWithdrawVal(), 
+	}
+
+}
+func RandomWithdrawVal() wModels.WithdrawVal {
+	return wModels.WithdrawVal{
+		Withdrawn: RandomPosMoneyAmount(),
+		UpdatedAt: RandomTime(),
+	}
+
+}
+
+func RandomTime() time.Time {
+	return TimeWithYear(2000+RandomInt())
 }
 
 func RandomLimit() limits.Limit {

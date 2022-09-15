@@ -5,6 +5,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/models"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/store"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
@@ -24,25 +25,15 @@ type LimitsGetter = func(db db.DB, userId string) (Limits, error)
 
 
 
+type limitsComputer = func(withdraws models.Withdraws) (Limits, error)
 // TODO: simplify 
-func NewLimitsGetter(getWithdraws store.WithdrawsGetter, limitedCurrencies map[core.Currency]core.MoneyAmount) LimitsGetter {
+func NewLimitsGetter(getWithdraws store.WithdrawsGetter, compute limitsComputer) LimitsGetter {
 	return func(db db.DB, userId string) (Limits, error) {
-		withdrawns, err := getWithdraws(db, userId)
+		withdraws, err := getWithdraws(db, userId)
 		if err != nil {
 			return Limits{}, core_err.Rethrow("getting current withdrawns", err)
 		}
-		limits := Limits{}
-		for curr, maxLimit := range limitedCurrencies {
-			w := withdrawns[curr].Withdrawn
-			if !w.IsSet() {
-				w = core.NewMoneyAmount(0)
-			}
-			limits[curr] = Limit{
-				Withdrawn: w,
-				Max:       maxLimit,
-			}
-		}
-		return limits, nil
+		return compute(withdraws)
 	}
 }
 
@@ -64,3 +55,19 @@ func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
 	}
 }
 
+func NewLimitsComputer(limitedCurrencies map[core.Currency]core.MoneyAmount) limitsComputer {
+	return func(withdraws models.Withdraws) (Limits, error) {
+		limits := Limits{} 
+		for curr, maxLimit := range limitedCurrencies {
+			w := withdraws[curr].Withdrawn
+			if !w.IsSet() {
+				w = core.NewMoneyAmount(0)
+			}
+			limits[curr] = Limit{
+				Withdrawn: w,
+				Max:       maxLimit,
+			}
+		}
+		return limits, nil
+	}
+}

@@ -96,8 +96,6 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	transact := tService.NewTransactionFinalizer(transValidator, transPerformer)
 	multiTransact := tService.NewMultiTransactionFinalizer(transact)
 
-	// TODO: write tests for the store layers
-
 	// ===== ATM =====
 	atmSecretValidator := atmValidators.NewATMSecretValidator(deps.AtmSecret)
 	metaTransByIdValidator := atmValidators.NewMetaTransByIdValidator(getTrans)

@@ -21,7 +21,7 @@ func IsNotFound(err error) bool {
 	return ok 
 }
 
-// TODO: actually this can be a performance bottleneck because of the type conversion
+// actually this can be a performance bottleneck because of the type conversion
 func Rethrow(description string, err error) error {
 	clientErr, ok := err.(client_errors.ClientError)
 	if ok {
