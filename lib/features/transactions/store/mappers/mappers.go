@@ -3,18 +3,15 @@ package mappers
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
-	"github.com/AvenciaLab/avencia-backend/lib/setup/config/configurable"
 	"github.com/AvenciaLab/avencia-backend/lib/core/jwt"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/config/configurable"
 )
 
 type CodeGenerator = func(values.MetaTrans) (values.GeneratedCode, error)
 type CodeParser = func(code string) (values.MetaTrans, error) 
 
-type TransIdGenerator = func(code string)  (transId string)
-type TransIdParser = func(transactionId string) (code string)
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(trans values.MetaTrans) (values.GeneratedCode, error) {
@@ -31,6 +28,7 @@ func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	}
 }
 
+// TODO: somehow simplify this using struct tags and maybe JSON Marshalling
 func NewCodeParser(parseJWT jwt.Verifier) CodeParser {
 	return func(code string) (values.MetaTrans, error) {
 		claims, err := parseJWT(code) 
@@ -51,18 +49,5 @@ func NewCodeParser(parseJWT jwt.Verifier) CodeParser {
 			Type: values.TransactionType(tType),
 			UserId:    userId,
 		}, nil
-	}
-}
-
-func NewTransIdGenerator() TransIdGenerator {
-	return func(transCode string) string {
-		uuid, _ := uuid.NewUUID()
-		return uuid.String() + transCode
-	}
-}
-
-func NewTransIdParser() TransIdParser {
-	return func(transactionId string) string {
-		return transactionId[36:]
 	}
 }

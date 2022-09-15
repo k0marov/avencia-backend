@@ -7,6 +7,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/validators"
 	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
 	tService "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
+	tStore "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/store"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
@@ -17,13 +18,13 @@ type DepositFinalizer = func(db.DB, values.DepositData) error
 type WithdrawalFinalizer = func(db.DB, values.WithdrawalData) error
 
 // TODO: add validation that there is no active transaction for this user
-func NewATMTransactionCreator(validate validators.MetaTransByCodeValidator, createTrans tService.TransactionIdGetter) ATMTransactionCreator {
+func NewATMTransactionCreator(validate validators.MetaTransByCodeValidator, create tStore.TransactionCreator) ATMTransactionCreator {
 	return func(nt values.TransFromQRCode) (values.CreatedTransaction, error) {
 		metaTrans, err := validate(nt.QRCodeText, nt.Type)
 		if err != nil {
 			return values.CreatedTransaction{}, err
 		}
-		transId, err := createTrans(metaTrans)
+		transId, err := create(metaTrans)
 		if err != nil {
 			return values.CreatedTransaction{}, core_err.Rethrow("getting the transaction id", err)
 		}

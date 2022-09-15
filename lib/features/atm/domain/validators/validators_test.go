@@ -123,5 +123,8 @@ func TestMetaTransValidator(t *testing.T) {
 	})
 }
 
+func TestTransIdValidator(t *testing.T) {
+    
+}
 
 

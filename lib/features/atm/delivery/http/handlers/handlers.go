@@ -3,14 +3,14 @@ package handlers
 import (
 	"net/http"
 
-	apiRequests "github.com/AvenciaLab/avencia-backend/lib/setup/api/api_requests"
-	apiResponses "github.com/AvenciaLab/avencia-backend/lib/setup/api/api_responses"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/http_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/service_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/service"
 	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/validators"
-	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/mappers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/store/mappers"
+	apiRequests "github.com/AvenciaLab/avencia-backend/lib/setup/api/api_requests"
+	apiResponses "github.com/AvenciaLab/avencia-backend/lib/setup/api/api_responses"
 )
 
 func NewGenerateQRCodeHandler(generate mappers.CodeGenerator) http.HandlerFunc {
