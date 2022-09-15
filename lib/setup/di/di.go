@@ -70,7 +70,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	storeUpdateWithdrawn := withdrawsStore.NewWithdrawUpdater(db.JsonUpdaterImpl[models.WithdrawVal])
 	getUpdatedWithdrawn := withdrawsService.NewWithdrawnUpdateGetter(storeGetWithdraws)
 	updateWithdrawn := withdrawsService.NewWithdrawnUpdater(getUpdatedWithdrawn, storeUpdateWithdrawn)
-	getLimits := limits.NewLimitsGetter(storeGetWithdraws, configurable.LimitedCurrencies)
+	getLimits := limits.NewLimitsGetter(storeGetWithdraws, limits.NewLimitsComputer(configurable.LimitedCurrencies))
 	checkLimit := limits.NewLimitChecker(getLimits)
 
 	// ===== USERS =====

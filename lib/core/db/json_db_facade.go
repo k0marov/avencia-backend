@@ -55,9 +55,9 @@ func JsonUpdaterImpl[T any](db DB, path []string, key string, val T) error {
 	return JsonSetterImpl(db, path, current)
 }
 
-func parseDoc[T any](doc []byte) (T, error) {
+func parseDoc[T any](doc *[]byte) (T, error) {
 	var res T
-	err := json.Unmarshal(doc, &res)
+	err := json.Unmarshal(*doc, &res)
 	if err != nil {
 		return res, core_err.Rethrow("unmarshalling doc", err)
 	}

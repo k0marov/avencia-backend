@@ -42,7 +42,7 @@ func (t transactionalDB) Get(path []string) (db.Document, error) {
   }
   return db.Document{
   	Path: path,
-  	Data: data,
+  	Data: &data,
   }, nil
 }
 
@@ -56,7 +56,7 @@ func (t transactionalDB) GetCollection(path []string) (db.Documents, error) {
 	for _, kv := range kvs {
 		docs = append(docs, db.Document{
 			Path: path,
-			Data: kv.Value,
+			Data: &kv.Value,
 		})
 	}
 	return docs, nil

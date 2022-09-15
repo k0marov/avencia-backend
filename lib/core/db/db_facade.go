@@ -23,7 +23,7 @@ type dbInternal interface {
 
 type Document struct {
 	Path []string
-	Data []byte // TODO: maybe store this as a pointer
+	Data *[]byte 
 }
 
 type Documents []Document
