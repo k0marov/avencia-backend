@@ -25,7 +25,6 @@ func NewWithdrawsGetter(getDoc db.JsonGetter[models.Withdraws]) store.WithdrawsG
 
 }
 
-// TODO: consider adding more context info to every core_err.Rethrow()
 
 func NewWithdrawUpdater(updDoc db.JsonUpdater[models.WithdrawVal]) store.WithdrawUpdater {
 	return func(db db.DB, userId string, withdrawn core.Money) error {

@@ -34,4 +34,3 @@ func NewDBNoResultService[INP any](runT db.TransRunner, service func(db.DB, INP)
   }
 }
 
-// TODO: maybe rename all package names to camel case since it is idiomatic

@@ -19,14 +19,12 @@ type Limit struct {
 }
 
 // LimitChecker returns a client error if rejected; simple error if server error; nil if accepted
-// LimitChecker does not update the withdrawn value, see WithdrawUpdater
 type LimitChecker = func(db db.DB, wantTransaction transValues.Transaction) error
 type LimitsGetter = func(db db.DB, userId string) (Limits, error)
 
 
 
 type limitsComputer = func(withdraws models.Withdraws) (Limits, error)
-// TODO: simplify 
 func NewLimitsGetter(getWithdraws store.WithdrawsGetter, compute limitsComputer) LimitsGetter {
 	return func(db db.DB, userId string) (Limits, error) {
 		withdraws, err := getWithdraws(db, userId)

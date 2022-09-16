@@ -3,15 +3,19 @@ package integration_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/AvenciaLab/avencia-api-contract/api"
 	"github.com/AvenciaLab/avencia-backend/lib/core"
+	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/general_helpers"
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/AvenciaLab/avencia-backend/lib/setup/di"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/config/configurable"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/di"
 )
 
 // apiDeps is for simplicity a global variable instead of an argument to every helper
@@ -30,7 +34,8 @@ func initApiDeps(deps di.APIDeps, atmAuthSecr, jwtSecr string) {
 
 func deposit(t *testing.T, user MockUser, dep core.Money) {
 	code := generateQRCode(t, user, values.Deposit)
-	// TODO: verify code.ExpiresAt
+	verifyExpiresAt(t, code.ExpiresAt)
+
 	tId := startTrans(t, values.Deposit, code.TransactionCode)
 	if dep.Amount.Num() > 1 {
 		insertBanknote(t, tId, api.Banknote{
@@ -40,8 +45,10 @@ func deposit(t *testing.T, user MockUser, dep core.Money) {
 	}
 	finishDeposit(t, tId, dep)
 }
+
 func withdraw(t *testing.T, user MockUser, w core.Money) {
 	code := generateQRCode(t, user, values.Withdrawal)
+	verifyExpiresAt(t, code.ExpiresAt)
 	tId := startTrans(t, values.Withdrawal, code.TransactionCode)
 	checkWithdrawal(t, tId, w)
 	if w.Amount.Neg().Num() > 1 {
@@ -196,5 +203,14 @@ func finishWithdrawal(t testing.TB, tId string, w core.Money) {
 	handler := apiDeps.AtmAuthMW(apiDeps.Handlers.Transaction.Withdrawal.OnComplete)
 	handler.ServeHTTP(response, request)
 	AssertStatusCode(t, response, http.StatusOK)
+}
+
+func verifyExpiresAt(t testing.TB, gotExpAt int64) {
+	t.Helper() 
+	expAt, err := general_helpers.DecodeTime(gotExpAt)
+	AssertNoError(t, err)
+	wantExpAt := time.Now().Add(configurable.TransactionExpDuration)
+	timeEqual := TimeAlmostEqual(expAt, wantExpAt) 
+	Assert(t, timeEqual, true, fmt.Sprintf("expires at %v is equal to %v", expAt, wantExpAt))
 }
 

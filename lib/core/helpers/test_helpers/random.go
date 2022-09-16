@@ -129,7 +129,6 @@ func RandomMoney() core.Money {
 	}
 }
 
-// TODO: maybe use less packages (i.e have only one namespace for every feature)
 
 func RandomLimits() limits.Limits {
 	return limits.Limits{RandomCurrency(): RandomLimit(), RandomCurrency(): RandomLimit()}

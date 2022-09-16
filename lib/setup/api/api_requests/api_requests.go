@@ -78,9 +78,8 @@ func DispensedBanknoteDecoder(_ *http.Request, b api.BanknoteDispensionRequest) 
 	}, nil
 }
 
-// TODO: get rid of using type x = func() and replace it with type x func() everywhere
 
-// TODO: move this to some core package
+// TODO 1: move this to some core package
 func moneyDecoder(m api.Money) core.Money {
 	return core.Money{
 		Currency: core.Currency(m.Currency),

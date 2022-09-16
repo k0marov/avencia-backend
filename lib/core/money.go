@@ -1,7 +1,5 @@
 package core
 
-// TODO: limit available currencies
-
 type Currency string // string for now
 
 type Money struct {

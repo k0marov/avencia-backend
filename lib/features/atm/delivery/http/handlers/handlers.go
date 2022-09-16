@@ -57,7 +57,6 @@ func NewBanknoteAcceptedHandler(runT db.TransRunner, validateBanknote validators
 	return NewBanknoteEscrowHandler(runT, validateBanknote)
 }
 
-// TODO: maybe use context.Context instead of db.DB for the services
 
 func NewPreBanknoteDispensedHandler(runT db.TransRunner, validateBanknote validators.DispensedBanknoteValidator) http.HandlerFunc {
 	return http_helpers.NewHandler(
