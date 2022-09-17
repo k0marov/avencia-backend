@@ -21,15 +21,6 @@ type WithdrawalValidator = func(db.DB, values.WithdrawalData) error
 type MetaTransByIdValidator = func(transId string, wantType tValues.TransactionType) (tValues.MetaTrans, error)
 type MetaTransByCodeValidator = func(code string, wantType tValues.TransactionType) (tValues.MetaTrans, error)
 
-// transIdValidator just validates that the transaction with the passed in id is still valid
-type transIdValidator = func(id string) (bool, error)
-
-func NewTransIdValidator(tStore.TransactionGetter) transIdValidator {
-	return func(id string) (bool, error) {
-		panic("unimplemented")
-	}
-}
-
 func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
 	return func(gotAtmSecret []byte) error {
 		if subtle.ConstantTimeCompare(gotAtmSecret, trueATMSecret) == 0 {
@@ -40,16 +31,18 @@ func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
 }
 
 // TODO: implement some checks
-func NewInsertedBanknoteValidator() InsertedBanknoteValidator {
+func NewInsertedBanknoteValidator(validate MetaTransByIdValidator) InsertedBanknoteValidator {
 	return func(db db.DB, ib values.InsertedBanknote) error {
-		return nil
+		_, err := validate(ib.TransactionId, tValues.Deposit)
+		return err
 	}
 }
 
 // TODO: implement some checks
-func NewDispensedBanknoteValidator() DispensedBanknoteValidator {
-	return func(db db.DB, dp values.DispensedBanknote) error {
-		return nil
+func NewDispensedBanknoteValidator(validate MetaTransByIdValidator) DispensedBanknoteValidator {
+	return func(db db.DB, banknote values.DispensedBanknote) error {
+		_, err := validate(banknote.TransactionId, tValues.Withdrawal) 
+		return err
 	}
 }
 

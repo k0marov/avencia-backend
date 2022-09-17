@@ -123,8 +123,32 @@ func TestMetaTransValidator(t *testing.T) {
 	})
 }
 
-func TestTransIdValidator(t *testing.T) {
-    
+func TestInsertedBanknoteValidator(t *testing.T) {
+	ib := values.InsertedBanknote{
+		TransactionId: RandomString(),
+	}
+	baseBanknoteValidatorTest(t, ib.TransactionId, tValues.Deposit, func(validate validators.MetaTransByIdValidator) error {
+    return validators.NewInsertedBanknoteValidator(validate)(NewStubDB(), ib)
+	})
+}
+func TestDispensedBanknoteValidator(t *testing.T) {
+	db := values.DispensedBanknote{
+		TransactionId: RandomString(),
+	}
+	baseBanknoteValidatorTest(t, db.TransactionId, tValues.Withdrawal, func(validate validators.MetaTransByIdValidator) error {
+    return validators.NewDispensedBanknoteValidator(validate)(NewStubDB(), db)
+	})
+}
+func baseBanknoteValidatorTest(t *testing.T, tId string, tType tValues.TransactionType, act func(validators.MetaTransByIdValidator) error) {
+	tErr := RandomError()
+	validate := func(gotId string, gotType tValues.TransactionType) (tValues.MetaTrans, error) {
+    if gotId == tId && gotType == tType {
+    	return RandomMetaTrans(), tErr
+    }
+    panic("unexpected")
+	}
+	gotErr := act(validate)
+	AssertError(t, gotErr, tErr)
 }
 
 

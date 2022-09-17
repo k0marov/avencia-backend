@@ -101,8 +101,8 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	metaTransByIdValidator := atmValidators.NewMetaTransByIdValidator(getTrans)
 	metaTransFromCodeValidator := atmValidators.NewMetaTransFromCodeValidator(codeParser)
 	validateWithdrawal := atmValidators.NewWithdrawalValidator(metaTransByIdValidator, transValidator)
-	insertedBanknoteValidator := atmValidators.NewInsertedBanknoteValidator()
-	dispensedBanknoteValidator := atmValidators.NewDispensedBanknoteValidator()
+	insertedBanknoteValidator := atmValidators.NewInsertedBanknoteValidator(metaTransByIdValidator)
+	dispensedBanknoteValidator := atmValidators.NewDispensedBanknoteValidator(metaTransByIdValidator)
 
 	createAtmTrans := atmService.NewATMTransactionCreator(metaTransFromCodeValidator, createTrans)
 	cancelTrans := atmService.NewTransactionCanceler()
