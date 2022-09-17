@@ -16,7 +16,9 @@ func CreatedTransactionEncoder(t atmValues.CreatedTransaction) api.OnTransaction
 		TransactionId: t.Id,
 		Customer: api.CustomerResponse{
 			Id:        t.UserInfo.User.Id,
-			Email:     t.UserInfo.User.Email, 
+			Email:     t.UserInfo.User.Email,
+			Mobile:    t.UserInfo.User.PhoneNum,
+			FirstName: t.UserInfo.User.DisplayName,
 		},
 	}
 }

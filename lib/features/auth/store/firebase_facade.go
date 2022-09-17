@@ -42,7 +42,7 @@ func (a FBAuthFacade) Get(userId string) (entities.DetailedUser, error) {
 	return entities.DetailedUser{
 		Id:          userId,
 		Email:       user.Email,
-		Phone:       user.PhoneNumber,
+		PhoneNum:       user.PhoneNumber,
 		DisplayName: user.DisplayName,
 	}, nil
 }

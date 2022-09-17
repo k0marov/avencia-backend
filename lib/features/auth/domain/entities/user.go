@@ -7,6 +7,6 @@ type User struct {
 type DetailedUser struct {
   Id string 
   Email string 
-  Phone string 
+  PhoneNum string 
   DisplayName string 
 }

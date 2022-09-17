@@ -25,6 +25,12 @@ var (
   jwtSecret string 
 )
 
+func RandomMockUser() MockUser {
+	return MockUser{
+		User:  RandomDetailedUser(),
+		Token: RandomString(),
+	}
+}
 
 func initApiDeps(deps di.APIDeps, atmAuthSecr, jwtSecr string) {
 	apiDeps = deps 
@@ -36,7 +42,7 @@ func deposit(t *testing.T, user MockUser, dep core.Money) {
 	code := generateQRCode(t, user, values.Deposit)
 	verifyExpiresAt(t, code.ExpiresAt)
 
-	tId := startTrans(t, values.Deposit, code.TransactionCode)
+	tId := startTrans(t, values.Deposit, code.TransactionCode, user)
 	if dep.Amount.Num() > 1 {
 		insertBanknote(t, tId, api.Banknote{
 			Currency:     string(dep.Currency),
@@ -49,7 +55,7 @@ func deposit(t *testing.T, user MockUser, dep core.Money) {
 func withdraw(t *testing.T, user MockUser, w core.Money) {
 	code := generateQRCode(t, user, values.Withdrawal)
 	verifyExpiresAt(t, code.ExpiresAt)
-	tId := startTrans(t, values.Withdrawal, code.TransactionCode)
+	tId := startTrans(t, values.Withdrawal, code.TransactionCode, user)
 	checkWithdrawal(t, tId, w)
 	if w.Amount.Neg().Num() > 1 {
 		dispenseBanknote(t, tId, api.Banknote{
@@ -112,7 +118,7 @@ func generateQRCode(t testing.TB, user MockUser, transType values.TransactionTyp
 	AssertNoError(t, err)
 	return codeResp
 }
-func startTrans(t testing.TB, tType values.TransactionType, qrText string) (tId string) {
+func startTrans(t testing.TB, tType values.TransactionType, qrText string, wantUser MockUser) (tId string) {
 	t.Helper()
 	reqBody := api.OnTransactionCreateRequest{
 		TransactionReference: "asdf",
@@ -129,6 +135,11 @@ func startTrans(t testing.TB, tType values.TransactionType, qrText string) (tId 
 	var jsonResp api.OnTransactionCreateResponse
 	err := json.Unmarshal(response.Body.Bytes(), &jsonResp)
 	AssertNoError(t, err)
+	Assert(t, jsonResp.Customer.Id, wantUser.User.Id, "customer's id")
+	Assert(t, jsonResp.Customer.Email, wantUser.User.Email, "customer's email")
+	Assert(t, jsonResp.Customer.Mobile, wantUser.User.PhoneNum, "customer's phone number")
+	Assert(t, jsonResp.Customer.FirstName, wantUser.User.DisplayName, "customer's first name")
+
 	return jsonResp.TransactionId
 }
 func insertBanknote(t testing.TB, tId string, b api.Banknote) {

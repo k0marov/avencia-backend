@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
-	"github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 	"github.com/AvenciaLab/avencia-backend/lib/setup/di"
 )
 
@@ -16,27 +14,9 @@ const (
 
 func TestIntegration(t *testing.T) {
 	users := []MockUser{
-		{
-			User: entities.DetailedUser{
-				Id:    "sam",
-				Email: "sam@skomarov.com",
-			},
-			Token: RandomString(),
-		},
-		{
-			entities.DetailedUser{
-				Id:    "john",
-				Email: "test@example.com",
-			},
-			RandomString(),
-		},
-		{
-			entities.DetailedUser{
-				Id: "bill",
-				Email: "test2@example.com",
-			},
-			RandomString(),
-		},
+		RandomMockUser(), 
+		RandomMockUser(), 
+		RandomMockUser(),
 	}
 	extDeps, cancelDBTrans := prepareExternalDeps(t, users)
 	defer cancelDBTrans()

@@ -68,7 +68,7 @@ func RandomDetailedUser() authEntities.DetailedUser {
 	return authEntities.DetailedUser{
 		Id:          RandomString(),
 		Email:       RandomString(),
-		Phone:       RandomString(),
+		PhoneNum:       RandomString(),
 		DisplayName: RandomString(),
 	}
 }
