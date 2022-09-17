@@ -30,7 +30,6 @@ func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
 	}
 }
 
-// TODO: implement some checks
 func NewInsertedBanknoteValidator(validate MetaTransByIdValidator) InsertedBanknoteValidator {
 	return func(db db.DB, ib values.InsertedBanknote) error {
 		_, err := validate(ib.TransactionId, tValues.Deposit)
@@ -38,7 +37,6 @@ func NewInsertedBanknoteValidator(validate MetaTransByIdValidator) InsertedBankn
 	}
 }
 
-// TODO: implement some checks
 func NewDispensedBanknoteValidator(validate MetaTransByIdValidator) DispensedBanknoteValidator {
 	return func(db db.DB, banknote values.DispensedBanknote) error {
 		_, err := validate(banknote.TransactionId, tValues.Withdrawal) 

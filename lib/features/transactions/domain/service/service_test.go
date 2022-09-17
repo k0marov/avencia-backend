@@ -10,6 +10,31 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
+func TestMultiTransactionFinalizer(t *testing.T) {
+	ts := []values.Transaction{
+		RandomTransactionData(), 
+		RandomTransactionData(), 
+		RandomTransactionData(), 
+	}
+	t.Run("error case - one of the transactions fails", func(t *testing.T) {
+    finalize := func(db.DB, values.Transaction) error {
+    	return RandomError()
+    }
+    err := service.NewMultiTransactionFinalizer(finalize)(NewStubDB(), ts) 
+    AssertSomeError(t, err)
+	})
+	t.Run("happy case", func(t *testing.T) {
+		called := []values.Transaction{} 
+		finalize := func(gotDB db.DB, gotT values.Transaction) error {
+			called = append(called, gotT)
+			return nil
+		}
+		err := service.NewMultiTransactionFinalizer(finalize)(NewStubDB(), ts)
+		AssertNoError(t, err)
+		Assert(t, called, ts, "array of finalized transactions")
+	})
+}
+
 func TestTransactionFinalizer(t *testing.T) {
 	transaction := RandomTransactionData()
 	mockDB := NewStubDB()
@@ -45,10 +70,6 @@ func TestTransactionPerformer(t *testing.T) {
 	mockDB := NewStubDB()
 	curBalance := RandomPosMoneyAmount()
 	trans := RandomTransactionData()
-	// wantNewBal := core.Money{
-	// 	Currency: trans.Money.Currency,
-	// 	Amount:   curBalance.Add(trans.Money.Amount),
-	// }
 
 	updateWithdrawn := func(db.DB, values.Transaction) error {
 		return nil

@@ -19,7 +19,6 @@ type TransactionFinalizer = func(db db.DB, t values.Transaction) error
 type transactionPerformer = func(db db.DB, curBalance core.MoneyAmount, t values.Transaction) error
 
 
-// TODO: not tested 
 func NewMultiTransactionFinalizer(finalize TransactionFinalizer) MultiTransactionFinalizer {
 	return func(db db.DB, tList []values.Transaction) error {
 		for _, t := range tList {

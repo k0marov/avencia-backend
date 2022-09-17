@@ -79,7 +79,6 @@ func DispensedBanknoteDecoder(_ *http.Request, b api.BanknoteDispensionRequest) 
 }
 
 
-// TODO 1: move this to some core package
 func moneyDecoder(m api.Money) core.Money {
 	return core.Money{
 		Currency: core.Currency(m.Currency),
