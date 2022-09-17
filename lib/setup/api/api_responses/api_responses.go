@@ -14,6 +14,10 @@ import (
 func CreatedTransactionEncoder(t atmValues.CreatedTransaction) api.OnTransactionCreateResponse {
 	return api.OnTransactionCreateResponse{
 		TransactionId: t.Id,
+		Customer: api.CustomerResponse{
+			Id:        t.UserInfo.Id,
+			Email:     "", // TODO: add email to UserInfo
+		},
 	}
 }
 

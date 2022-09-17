@@ -10,9 +10,11 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/service"
 	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	uEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
 )
 
 func TestATMTransactionCreator(t *testing.T) {
+	mockDB := NewStubDB()
 	newTrans := values.TransFromQRCode{
 		Type:       RandomTransactionType(),
 		QRCodeText: RandomString(),
@@ -22,6 +24,9 @@ func TestATMTransactionCreator(t *testing.T) {
 		UserId: RandomString(),
 	}
 	id := RandomString()
+	uInfo := RandomUserInfo()
+
+
 	validate := func(string, tValues.TransactionType) (tValues.MetaTrans, error) {
 		return metaTrans, nil
 	}
@@ -33,29 +38,47 @@ func TestATMTransactionCreator(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		_, err := service.NewATMTransactionCreator(validate, nil)(newTrans)
+		_, err := service.NewATMTransactionCreator(validate, nil, nil)(mockDB, newTrans)
 		AssertError(t, err, tErr)
 	})
 
-	getId := func(tValues.MetaTrans) (string, error) {
-		return id, nil
+	getUser := func(db.DB, string) (uEntities.UserInfo, error) {
+    return uInfo, nil 
 	}
 
-	t.Run("error case - getting transaction id throws", func(t *testing.T) {
-		getId := func(trans tValues.MetaTrans) (string, error) {
+	t.Run("error case - getting user info throws", func(t *testing.T) {
+		getUser := func(gotDB db.DB, userId string) (uEntities.UserInfo, error) {
+			if gotDB == mockDB && userId ==  metaTrans.UserId {
+				return uEntities.UserInfo{}, RandomError()
+			}
+			panic("unexpected")
+		}
+		_, err := service.NewATMTransactionCreator(validate, getUser, nil)(mockDB, newTrans)
+		AssertSomeError(t, err)
+	})
+
+	create := func(tValues.MetaTrans) (string, error) {
+		return id, nil
+	}
+	t.Run("error case - creating transaction throws", func(t *testing.T) {
+		create := func(trans tValues.MetaTrans) (string, error) {
 			if trans == metaTrans {
 				return "", RandomError()
 			}
 			panic("unexpected")
 		}
-		_, err := service.NewATMTransactionCreator(validate, getId)(newTrans)
+		_, err := service.NewATMTransactionCreator(validate, getUser, create)(mockDB, newTrans)
 		AssertSomeError(t, err)
 	})
 
 	t.Run("happy case", func(t *testing.T) {
-		created, err := service.NewATMTransactionCreator(validate, getId)(newTrans)
+		created, err := service.NewATMTransactionCreator(validate, getUser, create)(mockDB, newTrans)
 		AssertNoError(t, err)
-		Assert(t, created.Id, id, "returned id")
+		wantCreated := values.CreatedTransaction{
+			Id:       id,
+			UserInfo: uInfo,
+		}
+		Assert(t, created, wantCreated, "returned trans info")
 	})
 }
 

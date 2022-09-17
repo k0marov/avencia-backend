@@ -21,10 +21,10 @@ func NewGenerateQRCodeHandler(generate mappers.CodeGenerator) http.HandlerFunc {
   ) 
 }
 
-func NewCreateTransactionHandler(create service.ATMTransactionCreator) http.HandlerFunc {
+func NewCreateTransactionHandler(runT db.TransRunner, create service.ATMTransactionCreator) http.HandlerFunc {
 	return http_helpers.NewHandler(
 		apiRequests.TransDecoder,
-		create,
+	  service_helpers.NewDBTransService(runT, create),
 		apiResponses.CreatedTransactionEncoder,
 	)
 }

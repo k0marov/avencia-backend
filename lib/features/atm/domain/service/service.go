@@ -9,26 +9,35 @@ import (
 	tService "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
 	tStore "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/store"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	uService "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/service"
 )
 
-type ATMTransactionCreator = func(values.TransFromQRCode) (values.CreatedTransaction, error)
+type ATMTransactionCreator = func(db.DB, values.TransFromQRCode) (values.CreatedTransaction, error)
 type TransactionCanceler = func(id string) error
 
 type DepositFinalizer = func(db.DB, values.DepositData) error
 type WithdrawalFinalizer = func(db.DB, values.WithdrawalData) error
 
 // TODO: add validation that there is no active transaction for this user
-func NewATMTransactionCreator(validate validators.MetaTransByCodeValidator, create tStore.TransactionCreator) ATMTransactionCreator {
-	return func(nt values.TransFromQRCode) (values.CreatedTransaction, error) {
-		metaTrans, err := validate(nt.QRCodeText, nt.Type)
+func NewATMTransactionCreator(
+	val validators.MetaTransByCodeValidator, 
+	getUser uService.UserInfoGetter,
+	create tStore.TransactionCreator, 
+) ATMTransactionCreator {
+	return func(db db.DB, nt values.TransFromQRCode) (values.CreatedTransaction, error) {
+		metaTrans, err := val(nt.QRCodeText, nt.Type)
 		if err != nil {
 			return values.CreatedTransaction{}, err
+		}
+		user, err := getUser(db, metaTrans.UserId)
+		if err != nil {
+			return values.CreatedTransaction{}, core_err.Rethrow("getting user info", err)
 		}
 		transId, err := create(metaTrans)
 		if err != nil {
 			return values.CreatedTransaction{}, core_err.Rethrow("getting the transaction id", err)
 		}
-		return values.CreatedTransaction{Id: transId}, nil
+		return values.CreatedTransaction{Id: transId, UserInfo: user}, nil
 	}
 }
 

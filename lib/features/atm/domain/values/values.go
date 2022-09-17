@@ -3,17 +3,17 @@ package values
 import (
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	userEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
 )
 
 type TransFromQRCode struct {
-	Type tValues.TransactionType 
-	QRCodeText string 
+	Type       tValues.TransactionType
+	QRCodeText string
 }
 
 type CreatedTransaction struct {
-	Id string
-	// TODO: add returning user info from the onCreate endpoint
-	// UserInfo entities.UserInfo
+	Id       string
+	UserInfo userEntities.UserInfo
 }
 
 type InsertedBanknote struct {

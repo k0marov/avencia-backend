@@ -104,7 +104,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	insertedBanknoteValidator := atmValidators.NewInsertedBanknoteValidator(metaTransByIdValidator)
 	dispensedBanknoteValidator := atmValidators.NewDispensedBanknoteValidator(metaTransByIdValidator)
 
-	createAtmTrans := atmService.NewATMTransactionCreator(metaTransFromCodeValidator, createTrans)
+	createAtmTrans := atmService.NewATMTransactionCreator(metaTransFromCodeValidator, getUserInfo, createTrans)
 	cancelTrans := atmService.NewTransactionCanceler()
 	generalFinalizer := atmService.NewGeneralFinalizer(metaTransByIdValidator, multiTransact)
 	finalizeDeposit := atmService.NewDepositFinalizer(generalFinalizer)
@@ -113,7 +113,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	atmAuthMiddleware := atmMiddleware.NewATMAuthMiddleware(atmSecretValidator)
 
 	genCodeHandler := atmHandlers.NewGenerateQRCodeHandler(codeGenerator)
-	createTransHandler := atmHandlers.NewCreateTransactionHandler(createAtmTrans)
+	createTransHandler := atmHandlers.NewCreateTransactionHandler(deps.TRunner, createAtmTrans)
 	onCancelHandler := atmHandlers.NewCancelTransactionHandler(cancelTrans)
 	validateWithdrawalHandler := atmHandlers.NewWithdrawalValidationHandler(deps.TRunner, validateWithdrawal)
 	completeDepositHandler := atmHandlers.NewCompleteDepostHandler(deps.TRunner, finalizeDeposit)

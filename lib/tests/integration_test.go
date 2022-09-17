@@ -8,8 +8,6 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/setup/di"
 )
 
-// TODO: maybe stop testing the handlers layer in here, but just call services directly
-
 const (
 	AtmAuthSecret = "atm_test"
 	JwtSecret     = "jwt_test"
