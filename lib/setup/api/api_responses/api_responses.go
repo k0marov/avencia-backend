@@ -15,8 +15,8 @@ func CreatedTransactionEncoder(t atmValues.CreatedTransaction) api.OnTransaction
 	return api.OnTransactionCreateResponse{
 		TransactionId: t.Id,
 		Customer: api.CustomerResponse{
-			Id:        t.UserInfo.Id,
-			Email:     "", // TODO: add email to UserInfo
+			Id:        t.UserInfo.User.Id,
+			Email:     t.UserInfo.User.Email, 
 		},
 	}
 }
@@ -31,7 +31,7 @@ func TransCodeEncoder(code transValues.GeneratedCode) api.GenTransCodeResponse {
 
 func UserInfoEncoder(u userEntities.UserInfo) api.UserInfoResponse {
 	return api.UserInfoResponse{
-		Id:     u.Id,
+		Id:     u.User.Id,
 		Wallet: WalletEncoder(u.Wallet),
 		Limits: LimitsEncoder(u.Limits),
 	}

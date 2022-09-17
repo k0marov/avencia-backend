@@ -64,8 +64,16 @@ func RandomAPIMoney() api.Money {
 func RandomUser() authEntities.User {
 	return authEntities.User{Id: RandomString()}
 }
+func RandomDetailedUser() authEntities.DetailedUser {
+	return authEntities.DetailedUser{
+		Id:          RandomString(),
+		Email:       RandomString(),
+		Phone:       RandomString(),
+		DisplayName: RandomString(),
+	}
+}
 func RandomUserInfo() userEntities.UserInfo {
-	return userEntities.UserInfo{Id: RandomString(), Wallet: RandomWallet(), Limits: RandomLimits()}
+	return userEntities.UserInfo{User: RandomDetailedUser(), Wallet: RandomWallet(), Limits: RandomLimits()}
 }
 func RandomTransactionData() transValues.Transaction {
 	return transValues.Transaction{

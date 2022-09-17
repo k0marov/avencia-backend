@@ -33,3 +33,16 @@ func (a FBAuthFacade) UserByEmail(email string) (entities.User, error) {
 	}
 	return entities.User{Id: user.UID}, nil
 }
+
+func (a FBAuthFacade) Get(userId string) (entities.DetailedUser, error) {
+	user, err := a.client.GetUser(context.Background(), userId)
+	if err != nil {
+		return entities.DetailedUser{}, core_err.Rethrow("getting user info from firebase", err)
+	}
+	return entities.DetailedUser{
+		Id:          userId,
+		Email:       user.Email,
+		Phone:       user.PhoneNumber,
+		DisplayName: user.DisplayName,
+	}, nil
+}

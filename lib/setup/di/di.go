@@ -74,7 +74,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	checkLimit := limits.NewLimitChecker(getLimits)
 
 	// ===== USERS =====
-	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits)
+	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits, deps.Auth.Get)
 	getUserInfoHandler := userHandlers.NewGetUserInfoHandler(deps.TRunner, getUserInfo)
 
 	// ===== HISTORIES =====

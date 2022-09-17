@@ -7,9 +7,11 @@ type TokenVerifier = func(token string) (userId string)
 
 type UserByEmailGetter = func(email string) (entities.User, error)
 
+type UserGetter = func(userId string) (entities.DetailedUser, error)
+
 // AuthFacade Verify returns "" if the provided token is invalid
 type AuthFacade interface {
 	Verify(token string) (userId string)
 	UserByEmail(email string) (entities.User, error)
+	Get(userId string) (entities.DetailedUser, error)
 }
-
