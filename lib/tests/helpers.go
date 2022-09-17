@@ -61,7 +61,7 @@ func withdraw(t *testing.T, user MockUser, w core.Money) {
 }
 func transfer(t *testing.T, from, to MockUser, w core.Money) {
 	reqBody := api.TransferRequest{
-		RecipientIdentifier: to.Email,
+		RecipientIdentifier: to.User.Email,
 		Money: api.Money{
 			Currency: string(w.Currency),
 			Amount:   w.Amount.Num(),

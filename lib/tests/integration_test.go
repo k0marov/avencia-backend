@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
+	"github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 	"github.com/AvenciaLab/avencia-backend/lib/setup/di"
 )
 
@@ -16,19 +17,25 @@ const (
 func TestIntegration(t *testing.T) {
 	users := []MockUser{
 		{
+			User: entities.DetailedUser{
+				Id:    "sam",
+				Email: "sam@skomarov.com",
+			},
 			Token: RandomString(),
-			Id:    "sam",
-			Email: "sam@skomarov.com",
 		},
 		{
+			entities.DetailedUser{
+				Id:    "john",
+				Email: "test@example.com",
+			},
 			RandomString(),
-			"john",
-			"test@example.com",
 		},
 		{
+			entities.DetailedUser{
+				Id: "bill",
+				Email: "test2@example.com",
+			},
 			RandomString(),
-			"bill",
-			"test2@example.com",
 		},
 	}
 	extDeps, cancelDBTrans := prepareExternalDeps(t, users)
@@ -62,4 +69,3 @@ func TestIntegration(t *testing.T) {
 	fmt.Println("assert that balance of user2 is 5000 RUB")
 	assertBalance(t, users[1], newMoney("RUB", 5000))
 }
-
