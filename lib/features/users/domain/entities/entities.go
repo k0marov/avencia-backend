@@ -11,3 +11,4 @@ type UserInfo struct {
 	Wallet walletEntities.Wallet
 	Limits limits.Limits
 }
+
