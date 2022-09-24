@@ -11,7 +11,7 @@ func NewStubDB() db.DB {
 }
 
 type stubDB struct {
-	randId int
+	randId int // for usage in tests: checking that the proper db handler is forwarded
 }
 
 func newStubDB() stubDB {
@@ -29,6 +29,9 @@ func (s stubDB) GetCollection(path []string) (db.Documents, error) {
 
 func (s stubDB) Set(path []string, data []byte) error {
 	return errors.New("unimplemented")
+}
+func (s stubDB) Delete(path []string) error {
+	return errors.New("unimplemented") 
 }
 
 func (s stubDB) RunTransaction(func(db.DB) error) error {

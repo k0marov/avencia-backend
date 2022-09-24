@@ -9,7 +9,7 @@ import (
 )
 
 type Entity interface {
-  Id() string
+  // Id() string
 }
 
 type Creator[E Entity] func(e E) error
