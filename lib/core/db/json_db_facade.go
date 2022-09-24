@@ -10,6 +10,7 @@ type JsonGetter[T any] func(db DB, path []string) (T, error)
 type JsonColGetter[T any] func(db DB, path []string) ([]T, error)
 type JsonSetter[T any] func(db DB, path []string, val T) error
 type JsonUpdater[T any] func(db DB, path []string, key string, val T) error
+type JsonMultiUpdater[T any] func(db DB, path []string, newVal T) error
 
 func JsonGetterImpl[T any](db DB, path []string) (res T, err error) {
 	d, err := db.db.Get(path)
@@ -52,6 +53,31 @@ func JsonUpdaterImpl[T any](db DB, path []string, key string, val T) error {
 	}
 	current[key] = val
 
+	return JsonSetterImpl(db, path, current)
+}
+
+// JsonMultiUpdaterImpl could be a performance bottleneck 
+// since newVal is marshalled and then unmarshalled again.
+func JsonMultiUpdaterImpl[T any](db DB, path []string, newVal T) error {
+	current, err := JsonGetterImpl[map[string]any](db, path)
+	if err != nil && !core_err.IsNotFound(err){
+		return core_err.Rethrow("getting current doc", err)
+	}
+	if current == nil {
+		current = map[string]any{} 
+	}
+	newValBin, err := json.Marshal(newVal)
+	if err != nil {
+		return core_err.Rethrow("marhsalling the new value", err)
+	}
+	var newValMap map[string]any 
+	err = json.Unmarshal(newValBin, &newValMap)
+	if err != nil {
+		return core_err.Rethrow("while unmarshalling the new value to get a map", err)
+	}
+	for key, value := range newValMap {
+		current[key] = value
+	}
 	return JsonSetterImpl(db, path, current)
 }
 

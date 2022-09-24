@@ -77,3 +77,8 @@ func (t transactionalDB) Set(path []string, data []byte) error {
   t.t.Set(pathToKey(path), []byte(data))
   return nil 
 }
+
+func (t transactionalDB) Delete(path []string) error {
+	t.t.Clear(pathToKey(path)) 
+	return nil
+}

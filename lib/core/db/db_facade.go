@@ -18,6 +18,7 @@ type dbInternal interface {
 	Get(path []string) (Document, error)
 	GetCollection(path []string) (Documents, error)
 	Set(path []string, data []byte) error
+	Delete(path []string) error
 	RunTransaction(func(DB) error) error
 }
 
@@ -28,18 +29,12 @@ type Document struct {
 
 type Documents []Document
 
-// Getter should return core_err.NotFound if not found
-type Getter = func(db DB, path []string) (Document, error)
-type CollectionGetter = func(db DB, colPath []string) (Documents, error)
-type Setter = func(db DB, path []string, data map[string]any) error
 
-func GetterImpl(db DB, path []string) (Document, error) {
-	return db.db.Get(path)
-}
-func CollectionGetterImpl(db DB, colPath []string) (Documents, error) {
-	return db.db.GetCollection(colPath)
+type Deleter = func(db DB, path []string) error
+
+func DeleterImpl(db DB, path []string) error {
+	return db.db.Delete(path)
 }
 
-func SetterImpl(db DB, path []string, data []byte) error {
-	return db.db.Set(path, data)
-}
+
+
