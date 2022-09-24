@@ -29,6 +29,7 @@ import (
 	transHandlers "github.com/AvenciaLab/avencia-backend/lib/features/transfers/delivery/http/handlers"
 	transService "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/service"
 	transValidators "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/validators"
+	"github.com/AvenciaLab/avencia-backend/lib/features/users"
 	userHandlers "github.com/AvenciaLab/avencia-backend/lib/features/users/delivery/http/handlers"
 	userService "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/service"
 	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
@@ -76,6 +77,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	// ===== USERS =====
 	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits, deps.Auth.Get)
 	getUserInfoHandler := userHandlers.NewGetUserInfoHandler(deps.TRunner, getUserInfo)
+	userDetailsCrudEndpoint := users.NewUserDetailsCRUDEndpoint(deps.SimpleDB)
 
 	// ===== HISTORIES =====
 	storeGetHistory := histStore.NewHistoryGetter(db.JsonColGetterImpl[histEntities.TransEntry])
@@ -152,6 +154,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 				GetUserInfo: getUserInfoHandler,
 				Transfer:    transferHandler,
 				GetHistory:  getHistoryHandler,
+				UserDetails: userDetailsCrudEndpoint,
 			},
 		},
 		AuthMW:    authMW,

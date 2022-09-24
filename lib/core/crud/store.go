@@ -18,11 +18,11 @@ type Reader[E Entity] func(id string) (E, error)
 type Deleter[E Entity] func(id string) error
 
 type Store[E Entity] struct {
-	db db.TDB
+	db db.SDB
 	pathPrefix []string
 }
 
-func NewCRUDStore[E Entity](db db.TDB, pathPrefix []string) Store[E] {
+func NewCRUDStore[E Entity](db db.SDB, pathPrefix []string) Store[E] {
   return Store[E]{db: db, pathPrefix: pathPrefix}
 }
 
