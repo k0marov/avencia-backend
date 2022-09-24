@@ -1,6 +1,8 @@
 package crud
 
 import (
+	"net/http"
+
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 )
@@ -12,6 +14,7 @@ type Service[E Entity] struct {
 	Store         Store[E]
 	IdPolicy      IdPolicy
 	IgnoreNotFound bool 
+	CreateAllowed, ReadAllowed, UpdateAllowed, DeleteAllowed bool
 	ReadP, WriteP PermissionPolicy
 }
 
@@ -40,12 +43,18 @@ type RequestData struct {
 }
 
 func (s Service[E]) Create(rd RequestData, e E) error {
+	if !s.CreateAllowed {
+		return client_errors.ClientError{HTTPCode: http.StatusMethodNotAllowed}
+	}
 	if err := s.WriteP(rd); err != nil {
 		return err
 	}
 	return s.Store.Create(e)
 }
 func (s Service[E]) Read(rd RequestData) (e E, err error) {
+	if !s.ReadAllowed {
+		return e, client_errors.ClientError{HTTPCode: http.StatusMethodNotAllowed}
+	}
 	if err := s.ReadP(rd); err != nil {
 		return e, err
 	}
@@ -60,6 +69,9 @@ func (s Service[E]) Read(rd RequestData) (e E, err error) {
 	return e, nil
 }
 func (s Service[E]) Update(rd RequestData, e E) error {
+	if !s.UpdateAllowed {
+		return client_errors.ClientError{HTTPCode: http.StatusMethodNotAllowed}
+	}
 	if err := s.WriteP(rd); err != nil {
 		return err
 	}
@@ -70,6 +82,9 @@ func (s Service[E]) Update(rd RequestData, e E) error {
 	return s.Store.Update(id, e)
 }
 func (s Service[E]) Delete(rd RequestData) error {
+	if !s.DeleteAllowed {
+		return client_errors.ClientError{HTTPCode: http.StatusMethodNotAllowed}
+	}
 	if err := s.WriteP(rd); err != nil {
 		return err
 	}
