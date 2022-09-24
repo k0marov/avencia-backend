@@ -26,12 +26,12 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 	userId := RandomString()
 	mockDB := NewStubDB()
 
-	getWithdraws := func(db.DB, string) (models.Withdraws, error) {
+	getWithdraws := func(db.TDB, string) (models.Withdraws, error) {
 		return tWithdraws, nil
 	}
 
 	t.Run("error case - getting withdraws throws", func(t *testing.T) {
-		getWithdraws := func(gotDB db.DB, user string) (models.Withdraws, error) {
+		getWithdraws := func(gotDB db.TDB, user string) (models.Withdraws, error) {
 			if gotDB == mockDB && user == userId {
 				return nil, RandomError()
 			}
@@ -104,7 +104,7 @@ func TestWithdrawnUpdater(t *testing.T) {
   	AssertNoError(t, err)
   })
 	t.Run("error case - getting new value throws", func(t *testing.T) {
-		getValue := func(gotDB db.DB, gotTrans transValues.Transaction) (core.Money, error) {
+		getValue := func(gotDB db.TDB, gotTrans transValues.Transaction) (core.Money, error) {
 			if gotDB == mockDB && gotTrans == trans {
 				return core.Money{}, RandomError()
 			}
@@ -115,10 +115,10 @@ func TestWithdrawnUpdater(t *testing.T) {
 	})
 	t.Run("forward case", func(t *testing.T) {
 		tErr := RandomError()
-		getValue := func(db.DB, transValues.Transaction) (core.Money, error) {
+		getValue := func(db.TDB, transValues.Transaction) (core.Money, error) {
 			return newWithdrawn, nil
 		}
-		update := func(gotDB db.DB, userId string, value core.Money) error {
+		update := func(gotDB db.TDB, userId string, value core.Money) error {
 			if gotDB == mockDB && userId == trans.UserId && value == newWithdrawn {
 				return tErr
 			}

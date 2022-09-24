@@ -12,11 +12,11 @@ import (
 	walletService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 )
 
-type TransactionValidator = func(db db.DB, t values.Transaction) (curBalance core.MoneyAmount, err error)
-type enoughBalanceValidator = func(db db.DB, t values.Transaction) (curBalance core.MoneyAmount, err error)
+type TransactionValidator = func(db db.TDB, t values.Transaction) (curBalance core.MoneyAmount, err error)
+type enoughBalanceValidator = func(db db.TDB, t values.Transaction) (curBalance core.MoneyAmount, err error)
 
 func NewTransactionValidator(checkLimits limits.LimitChecker, checkBalance enoughBalanceValidator) TransactionValidator {
-	return func(db db.DB, t values.Transaction) (curBalance core.MoneyAmount, err error) {
+	return func(db db.TDB, t values.Transaction) (curBalance core.MoneyAmount, err error) {
 		if err := checkLimits(db, t); err != nil {
 			return core.NewMoneyAmount(0), err
 		}
@@ -26,7 +26,7 @@ func NewTransactionValidator(checkLimits limits.LimitChecker, checkBalance enoug
 }
 
 func NewEnoughBalanceValidator(getBalance walletService.BalanceGetter) enoughBalanceValidator {
-	return func(db db.DB, t values.Transaction) (curBalance core.MoneyAmount, err error) {
+	return func(db db.TDB, t values.Transaction) (curBalance core.MoneyAmount, err error) {
 		bal, err := getBalance(db, t.UserId, t.Money.Currency)
 		if err != nil {
 			return core.NewMoneyAmount(0), core_err.Rethrow("getting current balance", err)

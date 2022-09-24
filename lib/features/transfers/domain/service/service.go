@@ -12,13 +12,13 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
 )
 
-type Transferer = func(transactionalDB db.DB, t values.RawTransfer) error
+type Transferer = func(transactionalDB db.TDB, t values.RawTransfer) error
 
 type transferConverter = func(values.RawTransfer) (values.Transfer, error)
-type transferPerformer = func(transactionalDB db.DB, t values.Transfer) error
+type transferPerformer = func(transactionalDB db.TDB, t values.Transfer) error
 
 func NewTransferer(convert transferConverter, validate validators.TransferValidator, perform transferPerformer) Transferer {
-	return func(db db.DB, raw values.RawTransfer) error {
+	return func(db db.TDB, raw values.RawTransfer) error {
 		t, err := convert(raw)
 		if err != nil {
 			return core_err.Rethrow("converting raw transfer data to a transfer", err)
@@ -32,7 +32,7 @@ func NewTransferer(convert transferConverter, validate validators.TransferValida
 }
 
 func NewTransferPerformer(transact tService.MultiTransactionFinalizer) transferPerformer {
-	return func(db db.DB, t values.Transfer) error {
+	return func(db db.TDB, t values.Transfer) error {
 		withdrawTrans := transValues.Transaction{
 			Source: transValues.TransSource{
 				Type:   transValues.Transfer,

@@ -9,7 +9,7 @@ import (
 )
 
 func NewWalletGetter(getDoc db.JsonGetter[entities.Wallet]) store.WalletGetter {
-	return func(db db.DB, userId string) (entities.Wallet, error) {
+	return func(db db.TDB, userId string) (entities.Wallet, error) {
 		path := []string{"wallets", userId}
 		wallet, err := getDoc(db, path)
 		if core_err.IsNotFound(err) { 
@@ -23,7 +23,7 @@ func NewWalletGetter(getDoc db.JsonGetter[entities.Wallet]) store.WalletGetter {
 }
 
 func NewBalanceUpdater(updDoc db.JsonUpdater[core.MoneyAmount]) store.BalanceUpdater {
-	return func(db db.DB, userId string, newBalance core.Money) error {
+	return func(db db.TDB, userId string, newBalance core.Money) error {
 		path := []string{"wallets", userId}
 		return updDoc(db, path, string(newBalance.Currency), newBalance.Amount)
 	}

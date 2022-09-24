@@ -49,7 +49,7 @@ func TestTransferer(t *testing.T) {
 
 	t.Run("happy case - forward to perform", func(t *testing.T) {
 		err := RandomError()
-		perform := func(gotDB db.DB, t values.Transfer) error {
+		perform := func(gotDB db.TDB, t values.Transfer) error {
 			if gotDB == mockDB && t == transf {
 				return err
 			}
@@ -97,7 +97,7 @@ func TestTransferPerformer(t *testing.T) {
 	
 	t.Run("forward case", func(t *testing.T) {
 		tErr := RandomError()
-		transact := func(gotDB db.DB, tList []transValues.Transaction) error {
+		transact := func(gotDB db.TDB, tList []transValues.Transaction) error {
 			if gotDB == mockDB && reflect.DeepEqual(tList, []transValues.Transaction{withdrawTrans, depositTrans}) {
 				return tErr
 			}

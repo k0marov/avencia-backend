@@ -19,11 +19,11 @@ func TestUserInfoGetter(t *testing.T) {
 	tLimits := RandomLimits()
 	mockDB := NewStubDB()
 
-	getWallet := func(db.DB, string) (walletEntities.Wallet, error) {
+	getWallet := func(db.TDB, string) (walletEntities.Wallet, error) {
 		return wallet, nil
 	}
 	t.Run("error case - getting wallets throws", func(t *testing.T) {
-		getWallet := func(gotDB db.DB, user string) (walletEntities.Wallet, error) {
+		getWallet := func(gotDB db.TDB, user string) (walletEntities.Wallet, error) {
 			if gotDB == mockDB && user == userId {
 				return walletEntities.Wallet{}, RandomError()
 			}
@@ -32,11 +32,11 @@ func TestUserInfoGetter(t *testing.T) {
 		_, err := service.NewUserInfoGetter(getWallet, nil, nil)(mockDB, userId)
 		AssertSomeError(t, err)
 	})
-	getLimits := func(db.DB, string) (limits.Limits, error) {
+	getLimits := func(db.TDB, string) (limits.Limits, error) {
 		return tLimits, nil
 	}
 	t.Run("error case - getting limits throws", func(t *testing.T) {
-		getLimits := func(gotDB db.DB, user string) (limits.Limits, error) {
+		getLimits := func(gotDB db.TDB, user string) (limits.Limits, error) {
 			if gotDB == mockDB && user == userId {
 				return limits.Limits{}, RandomError()
 			}

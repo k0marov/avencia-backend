@@ -22,12 +22,12 @@ func TestTransactionValidator(t *testing.T) {
 			Amount:   core.NewMoneyAmount(50.0),
 		},
 	}
-	checkLimit := func(db.DB, values.Transaction) error {
+	checkLimit := func(db.TDB, values.Transaction) error {
 		return nil
 	}
 	t.Run("error case - limit checker throws", func(t *testing.T) {
 		err := RandomError()
-		checkLimit := func(gotDB db.DB, t values.Transaction) error {
+		checkLimit := func(gotDB db.TDB, t values.Transaction) error {
 			if gotDB == mockDB && t == trans {
 				return err
 			}
@@ -38,7 +38,7 @@ func TestTransactionValidator(t *testing.T) {
 	})
 	t.Run("forward case - forward to enoughBalanceValidator", func(t *testing.T) {
 		tErr := RandomError()
-    enoughBalanceValidator := func(gotDB db.DB, gotTrans values.Transaction) (core.MoneyAmount, error) {
+    enoughBalanceValidator := func(gotDB db.TDB, gotTrans values.Transaction) (core.MoneyAmount, error) {
     	if gotDB == mockDB && gotTrans == trans {
     		return tBalance, tErr
     	}
@@ -63,7 +63,7 @@ func TestEnoughBalanceValidator(t *testing.T) {
 	notEnoughBalance := core.NewMoneyAmount(30) 
 	enoughBalance := core.NewMoneyAmount(100) 
 	t.Run("error case - getting balance throws", func(t *testing.T) {
-		getBalance := func(gotDB db.DB, userId string, currency core.Currency) (core.MoneyAmount, error) {
+		getBalance := func(gotDB db.TDB, userId string, currency core.Currency) (core.MoneyAmount, error) {
 			if gotDB == mockDB && userId == trans.UserId && currency == trans.Money.Currency {
 				return core.MoneyAmount{}, RandomError()
 			}
@@ -73,14 +73,14 @@ func TestEnoughBalanceValidator(t *testing.T) {
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - insufficient funds", func(t *testing.T) {
-		getBalance := func(db.DB, string, core.Currency) (core.MoneyAmount, error) {
+		getBalance := func(db.TDB, string, core.Currency) (core.MoneyAmount, error) {
 			return notEnoughBalance, nil
 		}
 		_, err := validators.NewEnoughBalanceValidator(getBalance)(mockDB, trans)
 		AssertError(t, err, client_errors.InsufficientFunds)
 	})
 	t.Run("happy case", func(t *testing.T) {
-		getBalance := func(gotDB db.DB, userId string, currency core.Currency) (core.MoneyAmount, error) {
+		getBalance := func(gotDB db.TDB, userId string, currency core.Currency) (core.MoneyAmount, error) {
 			return enoughBalance, nil
 		}
 		bal, err := validators.NewEnoughBalanceValidator(getBalance)(mockDB, trans)

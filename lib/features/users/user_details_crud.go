@@ -7,7 +7,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 )
 
-func NewUserDetailsCRUDEndpoint(simpleDB db.DB) api.Endpoint {
+func NewUserDetailsCRUDEndpoint(simpleDB db.TDB) api.Endpoint {
 	store := crud.NewCRUDStore[api.DetailedUser](simpleDB, []string{"users_details"})
 	service := crud.Service[api.DetailedUser]{
 		Store: store,

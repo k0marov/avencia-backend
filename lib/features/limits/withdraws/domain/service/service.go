@@ -10,12 +10,12 @@ import (
 )
 
 
-type WithdrawnUpdater = func(db.DB, transValues.Transaction) error
+type WithdrawnUpdater = func(db.TDB, transValues.Transaction) error
 
-type withdrawnUpdateGetter = func(db.DB, transValues.Transaction) (core.Money, error)
+type withdrawnUpdateGetter = func(db.TDB, transValues.Transaction) (core.Money, error)
 
 func NewWithdrawnUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUpdater) WithdrawnUpdater {
-	return func(db db.DB, t transValues.Transaction) error { 
+	return func(db db.TDB, t transValues.Transaction) error { 
 		if t.Money.Amount.IsPos() { // it is a deposit - no update needed
 			return nil
 		}
@@ -28,7 +28,7 @@ func NewWithdrawnUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUp
 }
 
 func NewWithdrawnUpdateGetter(getWithdraws store.WithdrawsGetter) withdrawnUpdateGetter {
-	return func(db db.DB, t transValues.Transaction) (core.Money, error) {
+	return func(db db.TDB, t transValues.Transaction) (core.Money, error) {
 		withdraws, err := getWithdraws(db, t.UserId)
 		if err != nil {
 			return core.Money{}, core_err.Rethrow("getting limits", err)

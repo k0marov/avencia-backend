@@ -19,14 +19,14 @@ type Limit struct {
 }
 
 // LimitChecker returns a client error if rejected; simple error if server error; nil if accepted
-type LimitChecker = func(db db.DB, wantTransaction transValues.Transaction) error
-type LimitsGetter = func(db db.DB, userId string) (Limits, error)
+type LimitChecker = func(db db.TDB, wantTransaction transValues.Transaction) error
+type LimitsGetter = func(db db.TDB, userId string) (Limits, error)
 
 
 
 type limitsComputer = func(withdraws models.Withdraws) (Limits, error)
 func NewLimitsGetter(getWithdraws store.WithdrawsGetter, compute limitsComputer) LimitsGetter {
-	return func(db db.DB, userId string) (Limits, error) {
+	return func(db db.TDB, userId string) (Limits, error) {
 		withdraws, err := getWithdraws(db, userId)
 		if err != nil {
 			return Limits{}, core_err.Rethrow("getting current withdrawns", err)
@@ -36,7 +36,7 @@ func NewLimitsGetter(getWithdraws store.WithdrawsGetter, compute limitsComputer)
 }
 
 func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
-	return func(db db.DB, t transValues.Transaction) error {
+	return func(db db.TDB, t transValues.Transaction) error {
 		if t.Money.Amount.IsPos() { // it's a deposit
 			return nil
 		}

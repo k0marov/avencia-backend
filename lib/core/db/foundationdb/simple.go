@@ -2,15 +2,14 @@ package foundationdb
 
 import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
-	"github.com/apple/foundationdb/bindings/go/src/fdb"
 )
 
 type simpleDB struct {
-  fdb fdb.Database
+	runTrans db.TransRunner
 }
 
-func NewSimpleDB(fdb fdb.Database) simpleDB {
-  return simpleDB{fdb: fdb}
+func NewSimpleDB(runTrans db.TransRunner) simpleDB {
+  return simpleDB{runTrans: runTrans}
 }
 
 // Since in foundationdb everything must happen inside a transaction, 
@@ -19,7 +18,7 @@ func NewSimpleDB(fdb fdb.Database) simpleDB {
 
 func (s simpleDB) Get(path []string) (db.Document, error) {
   var doc db.Document
-  err := NewTransactionRunner(s.fdb)(func(dbHandle db.DB) error {
+  err := s.runTrans(func(dbHandle db.TDB) error {
     var err error
     doc, err = db.GetterImpl(dbHandle, path)
     return err
@@ -28,7 +27,7 @@ func (s simpleDB) Get(path []string) (db.Document, error) {
 }
 func (s simpleDB) GetCollection(path []string) (db.Documents, error) {
   var docs db.Documents
-  err := NewTransactionRunner(s.fdb)(func(dbHandle db.DB) error {
+  err := s.runTrans(func(dbHandle db.TDB) error {
     var err error
     docs, err = db.ColGetterImpl(dbHandle, path)
     return err
@@ -36,12 +35,12 @@ func (s simpleDB) GetCollection(path []string) (db.Documents, error) {
   return docs, err
 }
 func (s simpleDB) Set(path []string, data []byte) error {
-  return NewTransactionRunner(s.fdb)(func(dbHandle db.DB) error {
+  return s.runTrans(func(dbHandle db.TDB) error {
     return db.SetterImpl(dbHandle, path, data)
   })
 }
 func (s simpleDB) Delete(path []string) error {
-  return NewTransactionRunner(s.fdb)(func(dbHandle db.DB) error {
+  return s.runTrans(func(dbHandle db.TDB) error {
     return db.DeleterImpl(dbHandle, path)
   })
 }

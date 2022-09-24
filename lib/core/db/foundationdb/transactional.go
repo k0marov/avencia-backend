@@ -17,10 +17,10 @@ type FoundationDB interface {
 
 // NewTransactionRunner( fDB can be a fdb.Database instance)
 func NewTransactionRunner(fDB FoundationDB) db.TransRunner {
-	return func(perform func(db.DB) error) error {
+	return func(perform func(db.TDB) error) error {
     _, err := fDB.Transact(func(t fdb.Transaction) (interface{}, error) {
       tDB := transactionalDB{t: t}
-      err := perform(db.NewDB(tDB))
+      err := perform(tDB)
       return nil, err
     })
     return err
@@ -72,11 +72,11 @@ func (t transactionalDB) Delete(path []string) error {
 	return nil
 }
 
-func (t transactionalDB) RunTransaction(perform func(db.DB) error) error {
+func (t transactionalDB) RunTransaction(perform func(db.TDB) error) error {
 	_, err := t.t.Transact(func(trans fdb.Transaction) (interface{}, error) {
-    err := perform(db.NewDB(transactionalDB{
+    err := perform(transactionalDB{
     	t: trans,
-    }))
+    })
     return nil, err
 	})
 	return err 

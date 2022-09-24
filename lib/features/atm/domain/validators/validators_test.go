@@ -74,7 +74,7 @@ func TestWithdrawalValidator(t *testing.T) {
 	
 	t.Run("forward case - forward to TransactionValidator", func(t *testing.T) {
 		tErr := RandomError()
-		transValidator := func(gotDB  db.DB, trans tValues.Transaction) (core.MoneyAmount, error) {
+		transValidator := func(gotDB  db.TDB, trans tValues.Transaction) (core.MoneyAmount, error) {
 			if gotDB == mockDB && trans == wantTrans {
 				return core.NewMoneyAmount(42), tErr
 			} 		

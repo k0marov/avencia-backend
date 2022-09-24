@@ -14,9 +14,9 @@ import (
 )
 
 type ATMSecretValidator = func(gotAtmSecret []byte) error
-type InsertedBanknoteValidator = func(db.DB, values.InsertedBanknote) error
-type DispensedBanknoteValidator = func(db.DB, values.DispensedBanknote) error
-type WithdrawalValidator = func(db.DB, values.WithdrawalData) error
+type InsertedBanknoteValidator = func(db.TDB, values.InsertedBanknote) error
+type DispensedBanknoteValidator = func(db.TDB, values.DispensedBanknote) error
+type WithdrawalValidator = func(db.TDB, values.WithdrawalData) error
 
 type MetaTransByIdValidator = func(transId string, wantType tValues.TransactionType) (tValues.MetaTrans, error)
 type MetaTransByCodeValidator = func(code string, wantType tValues.TransactionType) (tValues.MetaTrans, error)
@@ -31,21 +31,21 @@ func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
 }
 
 func NewInsertedBanknoteValidator(validate MetaTransByIdValidator) InsertedBanknoteValidator {
-	return func(db db.DB, ib values.InsertedBanknote) error {
+	return func(db db.TDB, ib values.InsertedBanknote) error {
 		_, err := validate(ib.TransactionId, tValues.Deposit)
 		return err
 	}
 }
 
 func NewDispensedBanknoteValidator(validate MetaTransByIdValidator) DispensedBanknoteValidator {
-	return func(db db.DB, banknote values.DispensedBanknote) error {
+	return func(db db.TDB, banknote values.DispensedBanknote) error {
 		_, err := validate(banknote.TransactionId, tValues.Withdrawal) 
 		return err
 	}
 }
 
 func NewWithdrawalValidator(validateMeta MetaTransByIdValidator, validateTrans tValidators.TransactionValidator) WithdrawalValidator {
-	return func(db db.DB, wd values.WithdrawalData) error {
+	return func(db db.TDB, wd values.WithdrawalData) error {
 		metaTrans, err := validateMeta(wd.TransactionId, tValues.Withdrawal)
 		if err != nil {
 			return err

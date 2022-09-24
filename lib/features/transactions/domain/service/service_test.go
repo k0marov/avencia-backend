@@ -17,7 +17,7 @@ func TestMultiTransactionFinalizer(t *testing.T) {
 		RandomTransactionData(), 
 	}
 	t.Run("error case - one of the transactions fails", func(t *testing.T) {
-    finalize := func(db.DB, values.Transaction) error {
+    finalize := func(db.TDB, values.Transaction) error {
     	return RandomError()
     }
     err := service.NewMultiTransactionFinalizer(finalize)(NewStubDB(), ts) 
@@ -25,7 +25,7 @@ func TestMultiTransactionFinalizer(t *testing.T) {
 	})
 	t.Run("happy case", func(t *testing.T) {
 		called := []values.Transaction{} 
-		finalize := func(gotDB db.DB, gotT values.Transaction) error {
+		finalize := func(gotDB db.TDB, gotT values.Transaction) error {
 			called = append(called, gotT)
 			return nil
 		}
@@ -40,7 +40,7 @@ func TestTransactionFinalizer(t *testing.T) {
 	mockDB := NewStubDB()
 	t.Run("error case - validation throws", func(t *testing.T) {
 		err := RandomError()
-		validate := func(gotDB db.DB, t values.Transaction) (core.MoneyAmount, error) {
+		validate := func(gotDB db.TDB, t values.Transaction) (core.MoneyAmount, error) {
 			if gotDB == mockDB && t == transaction {
 				return core.NewMoneyAmount(0), err
 			}
@@ -52,10 +52,10 @@ func TestTransactionFinalizer(t *testing.T) {
 	t.Run("forward case - return whatever performTransaction returns", func(t *testing.T) {
 		wantErr := RandomError()
 		currentBalance := RandomPosMoneyAmount()
-		validate := func(db.DB, values.Transaction) (core.MoneyAmount, error) {
+		validate := func(db.TDB, values.Transaction) (core.MoneyAmount, error) {
 			return currentBalance, nil
 		}
-		performTransaction := func(gotDB db.DB, curBal core.MoneyAmount, trans values.Transaction) error {
+		performTransaction := func(gotDB db.TDB, curBal core.MoneyAmount, trans values.Transaction) error {
 			if curBal == currentBalance && trans == transaction {
 				return wantErr
 			}
@@ -71,11 +71,11 @@ func TestTransactionPerformer(t *testing.T) {
 	curBalance := RandomPosMoneyAmount()
 	trans := RandomTransactionData()
 
-	updateWithdrawn := func(db.DB, values.Transaction) error {
+	updateWithdrawn := func(db.TDB, values.Transaction) error {
 		return nil
 	}
 	t.Run("updating withdrawn throws", func(t *testing.T) {
-		updateWithdrawn := func(gotDB db.DB, gotTrans values.Transaction) error {
+		updateWithdrawn := func(gotDB db.TDB, gotTrans values.Transaction) error {
 			if gotDB == mockDB && gotTrans == trans {
 				return RandomError()
 			}
@@ -85,11 +85,11 @@ func TestTransactionPerformer(t *testing.T) {
 		AssertSomeError(t, err)
 	})
 
-	addHist := func(gotDB db.DB, gotTrans values.Transaction) error {
+	addHist := func(gotDB db.TDB, gotTrans values.Transaction) error {
 		return nil
 	}
 	t.Run("adding transaction to history throws", func(t *testing.T) {
-		addHist := func(gotDB db.DB, gotTrans values.Transaction) error {
+		addHist := func(gotDB db.TDB, gotTrans values.Transaction) error {
 			if gotDB == mockDB && gotTrans == trans {
 				return RandomError()
 			}
@@ -101,7 +101,7 @@ func TestTransactionPerformer(t *testing.T) {
 
 	t.Run("forward case - update balance", func(t *testing.T) {
 		tErr := RandomError()
-		updBal := func(gotDB db.DB, curBal core.MoneyAmount, gotTrans values.Transaction) error {
+		updBal := func(gotDB db.TDB, curBal core.MoneyAmount, gotTrans values.Transaction) error {
 			if gotDB == mockDB && curBal == curBalance && gotTrans == trans {
 				return tErr
 			}
@@ -125,7 +125,7 @@ func TestTransBalUpdater(t *testing.T) {
 	wantNewBal := curBalance.Add(trans.Money.Amount)
 
 	tErr := RandomError()
-	updBal := func(gotDB db.DB, user string, newBal core.Money) error {
+	updBal := func(gotDB db.TDB, user string, newBal core.Money) error {
 		if gotDB == mockDB && user == trans.UserId && newBal.Currency == trans.Money.Currency && newBal.Amount.IsEqual(wantNewBal) {
 			return tErr
 		}

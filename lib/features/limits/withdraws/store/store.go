@@ -11,7 +11,7 @@ import (
 )
 
 func NewWithdrawsGetter(getDoc db.JsonGetter[models.Withdraws]) store.WithdrawsGetter {
-	return func(db db.DB, userId string) (models.Withdraws, error) {
+	return func(db db.TDB, userId string) (models.Withdraws, error) {
 		path := []string{"withdrawn", userId}
 		withdraws, err := getDoc(db, path)
 		if core_err.IsNotFound(err) {
@@ -27,7 +27,7 @@ func NewWithdrawsGetter(getDoc db.JsonGetter[models.Withdraws]) store.WithdrawsG
 
 
 func NewWithdrawUpdater(updDoc db.JsonUpdater[models.WithdrawVal]) store.WithdrawUpdater {
-	return func(db db.DB, userId string, withdrawn core.Money) error {
+	return func(db db.TDB, userId string, withdrawn core.Money) error {
 		path := []string{"withdrawn", userId}
 		val := models.WithdrawVal{
 			Withdrawn: withdrawn.Amount,

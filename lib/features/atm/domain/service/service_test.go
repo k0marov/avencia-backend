@@ -42,12 +42,12 @@ func TestATMTransactionCreator(t *testing.T) {
 		AssertError(t, err, tErr)
 	})
 
-	getUser := func(db.DB, string) (uEntities.UserInfo, error) {
+	getUser := func(db.TDB, string) (uEntities.UserInfo, error) {
     return uInfo, nil 
 	}
 
 	t.Run("error case - getting user info throws", func(t *testing.T) {
-		getUser := func(gotDB db.DB, userId string) (uEntities.UserInfo, error) {
+		getUser := func(gotDB db.TDB, userId string) (uEntities.UserInfo, error) {
 			if gotDB == mockDB && userId ==  metaTrans.UserId {
 				return uEntities.UserInfo{}, RandomError()
 			}
@@ -94,7 +94,7 @@ func TestDepositFinalizer(t *testing.T) {
 
 	t.Run("should forward to the general finalizer", func(t *testing.T) {
 		tErr := RandomError()
-		generalFinalizer := func(gotDB db.DB, tId string, tType tValues.TransactionType, gotMoney []core.Money) error {
+		generalFinalizer := func(gotDB db.TDB, tId string, tType tValues.TransactionType, gotMoney []core.Money) error {
 			if gotDB == mockDB && tId == dd.TransactionId && tType == tValues.Deposit && reflect.DeepEqual(dd.Received, gotMoney) {
 				return tErr
 			}
@@ -113,7 +113,7 @@ func TestWithdrawalFinalizer(t *testing.T) {
 	}
 	t.Run("should forward to the general finalizer", func(t *testing.T) {
 		tErr := RandomError()
-		generalFinalizer := func(gotDB db.DB, tId string, tType tValues.TransactionType, gotMoney []core.Money) error {
+		generalFinalizer := func(gotDB db.TDB, tId string, tType tValues.TransactionType, gotMoney []core.Money) error {
 			if gotDB == mockDB && tId == wd.TransactionId && tType == tValues.Withdrawal && reflect.DeepEqual(gotMoney, []core.Money{wd.Money}) {
 				return tErr
 			}
@@ -176,7 +176,7 @@ func TestGeneralFinalizer(t *testing.T) {
 
 	t.Run("forward case - forward to multifinalizer", func(t *testing.T) {
 		tErr := RandomError()
-		finalize := func(gotDB db.DB, gotT []tValues.Transaction) error {
+		finalize := func(gotDB db.TDB, gotT []tValues.Transaction) error {
 			if gotDB == mockDB && reflect.DeepEqual(gotT, wantT) {
 				return tErr
 			}

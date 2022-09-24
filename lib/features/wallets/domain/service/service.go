@@ -8,10 +8,10 @@ import (
 )
 
 // BalanceGetter Should return 0 if the wallets field for the given currency is null
-type BalanceGetter = func(db db.DB, userId string, currency core.Currency) (core.MoneyAmount, error)
+type BalanceGetter = func(db db.TDB, userId string, currency core.Currency) (core.MoneyAmount, error)
 
 func NewBalanceGetter(getWallet store.WalletGetter) BalanceGetter {
-	return func(db db.DB, userId string, currency core.Currency) (core.MoneyAmount, error) {
+	return func(db db.TDB, userId string, currency core.Currency) (core.MoneyAmount, error) {
 		wallet, err := getWallet(db, userId)
 		if err != nil {
 			return core.NewMoneyAmount(0), core_err.Rethrow("getting wallets to later extract balance", err)

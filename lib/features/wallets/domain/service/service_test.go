@@ -14,7 +14,7 @@ func TestBalanceGetter(t *testing.T) {
 	userId := RandomString()
 	mockDB := NewStubDB()
 	t.Run("error case", func(t *testing.T) {
-		getWallet := func(db.DB, string) (entities.Wallet, error) {
+		getWallet := func(db.TDB, string) (entities.Wallet, error) {
 			return entities.Wallet{}, RandomError()
 		}
 		_, err := service.NewBalanceGetter(getWallet)(mockDB, userId, RandomCurrency())
@@ -22,7 +22,7 @@ func TestBalanceGetter(t *testing.T) {
 	})
 	t.Run("should return 0 if there is no such currency in the wallet", func(t *testing.T) {
 		wallet := entities.Wallet{}
-		getWallet := func(gotDB db.DB, user string) (entities.Wallet, error) {
+		getWallet := func(gotDB db.TDB, user string) (entities.Wallet, error) {
 			if gotDB == mockDB && user == userId {
 				return wallet, nil
 			}
@@ -34,7 +34,7 @@ func TestBalanceGetter(t *testing.T) {
 	})
 	t.Run("should return the value from wallets", func(t *testing.T) {
 		wallet := entities.Wallet{"RUB": core.NewMoneyAmount(4000), "USD": core.NewMoneyAmount(300)}
-		getWallet := func(db.DB, string) (entities.Wallet, error) {
+		getWallet := func(db.TDB, string) (entities.Wallet, error) {
 			return wallet, nil
 		}
 		balance, err := service.NewBalanceGetter(getWallet)(mockDB, userId, "USD")

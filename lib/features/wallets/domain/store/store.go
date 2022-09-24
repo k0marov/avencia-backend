@@ -6,5 +6,5 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
 
-type WalletGetter = func(db db.DB, userId string) (entities.Wallet, error)
-type BalanceUpdater = func(db db.DB, userId string, newBalance core.Money) error
+type WalletGetter = func(db db.TDB, userId string) (entities.Wallet, error)
+type BalanceUpdater = func(db db.TDB, userId string, newBalance core.Money) error

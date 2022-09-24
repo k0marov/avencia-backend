@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	firebase "firebase.google.com/go/v4"
-	"github.com/AvenciaLab/avencia-backend/lib/setup/config"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db/foundationdb"
-	"github.com/AvenciaLab/avencia-backend/lib/setup/di"
 	authStoreImpl "github.com/AvenciaLab/avencia-backend/lib/features/auth/store"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/config"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/di"
 	"github.com/apple/foundationdb/bindings/go/src/fdb"
 	"google.golang.org/api/option"
 )
@@ -23,7 +23,7 @@ func removeEOF(contents []byte) []byte {
 func readSecret(filepath string) []byte {
 	contents, err := os.ReadFile(filepath)
 	if err != nil {
-	  log.Fatalf("while reading the contents of the %v secret file: %v", filepath, err)	
+		log.Fatalf("while reading the contents of the %v secret file: %v", filepath, err)
 	}
 	return removeEOF(contents)
 }
@@ -54,6 +54,7 @@ func InitializeExternal() di.ExternalDeps {
 	foundationDB := fdb.MustOpenDefault()
 
 	runTrans := foundationdb.NewTransactionRunner(foundationDB)
+	simpleDB := foundationdb.NewSimpleDB(runTrans)
 
 	authFacade := authStoreImpl.NewFBAuthFacade(fbAuth)
 
@@ -62,6 +63,7 @@ func InitializeExternal() di.ExternalDeps {
 		JwtSecret: jwtSecret,
 		Auth:      authFacade,
 		TRunner:   runTrans,
+		SimpleDB:  simpleDB,
 	}
 
 }

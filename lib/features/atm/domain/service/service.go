@@ -12,11 +12,11 @@ import (
 	uService "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/service"
 )
 
-type ATMTransactionCreator = func(db.DB, values.TransFromQRCode) (values.CreatedTransaction, error)
+type ATMTransactionCreator = func(db.TDB, values.TransFromQRCode) (values.CreatedTransaction, error)
 type TransactionCanceler = func(id string) error
 
-type DepositFinalizer = func(db.DB, values.DepositData) error
-type WithdrawalFinalizer = func(db.DB, values.WithdrawalData) error
+type DepositFinalizer = func(db.TDB, values.DepositData) error
+type WithdrawalFinalizer = func(db.TDB, values.WithdrawalData) error
 
 // TODO: add validation that there is no active transaction for this user
 func NewATMTransactionCreator(
@@ -24,7 +24,7 @@ func NewATMTransactionCreator(
 	getUser uService.UserInfoGetter,
 	create tStore.TransactionCreator, 
 ) ATMTransactionCreator {
-	return func(db db.DB, nt values.TransFromQRCode) (values.CreatedTransaction, error) {
+	return func(db db.TDB, nt values.TransFromQRCode) (values.CreatedTransaction, error) {
 		metaTrans, err := val(nt.QRCodeText, nt.Type)
 		if err != nil {
 			return values.CreatedTransaction{}, err
@@ -49,22 +49,22 @@ func NewTransactionCanceler() TransactionCanceler {
 	}
 }
 
-type generalFinalizer = func(db db.DB, transId string, wantType tValues.TransactionType, m []core.Money) error
+type generalFinalizer = func(db db.TDB, transId string, wantType tValues.TransactionType, m []core.Money) error
 
 func NewDepositFinalizer(generalFinalizer generalFinalizer) DepositFinalizer {
-	return func(db db.DB, dd values.DepositData) error {
+	return func(db db.TDB, dd values.DepositData) error {
 		return generalFinalizer(db, dd.TransactionId, tValues.Deposit, dd.Received)
 	}
 }
 
 func NewWithdrawalFinalizer(generalFinalizer generalFinalizer) WithdrawalFinalizer {
-	return func(db db.DB, wd values.WithdrawalData) error {
+	return func(db db.TDB, wd values.WithdrawalData) error {
 		return generalFinalizer(db, wd.TransactionId, tValues.Withdrawal, []core.Money{wd.Money})
 	}
 }
 
 func NewGeneralFinalizer(validate validators.MetaTransByIdValidator, finalize tService.MultiTransactionFinalizer) generalFinalizer {
-	return func(db db.DB, transId string, tType tValues.TransactionType, m []core.Money) error {
+	return func(db db.TDB, transId string, tType tValues.TransactionType, m []core.Money) error {
 		metaTrans, err := validate(transId, tType)
 		if err != nil {
 			return err

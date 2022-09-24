@@ -6,22 +6,22 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 )
 
-type JsonGetter[T any] func(db DB, path []string) (T, error)
-type JsonColGetter[T any] func(db DB, path []string) ([]T, error)
-type JsonSetter[T any] func(db DB, path []string, val T) error
-type JsonUpdater[T any] func(db DB, path []string, key string, val T) error
-type JsonMultiUpdater[T any] func(db DB, path []string, newVal T) error
+type JsonGetter[T any] func(db TDB, path []string) (T, error)
+type JsonColGetter[T any] func(db TDB, path []string) ([]T, error)
+type JsonSetter[T any] func(db TDB, path []string, val T) error
+type JsonUpdater[T any] func(db TDB, path []string, key string, val T) error
+type JsonMultiUpdater[T any] func(db TDB, path []string, newVal T) error
 
-func JsonGetterImpl[T any](db DB, path []string) (res T, err error) {
-	d, err := db.db.Get(path)
+func JsonGetterImpl[T any](db TDB, path []string) (res T, err error) {
+	d, err := db.Get(path)
 	if err != nil {
 		return res, core_err.Rethrow("getting raw doc", err)
 	}
 	return parseDoc[T](d.Data)
 }
 
-func JsonColGetterImpl[T any](db DB, path []string) (res []T, err error) {
-	docs, err := db.db.GetCollection(path)
+func JsonColGetterImpl[T any](db TDB, path []string) (res []T, err error) {
+	docs, err := db.GetCollection(path)
 	if err != nil {
 		return res, core_err.Rethrow("getting raw collection elems", err)
 	}
@@ -35,15 +35,15 @@ func JsonColGetterImpl[T any](db DB, path []string) (res []T, err error) {
 	return res, nil
 }
 
-func JsonSetterImpl[T any](db DB, path []string, val T) error {
+func JsonSetterImpl[T any](db TDB, path []string, val T) error {
 	valEncoded, err := json.Marshal(val)
 	if err != nil {
 		return core_err.Rethrow("marshalling val", err)
 	}
-	return db.db.Set(path, valEncoded)
+	return db.Set(path, valEncoded)
 }
 
-func JsonUpdaterImpl[T any](db DB, path []string, key string, val T) error {
+func JsonUpdaterImpl[T any](db TDB, path []string, key string, val T) error {
 	current, err := JsonGetterImpl[map[string]any](db, path)
 	if err != nil && !core_err.IsNotFound(err){
 		return core_err.Rethrow("getting current doc", err)
@@ -58,7 +58,7 @@ func JsonUpdaterImpl[T any](db DB, path []string, key string, val T) error {
 
 // JsonMultiUpdaterImpl could be a performance bottleneck 
 // since newVal is marshalled and then unmarshalled again.
-func JsonMultiUpdaterImpl[T any](db DB, path []string, newVal T) error {
+func JsonMultiUpdaterImpl[T any](db TDB, path []string, newVal T) error {
 	current, err := JsonGetterImpl[map[string]any](db, path)
 	if err != nil && !core_err.IsNotFound(err){
 		return core_err.Rethrow("getting current doc", err)

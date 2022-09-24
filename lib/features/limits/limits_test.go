@@ -17,7 +17,7 @@ func TestLimitsGetter(t *testing.T) {
 	user := RandomString()
 	mockDB := NewStubDB()
 	t.Run("error case - getting withdraws throws", func(t *testing.T) {
-		getWithdraws := func(gotDB db.DB, userId string) (models.Withdraws, error) {
+		getWithdraws := func(gotDB db.TDB, userId string) (models.Withdraws, error) {
 			if gotDB == mockDB && userId == user {
 				return nil, RandomError()
 			}
@@ -30,7 +30,7 @@ func TestLimitsGetter(t *testing.T) {
 		withdraws := RandomWithdraws()
 		tLimits := RandomLimits()
 		tErr := RandomError()
-		getWithdraws := func(db.DB, string) (models.Withdraws, error) {
+		getWithdraws := func(db.TDB, string) (models.Withdraws, error) {
 			return withdraws, nil
 		}
 		limitsComputer := func(w models.Withdraws) (limits.Limits, error) {
@@ -103,7 +103,7 @@ func TestLimitChecker(t *testing.T) {
 	user := RandomString()
 	mockDB := NewStubDB()
 
-	getLimits := func(gotDB db.DB, userId string) (limits.Limits, error) {
+	getLimits := func(gotDB db.TDB, userId string) (limits.Limits, error) {
 		if gotDB == mockDB && userId == user {
 			return tLimits, nil
 		}
@@ -111,7 +111,7 @@ func TestLimitChecker(t *testing.T) {
 	}
 
 	t.Run("error case - getting limits throws", func(t *testing.T) {
-		getLimits := func(db.DB, string) (limits.Limits, error) {
+		getLimits := func(db.TDB, string) (limits.Limits, error) {
 			return nil, RandomError()
 		}
 		err := limits.NewLimitChecker(getLimits)(mockDB, transValues.Transaction{Money: RandomNegativeMoney()})

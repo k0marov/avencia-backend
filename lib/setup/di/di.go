@@ -42,13 +42,13 @@ type ExternalDeps struct {
 	AtmSecret, JwtSecret []byte
 	Auth                 authStore.AuthFacade
 	TRunner              db.TransRunner
+	SimpleDB             db.SDB
 }
 type APIDeps struct {
-  Handlers api.Handlers 
-  AuthMW api.Middleware
-  AtmAuthMW api.Middleware
+	Handlers  api.Handlers
+	AuthMW    api.Middleware
+	AtmAuthMW api.Middleware
 }
-
 
 func InitializeBusiness(deps ExternalDeps) APIDeps {
 	// ===== AUTH =====
@@ -85,13 +85,13 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	getHistoryHandler := histHandlers.NewGetHistoryHandler(deps.TRunner, getHistory)
 
 	// ===== TRANSACTIONS =====
-  
+
 	transValidator := tValidators.NewTransactionValidator(checkLimit, tValidators.NewEnoughBalanceValidator(getBalance))
 	codeParser := mappers.NewCodeParser(jwtVerifier)
 	codeGenerator := mappers.NewCodeGenerator(jwtIssuer)
 
 	createTrans := tStore.NewTransactionCreator(codeGenerator)
-	getTrans := tStore.NewTransactionGetter(codeParser) 
+	getTrans := tStore.NewTransactionGetter(codeParser)
 	transPerformer := tService.NewTransactionPerformer(updateWithdrawn, storeTrans, tService.NewTransBalUpdater(updBal))
 	transact := tService.NewTransactionFinalizer(transValidator, transPerformer)
 	multiTransact := tService.NewMultiTransactionFinalizer(transact)
@@ -131,35 +131,35 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	transferHandler := transHandlers.NewTransferHandler(deps.TRunner, transfer)
 
 	return APIDeps{
-		Handlers:  api.Handlers{
-		Transaction: api.TransactionHandlers{
-			OnCreate: createTransHandler,
-			OnCancel: onCancelHandler,
-			Deposit: api.TransactionDepositHandlers{
-				OnBanknoteEscrow:   banknoteEscrowHandler,
-				OnBanknoteAccepted: banknoteAcceptedHandler,
-				OnComplete:         completeDepositHandler,
+		Handlers: api.Handlers{
+			Transaction: api.TransactionHandlers{
+				OnCreate: createTransHandler,
+				OnCancel: onCancelHandler,
+				Deposit: api.TransactionDepositHandlers{
+					OnBanknoteEscrow:   banknoteEscrowHandler,
+					OnBanknoteAccepted: banknoteAcceptedHandler,
+					OnComplete:         completeDepositHandler,
+				},
+				Withdrawal: api.TransactionWithdrawalHandlers{
+					OnStart:                 validateWithdrawalHandler,
+					OnPreBanknoteDispensed:  preBanknoteDispensedHandler,
+					OnPostBanknoteDispensed: postBanknoteDispensedHandler,
+					OnComplete:              completeWithdrawalHandler,
+				},
 			},
-			Withdrawal: api.TransactionWithdrawalHandlers{
-				OnStart:                 validateWithdrawalHandler,
-				OnPreBanknoteDispensed:  preBanknoteDispensedHandler,
-				OnPostBanknoteDispensed: postBanknoteDispensedHandler,
-				OnComplete:              completeWithdrawalHandler,
+			App: api.AppHandlers{
+				GenCode:     genCodeHandler,
+				GetUserInfo: getUserInfoHandler,
+				Transfer:    transferHandler,
+				GetHistory:  getHistoryHandler,
 			},
 		},
-		App: api.AppHandlers{
-			GenCode:     genCodeHandler,
-			GetUserInfo: getUserInfoHandler,
-			Transfer:    transferHandler,
-			GetHistory:  getHistoryHandler,
-		},
-	},
 		AuthMW:    authMW,
 		AtmAuthMW: atmAuthMiddleware,
 	}
 }
 
 func InitializeHandler(deps APIDeps) http.Handler {
-	apiRouter := api.NewAPIRouter(deps.Handlers, deps.AuthMW, deps.AtmAuthMW) 
+	apiRouter := api.NewAPIRouter(deps.Handlers, deps.AuthMW, deps.AtmAuthMW)
 	return middleware.Recoverer(apiRouter)
 }

@@ -11,14 +11,14 @@ import (
 )
 
 func NewHistoryGetter(getDocs db.JsonColGetter[entities.TransEntry]) store.HistoryGetter {
-	return func(db db.DB, userId string) ([]entities.TransEntry, error) {
+	return func(db db.TDB, userId string) ([]entities.TransEntry, error) {
 		col := []string{"histories", userId}
 		return getDocs(db,col)
 	}
 }
 
 func NewTransStorer(updDoc db.JsonSetter[entities.TransEntry]) store.TransStorer {
-	return func(db db.DB, t transValues.Transaction) error {
+	return func(db db.TDB, t transValues.Transaction) error {
 		path := []string{"histories", t.UserId, general_helpers.RandomId()}
 		tEntry := entities.TransEntry{
 			Source:    t.Source,

@@ -6,15 +6,11 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 )
 
-func NewStubDB() db.DB {
-	return db.NewDB(newStubDB())
-}
-
 type stubDB struct {
 	randId int // for usage in tests: checking that the proper db handler is forwarded
 }
 
-func newStubDB() stubDB {
+func NewStubDB() stubDB {
 	return stubDB{
 		randId: RandomInt(),
 	}
@@ -34,7 +30,7 @@ func (s stubDB) Delete(path []string) error {
 	return errors.New("unimplemented") 
 }
 
-func (s stubDB) RunTransaction(func(db.DB) error) error {
+func (s stubDB) RunTransaction(func(db.TDB) error) error {
 	return errors.New("unimplemented")
 }
 

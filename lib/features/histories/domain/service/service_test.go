@@ -13,7 +13,7 @@ func TestHistoryGetter(t *testing.T) {
 	userId := RandomString()
 	mockDB := NewStubDB() 
 	t.Run("error case - getting history entries from store throws", func(t *testing.T) {
-		getFromStore := func(gotDB db.DB, gotUserId string) ([]entities.TransEntry, error) {
+		getFromStore := func(gotDB db.TDB, gotUserId string) ([]entities.TransEntry, error) {
 			if gotDB == mockDB && gotUserId == userId {
 				return nil, RandomError()
 			}
@@ -43,7 +43,7 @@ func TestHistoryGetter(t *testing.T) {
 			entryNewest, 
 			entryMiddle, 
 		}
-		getFromStore := func(gotDB db.DB, userId string) ([]entities.TransEntry, error) {
+		getFromStore := func(gotDB db.TDB, userId string) ([]entities.TransEntry, error) {
 			return storeEntries, nil
 		}
 
