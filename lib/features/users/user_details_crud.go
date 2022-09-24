@@ -17,6 +17,7 @@ func NewUserDetailsCRUDEndpoint(simpleDB db.SDB) api.Endpoint {
 			}
 			return rd.IdFromURL, nil
 		},
+		IgnoreNotFound: true,
 		ReadP: crud.MustBeAuthenticated,
 		WriteP: crud.MustBeAuthenticated.And(func(rd crud.RequestData) error {
 			if rd.IdFromURL == rd.CallerId || rd.IdFromURL == "" {

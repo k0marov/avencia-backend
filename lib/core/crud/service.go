@@ -2,16 +2,16 @@ package crud
 
 import (
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 )
 
-
-// TODO: add policies for reacting to NotFound 
 // TODO: add policies for banning certain methods, e.g. restrict DELETE and CREATE
 
 
 type Service[E Entity] struct {
 	Store         Store[E]
 	IdPolicy      IdPolicy
+	IgnoreNotFound bool 
 	ReadP, WriteP PermissionPolicy
 }
 
@@ -53,7 +53,11 @@ func (s Service[E]) Read(rd RequestData) (e E, err error) {
 	if err != nil {
 		return e, err
 	}
-	return s.Store.Read(id)
+	e, err = s.Store.Read(id)
+	if err != nil && !(core_err.IsNotFound(err) && s.IgnoreNotFound) {
+		return e, err
+	}
+	return e, nil
 }
 func (s Service[E]) Update(rd RequestData, e E) error {
 	if err := s.WriteP(rd); err != nil {
