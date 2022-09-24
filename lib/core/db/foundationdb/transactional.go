@@ -62,6 +62,16 @@ func (t transactionalDB) GetCollection(path []string) (db.Documents, error) {
 	return docs, nil
 }
 
+func (t transactionalDB) Set(path []string, data []byte) error {
+  t.t.Set(pathToKey(path), []byte(data))
+  return nil 
+}
+
+func (t transactionalDB) Delete(path []string) error {
+	t.t.Clear(pathToKey(path)) 
+	return nil
+}
+
 func (t transactionalDB) RunTransaction(perform func(db.DB) error) error {
 	_, err := t.t.Transact(func(trans fdb.Transaction) (interface{}, error) {
     err := perform(db.NewDB(transactionalDB{
@@ -72,13 +82,3 @@ func (t transactionalDB) RunTransaction(perform func(db.DB) error) error {
 	return err 
 }
 
-
-func (t transactionalDB) Set(path []string, data []byte) error {
-  t.t.Set(pathToKey(path), []byte(data))
-  return nil 
-}
-
-func (t transactionalDB) Delete(path []string) error {
-	t.t.Clear(pathToKey(path)) 
-	return nil
-}
