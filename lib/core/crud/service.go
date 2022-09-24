@@ -4,6 +4,11 @@ import (
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
 )
 
+
+// TODO: add policies for reacting to NotFound 
+// TODO: add policies for banning certain methods, e.g. restrict DELETE and CREATE
+
+
 type Service[E Entity] struct {
 	Store         Store[E]
 	IdPolicy      IdPolicy

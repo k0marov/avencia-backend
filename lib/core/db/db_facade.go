@@ -28,18 +28,5 @@ type ColGetter = func(db SDB, path []string) (Documents, error)
 type Setter = func(db SDB, path []string, data []byte) error 
 type Deleter = func(db SDB, path []string) error
 
-func GetterImpl(db SDB, path []string) (Document, error) {
-	return db.Get(path) 
-}
-func ColGetterImpl(db SDB, path []string) (Documents, error) {
-	return db.GetCollection(path)
-}
-func SetterImpl(db SDB, path []string, data []byte) error {
-	return db.Set(path, data)
-}
-func DeleterImpl(db SDB, path []string) error {
-	return db.Delete(path)
-}
-
 
 

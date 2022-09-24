@@ -18,30 +18,30 @@ func NewSimpleDB(runTrans db.TransRunner) simpleDB {
 
 func (s simpleDB) Get(path []string) (db.Document, error) {
   var doc db.Document
-  err := s.runTrans(func(dbHandle db.TDB) error {
+  err := s.runTrans(func(db db.TDB) error {
     var err error
-    doc, err = db.GetterImpl(dbHandle, path)
+    doc, err = db.Get(path)
     return err
   })
   return doc, err
 }
 func (s simpleDB) GetCollection(path []string) (db.Documents, error) {
   var docs db.Documents
-  err := s.runTrans(func(dbHandle db.TDB) error {
+  err := s.runTrans(func(db db.TDB) error {
     var err error
-    docs, err = db.ColGetterImpl(dbHandle, path)
+    docs, err = db.GetCollection(path)
     return err
   })
   return docs, err
 }
 func (s simpleDB) Set(path []string, data []byte) error {
-  return s.runTrans(func(dbHandle db.TDB) error {
-    return db.SetterImpl(dbHandle, path, data)
+  return s.runTrans(func(db db.TDB) error {
+    return db.Set(path, data)
   })
 }
 func (s simpleDB) Delete(path []string) error {
-  return s.runTrans(func(dbHandle db.TDB) error {
-    return db.DeleterImpl(dbHandle, path)
+  return s.runTrans(func(db db.TDB) error {
+    return db.Delete(path)
   })
 }
 

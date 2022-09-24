@@ -59,7 +59,7 @@ func (s Store[E]) Read(id string) (E, error) {
 
 func (s Store[E]) Delete(id string) error {
   path := s.getEntityPath(id) 
-  err := db.DeleterImpl(s.db, path)
+  err := s.db.Delete(path)
   if err != nil {
     return core_err.Rethrow(fmt.Sprintf("while deleting a CRUD entity at path %+v", path), err)
   }
