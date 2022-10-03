@@ -152,7 +152,7 @@ func RandomWithdraws() wModels.Withdraws {
 func RandomWithdrawVal() wModels.WithdrawVal {
 	return wModels.WithdrawVal{
 		Withdrawn: RandomPosMoneyAmount(),
-		UpdatedAt: RandomTime(),
+		UpdatedAt: RandomTime().Unix(),
 	}
 
 }

@@ -26,17 +26,17 @@ func TestHistoryGetter(t *testing.T) {
 		entryNewest := entities.TransEntry{
 			Source:    RandomTransactionSource(),
 			Money:     RandomMoney(),
-			CreatedAt: TimeWithYear(2022), 
+			CreatedAt: TimeWithYear(2022).Unix(), 
 		}
 		entryOldest := entities.TransEntry{
 			Source:    RandomTransactionSource(),
 			Money:     RandomMoney(),
-			CreatedAt: TimeWithYear(2000),
+			CreatedAt: TimeWithYear(2000).Unix(),
 		}
 		entryMiddle := entities.TransEntry{
 			Source:    RandomTransactionSource(),
 			Money:     RandomMoney(),
-			CreatedAt: TimeWithYear(2010),
+			CreatedAt: TimeWithYear(2010).Unix(),
 		}
 		storeEntries := []entities.TransEntry{
 			entryOldest, 

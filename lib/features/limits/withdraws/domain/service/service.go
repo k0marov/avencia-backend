@@ -1,12 +1,14 @@
 package service
 
 import (
-	"github.com/AvenciaLab/avencia-backend/lib/setup/config/configurable"
+	"time"
+
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/store"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/config/configurable"
 )
 
 
@@ -37,7 +39,7 @@ func NewWithdrawnUpdateGetter(getWithdraws store.WithdrawsGetter) withdrawnUpdat
 		newWithdraw := t.Money.Amount.Neg()
     
     result := core.Money{Currency: t.Money.Currency}
-		if configurable.IsWithdrawLimitRelevant(curWithdrawn.UpdatedAt) {
+		if configurable.IsWithdrawLimitRelevant(time.Unix(curWithdrawn.UpdatedAt, 0)) {
 			result.Amount = curWithdrawn.Withdrawn.Add(newWithdraw)
 		} else {
 			result.Amount = newWithdraw

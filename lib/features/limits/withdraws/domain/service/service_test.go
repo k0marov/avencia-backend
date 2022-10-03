@@ -16,11 +16,11 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 	tWithdraws := models.Withdraws{
 		"USD": {
 			Withdrawn: core.NewMoneyAmount(400),
-			UpdatedAt: time.Now(), // still relevant
+			UpdatedAt: time.Now().Unix(), // still relevant
 		},
 		"RUB": {
 			Withdrawn: core.NewMoneyAmount(1000),
-			UpdatedAt: TimeWithYear(2000), // no longer relevant
+			UpdatedAt: TimeWithYear(2000).Unix(), // no longer relevant
 		},
 	}
 	userId := RandomString()

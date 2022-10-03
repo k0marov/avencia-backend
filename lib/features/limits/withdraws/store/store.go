@@ -31,7 +31,7 @@ func NewWithdrawUpdater(updDoc db.JsonUpdater[models.WithdrawVal]) store.Withdra
 		path := []string{"withdrawn", userId}
 		val := models.WithdrawVal{
 			Withdrawn: withdrawn.Amount,
-			UpdatedAt: time.Now(), // TODO: this should in the business logic
+			UpdatedAt: time.Now().Unix(), // TODO: this should in the business logic
 		}
 		return updDoc(db, path, string(withdrawn.Currency), val)
 	}

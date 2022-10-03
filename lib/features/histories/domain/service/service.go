@@ -16,12 +16,12 @@ type TransStorer = func(db.TDB, transValues.Transaction) error
 
 func NewHistoryGetter(getHistory store.HistoryGetter) HistoryGetter {
   return func(db db.TDB, userId string) ([]entities.TransEntry, error) {
-  	entries, err := getHistory(db, userId) 
+  	e, err := getHistory(db, userId) 
   	if err != nil {
   		return []entities.TransEntry{}, core_err.Rethrow("getting history from store", err)
   	}
-  	sort.Slice(entries, func(i, j int) bool {return entries[i].CreatedAt.After(entries[j].CreatedAt)})
-  	return entries, nil
+  	sort.Slice(e, func(i, j int) bool {return e[i].CreatedAt > (e[j].CreatedAt)})
+  	return e, nil
   }
 }
 

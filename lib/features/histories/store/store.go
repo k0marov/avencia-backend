@@ -23,7 +23,7 @@ func NewTransStorer(updDoc db.JsonSetter[entities.TransEntry]) store.TransStorer
 		tEntry := entities.TransEntry{
 			Source:    t.Source,
 			Money:     t.Money,
-			CreatedAt: time.Now(), // TODO: this should be in the business layer
+			CreatedAt: time.Now().Unix(), // TODO: this should be in the business layer
 		}
 		return updDoc(db, path, tEntry)
 	}

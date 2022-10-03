@@ -63,7 +63,7 @@ func HistoryEncoder(entries []histEntities.TransEntry) api.TransactionHistory {
 	respEntries := []api.TransEntry{}
 	for _, e := range entries {
 		respEntries = append(respEntries, api.TransEntry{
-			TransactedAt: e.CreatedAt.UTC().Unix(),
+			TransactedAt: e.CreatedAt,
 			Source:  api.TransactionSource{
 				Type:   string(e.Source.Type),
 				Detail: e.Source.Detail,

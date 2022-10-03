@@ -80,6 +80,8 @@ github.com/AvenciaLab/avencia-api-contract v0.0.0-20220924135816-461b4e1803ab h1
 github.com/AvenciaLab/avencia-api-contract v0.0.0-20220924135816-461b4e1803ab/go.mod h1:kogtRGgiOOVgHhAEkMZi2XZ7pMMBKQHC8d5mELAg4i0=
 github.com/AvenciaLab/avencia-api-contract v0.0.0-20220924145233-c04bf7fd2a08 h1:j20lXBXAOJLOsOJ/AZqcKNfI35wjxDs/j3fUKsI2LkA=
 github.com/AvenciaLab/avencia-api-contract v0.0.0-20220924145233-c04bf7fd2a08/go.mod h1:kogtRGgiOOVgHhAEkMZi2XZ7pMMBKQHC8d5mELAg4i0=
+github.com/AvenciaLab/avencia-api-contract v0.0.0-20221003094607-680beacd2fc7 h1:plBty4x/wTgcHaAXYLGjjT+JFwArDA8uFTEeGd1vE90=
+github.com/AvenciaLab/avencia-api-contract v0.0.0-20221003094607-680beacd2fc7/go.mod h1:kogtRGgiOOVgHhAEkMZi2XZ7pMMBKQHC8d5mELAg4i0=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
