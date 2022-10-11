@@ -12,22 +12,22 @@ func TestStaticDirDeleter(t *testing.T) {
 	tPath := RandomString()
 	staticDir := RandomString()
 	wantDirPath := filepath.Join(staticDir, tPath)
-	t.Run("happy case", func(t *testing.T) {
+
+	t.Run("error case - deleting the dir throws", func(t *testing.T) {
 		deleteDir := func(dir string) error {
 			if dir == wantDirPath {
-				return nil
+				return RandomError()
 			}
-			panic("unexpected args")
-		}
-		sut := static_store.NewStaticDirDeleter(deleteDir, staticDir)
-		err := sut(tPath)
-		AssertNoError(t, err)
-	})
-	t.Run("error case - deleting the dir throws", func(t *testing.T) {
-		deleteDir := func(string) error {
-			return RandomError()
+			panic("unexpected")
 		}
 		err := static_store.NewStaticDirDeleter(deleteDir, staticDir)(tPath)
 		AssertSomeError(t, err)
+	})
+	t.Run("happy case", func(t *testing.T) {
+		deleteDir := func(dir string) error {
+			return nil
+		}
+		err := static_store.NewStaticDirDeleter(deleteDir, staticDir)(tPath)
+		AssertNoError(t, err)
 	})
 }
