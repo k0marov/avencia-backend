@@ -2,6 +2,7 @@ package http_helpers
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 
@@ -47,3 +48,20 @@ func ThrowClientError(w http.ResponseWriter, clientError client_errors.ClientErr
 	errorJson, _ := json.Marshal(clientError)
 	http.Error(w, string(errorJson), clientError.HTTPCode)
 }
+
+
+func ParseFile(r *http.Request, field string) (*[]byte, bool) {
+	file, _, err := r.FormFile(field)
+	if err != nil {
+		return nil, false
+	}
+	defer file.Close()
+	avatarData, err := io.ReadAll(file)
+	if err != nil {
+		return nil, false
+	}
+	return &avatarData, true
+}
+
+
+

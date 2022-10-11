@@ -63,6 +63,8 @@ func NewWithdrawalFinalizer(generalFinalizer generalFinalizer) WithdrawalFinaliz
 	}
 }
 
+// TODO: here the user's current transaction may be reset
+// TODO: invalidate the transactionId
 func NewGeneralFinalizer(validate validators.MetaTransByIdValidator, finalize tService.MultiTransactionFinalizer) generalFinalizer {
 	return func(db db.TDB, transId string, tType tValues.TransactionType, m []core.Money) error {
 		metaTrans, err := validate(transId, tType)
