@@ -13,9 +13,9 @@ type RecursiveDirCreator = func(path string, perm fs.FileMode) error
 // FileCreator os.WriteFile implements this
 type FileCreator = func(name string, data []byte, perm fs.FileMode) error
 
-func NewStaticFileCreator(mkdirAll RecursiveDirCreator, writeFile FileCreator) StaticFileCreator {
+func NewStaticFileCreator(mkdirAll RecursiveDirCreator, writeFile FileCreator, staticDir string) StaticFileCreator {
 	return func(data *[]byte, dir, filename string) (string, error) {
-		fullDir := filepath.Join(StaticDir, dir)
+		fullDir := filepath.Join(staticDir, dir)
 		err := mkdirAll(fullDir, 0777)
 		if err != nil {
 			return "", fmt.Errorf("error while creating a new directory: %w", err)
@@ -30,6 +30,6 @@ func NewStaticFileCreator(mkdirAll RecursiveDirCreator, writeFile FileCreator) S
 	}
 }
 
-func NewStaticFileCreatorImpl() StaticFileCreator {
-	return NewStaticFileCreator(os.MkdirAll, os.WriteFile)
+func NewStaticFileCreatorImpl(staticDir string) StaticFileCreator {
+	return NewStaticFileCreator(os.MkdirAll, os.WriteFile, staticDir)
 }

@@ -1,5 +1,7 @@
 package static_store_test
 
+// TODO: refactor the static_store tests
+
 import (
 	"io/fs"
 	"path/filepath"
@@ -11,10 +13,11 @@ import (
 )
 
 func TestStaticFileCreator(t *testing.T) {
+	staticDir := RandomString()
 	tData := []byte(RandomString())
 	tDir := RandomString()
 	tFilename := RandomString()
-	wantDir := filepath.Join(static_store.StaticDir, tDir)
+	wantDir := filepath.Join(staticDir, tDir)
 	wantFullPath := filepath.Join(wantDir, tFilename)
 	wantPath := filepath.Join(tDir, tFilename)
 
@@ -33,8 +36,8 @@ func TestStaticFileCreator(t *testing.T) {
 					}
 					panic("called with unexpected arguments")
 				}
-				sut := static_store.NewStaticFileCreator(recursiveDirCreator, writeFile) // now nil
-				gotPath, err := sut(tData, tDir, tFilename)
+				sut := static_store.NewStaticFileCreator(recursiveDirCreator, writeFile, staticDir)
+				gotPath, err := sut(&tData, tDir, tFilename)
 				AssertNoError(t, err)
 				Assert(t, gotPath, wantPath, "returned path")
 			})
@@ -42,8 +45,8 @@ func TestStaticFileCreator(t *testing.T) {
 				writeFile := func(string, []byte, fs.FileMode) error {
 					return RandomError()
 				}
-				sut := static_store.NewStaticFileCreator(recursiveDirCreator, writeFile)
-				_, err := sut(tData, tDir, tFilename)
+				sut := static_store.NewStaticFileCreator(recursiveDirCreator, writeFile, staticDir)
+				_, err := sut(&tData, tDir, tFilename)
 				AssertSomeError(t, err)
 			})
 		})
@@ -51,8 +54,8 @@ func TestStaticFileCreator(t *testing.T) {
 			recursiveDirCreator := func(path string, perm fs.FileMode) error {
 				return RandomError()
 			}
-			sut := static_store.NewStaticFileCreator(recursiveDirCreator, nil) // writefile shouldn't be called, so it's nil
-			_, err := sut(tData, tDir, tFilename)
+			sut := static_store.NewStaticFileCreator(recursiveDirCreator, nil, staticDir) 
+			_, err := sut(&tData, tDir, tFilename)
 			AssertSomeError(t, err)
 		})
 	})
