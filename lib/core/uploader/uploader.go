@@ -11,7 +11,9 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 )
 
-type UploaderFactory = func(field string, filename string) http.HandlerFunc
+const FileUploadField = "file"
+
+type UploaderFactory = func(filename string) http.HandlerFunc
 
 type UserFile struct {
 	User entities.User
@@ -19,10 +21,10 @@ type UserFile struct {
 }
 
 func NewUploaderFactory(createFile static_store.StaticFileCreator) UploaderFactory {
-	return func(field string, filename string) http.HandlerFunc {
+	return func(filename string) http.HandlerFunc {
 		return http_helpers.NewAuthenticatedHandler(
 			func(user entities.User, req *http.Request, _ http_helpers.NoJSONRequest) (UserFile, error) {
-				file := http_helpers.ParseFile(req, field)
+				file := http_helpers.ParseFile(req, FileUploadField)
 				if !file.IsSet() {
 					return UserFile{}, errors.New("file could not be parsed")
 				}
