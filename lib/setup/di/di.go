@@ -76,7 +76,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	// staticDirDeleter = static_store.NewStaticDirDeleterImpl(deps.Config.StaticDir)
 
 	// ===== UPLOADER =====
-	upld := uploader.NewUploaderFactory(staticFileCreator)
+	upld := uploader.NewUploaderFactory(uploader.NewServiceFactory(staticFileCreator))
 
 	// ===== LIMITS =====
 	storeGetWithdraws := withdrawsStore.NewWithdrawsGetter(db.JsonGetterImpl[models.Withdraws])

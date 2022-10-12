@@ -8,8 +8,8 @@ import (
 
 func NewPassportEndpoint(upld uploader.UploaderFactory, statFactory StatusEndpointFactory) api.Endpoint {
 	return func(r chi.Router) {
-		r.Put("/front", upld("front"))
-		r.Put("/back", upld("back"))
+		r.Put("/front", upld("front", uploader.SimpleSizePolicy))
+		r.Put("/back", upld("back", uploader.SimpleSizePolicy))
 		r.Route("/status", statFactory("passport"))
 	}
 }
