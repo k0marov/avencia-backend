@@ -12,8 +12,6 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// TODO: refactor this
-
 type Status int
 
 const (
