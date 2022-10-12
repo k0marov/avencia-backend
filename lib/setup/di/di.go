@@ -7,6 +7,8 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/core/jwt"
+	"github.com/AvenciaLab/avencia-backend/lib/core/static_store"
+	"github.com/AvenciaLab/avencia-backend/lib/core/uploader"
 	atmHandlers "github.com/AvenciaLab/avencia-backend/lib/features/atm/delivery/http/handlers"
 	atmMiddleware "github.com/AvenciaLab/avencia-backend/lib/features/atm/delivery/http/middleware"
 	atmService "github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/service"
@@ -18,6 +20,7 @@ import (
 	histEntities "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
 	histService "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/service"
 	histStore "github.com/AvenciaLab/avencia-backend/lib/features/histories/store"
+	"github.com/AvenciaLab/avencia-backend/lib/features/kyc"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/models"
 	withdrawsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/service"
@@ -35,11 +38,13 @@ import (
 	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 	walletService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 	storeImpl "github.com/AvenciaLab/avencia-backend/lib/features/wallets/store"
+	"github.com/AvenciaLab/avencia-backend/lib/setup/config"
 	"github.com/AvenciaLab/avencia-backend/lib/setup/config/configurable"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 type ExternalDeps struct {
+	Config               config.Config
 	AtmSecret, JwtSecret []byte
 	Auth                 authStore.AuthFacade
 	TRunner              db.TransRunner
@@ -65,6 +70,13 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	updBal := storeImpl.NewBalanceUpdater(db.JsonUpdaterImpl[core.MoneyAmount])
 	getWallet := storeImpl.NewWalletGetter(db.JsonGetterImpl[walletEntities.Wallet])
 	getBalance := walletService.NewBalanceGetter(getWallet)
+
+	// ===== STATIC STORE =====
+	staticFileCreator := static_store.NewStaticFileCreatorImpl(deps.Config.StaticDir)
+	// staticDirDeleter = static_store.NewStaticDirDeleterImpl(deps.Config.StaticDir)
+
+	// ===== UPLOADER =====
+	upld := uploader.NewUploaderFactory(staticFileCreator)
 
 	// ===== LIMITS =====
 	storeGetWithdraws := withdrawsStore.NewWithdrawsGetter(db.JsonGetterImpl[models.Withdraws])
@@ -132,6 +144,10 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	transfer := transService.NewTransferer(convertTransfer, validateTransfer, performTransfer)
 	transferHandler := transHandlers.NewTransferHandler(deps.TRunner, transfer)
 
+	// ===== KYC =====
+	statusEPFactory := kyc.NewStatusEndpointFactory(deps.SimpleDB)
+	passportEndpoint := kyc.NewPassportEndpoint(upld, statusEPFactory)
+
 	return APIDeps{
 		Handlers: api.Handlers{
 			Transaction: api.TransactionHandlers{
@@ -155,6 +171,9 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 				Transfer:    transferHandler,
 				GetHistory:  getHistoryHandler,
 				UserDetails: userDetailsCrudEndpoint,
+				Kyc: api.KycHandlers{
+					Passport: passportEndpoint,
+				},
 			},
 		},
 		AuthMW:    authMW,

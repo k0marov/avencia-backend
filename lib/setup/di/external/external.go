@@ -59,6 +59,7 @@ func InitializeExternal() di.ExternalDeps {
 	authFacade := authStoreImpl.NewFBAuthFacade(fbAuth)
 
 	return di.ExternalDeps{
+		Config: conf, 
 		AtmSecret: atmSecret,
 		JwtSecret: jwtSecret,
 		Auth:      authFacade,
