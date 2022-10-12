@@ -104,6 +104,8 @@ github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAE
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/apple/foundationdb/bindings/go v0.0.0-20220908182017-4195aa69d6d1 h1:674DWAs4yXRacguPxldTyWJZBD82ZDOAFZmGIJJsLak=
 github.com/apple/foundationdb/bindings/go v0.0.0-20220908182017-4195aa69d6d1/go.mod h1:w63jdZTFCtvdjsUj5yrdKgjxaAD5uXQX6hJ7EaiLFRs=
+github.com/apple/foundationdb/bindings/go v0.0.0-20221010201932-cdb57aa00f6c h1:Y+S84K1SWbrY2kfmgmeABOpTqkVGnYg005u4KG+9GOU=
+github.com/apple/foundationdb/bindings/go v0.0.0-20221010201932-cdb57aa00f6c/go.mod h1:w63jdZTFCtvdjsUj5yrdKgjxaAD5uXQX6hJ7EaiLFRs=
 github.com/apple/foundationdb/bindings/go v0.0.0-20221011235449-fec05e5bc69d h1:/QzHcXNQw1lo0kPa+s+BmtahgM44GfVNao/vhzEVGFo=
 github.com/apple/foundationdb/bindings/go v0.0.0-20221011235449-fec05e5bc69d/go.mod h1:w63jdZTFCtvdjsUj5yrdKgjxaAD5uXQX6hJ7EaiLFRs=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=

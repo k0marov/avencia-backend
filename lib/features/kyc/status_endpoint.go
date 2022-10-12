@@ -1,5 +1,7 @@
 package kyc
 
+// TODO: add tests for the kyc feature 
+
 import (
 	"net/http"
 

@@ -1,5 +1,8 @@
 package uploader
 
+
+// TODO: add tests for the uploader feature 
+
 import (
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
 	"github.com/AvenciaLab/avencia-backend/lib/core"
