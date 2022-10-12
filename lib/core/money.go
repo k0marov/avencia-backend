@@ -1,5 +1,7 @@
 package core
 
+// TODO: refactor the core directory 
+
 type Currency string // string for now
 
 type Money struct {

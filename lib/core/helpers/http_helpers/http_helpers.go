@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
 	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 	authService "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/service"
 )
@@ -49,18 +50,22 @@ func ThrowClientError(w http.ResponseWriter, clientError client_errors.ClientErr
 	http.Error(w, string(errorJson), clientError.HTTPCode)
 }
 
-
-func ParseFile(r *http.Request, field string) (*[]byte, bool) {
+// ParseFile returns a File with IsSet == false if the parsing failed
+func ParseFile(r *http.Request, field string) core.File {
 	file, _, err := r.FormFile(field)
 	if err != nil {
-		return nil, false
+		return core.File{}
 	}
 	defer file.Close()
-	avatarData, err := io.ReadAll(file)
+	fileData, err := io.ReadAll(file)
 	if err != nil {
-		return nil, false
+		return core.File{}
 	}
-	return &avatarData, true
+	gotFile, err := core.NewFile(&fileData)
+	if err != nil {
+		return core.File{}
+	}
+	return gotFile
 }
 
 

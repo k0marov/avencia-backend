@@ -5,6 +5,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/AvenciaLab/avencia-backend/lib/core"
 )
 
 // RecursiveDirCreator os.MkdirAll implements this
@@ -14,14 +16,18 @@ type RecursiveDirCreator = func(path string, perm fs.FileMode) error
 type FileCreator = func(name string, data []byte, perm fs.FileMode) error
 
 func NewStaticFileCreator(mkdirAll RecursiveDirCreator, writeFile FileCreator, staticDir string) StaticFileCreator {
-	return func(data *[]byte, dir, filename string) (string, error) {
+	return func(file core.File, dir, filename string) (string, error) {
 		fullDir := filepath.Join(staticDir, dir)
 		err := mkdirAll(fullDir, 0777)
 		if err != nil {
 			return "", fmt.Errorf("error while creating a new directory: %w", err)
 		}
 		fullPath := filepath.Join(fullDir, filename)
-		err = writeFile(fullPath, *data, 0777)
+		data, err := file.Data()
+		if err != nil {
+			panic("")
+		}
+		err = writeFile(fullPath, data, 0777)
 		if err != nil {
 			return "", fmt.Errorf("error while writing to a file: %w", err)
 		}

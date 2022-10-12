@@ -1,13 +1,12 @@
 package static_store_test
 
-// TODO: refactor the static_store tests
-
 import (
 	"io/fs"
 	"path/filepath"
 	"reflect"
 	"testing"
 
+	"github.com/AvenciaLab/avencia-backend/lib/core"
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/core/static_store"
 )
@@ -15,6 +14,8 @@ import (
 func TestStaticFileCreator(t *testing.T) {
 	staticDir := RandomString()
 	tData := []byte(RandomString())
+	tFile, err := core.NewFile(&tData)
+	AssertNoError(t, err)
 	tDir := RandomString()
 	tFilename := RandomString()
 	wantDir := filepath.Join(staticDir, tDir)
@@ -31,7 +32,7 @@ func TestStaticFileCreator(t *testing.T) {
 			}
 			panic("called with unexpected arguments")
 		}
-		_, err := static_store.NewStaticFileCreator(recursiveDirCreator, nil, staticDir)(&tData, tDir, tFilename)
+		_, err := static_store.NewStaticFileCreator(recursiveDirCreator, nil, staticDir)(tFile, tDir, tFilename)
 		AssertSomeError(t, err)
 	})
 	writeFile := func(string, []byte, fs.FileMode) error {
@@ -45,12 +46,12 @@ func TestStaticFileCreator(t *testing.T) {
 			panic("called with unexpected arguments")
 		}
 		sut := static_store.NewStaticFileCreator(createDir, writeFile, staticDir)
-		_, err := sut(&tData, tDir, tFilename)
+		_, err := sut(tFile, tDir, tFilename)
 		AssertSomeError(t, err)
 	})
 	t.Run("happy case", func(t *testing.T) {
 		sut := static_store.NewStaticFileCreator(createDir, writeFile, staticDir)
-		gotPath, err := sut(&tData, tDir, tFilename)
+		gotPath, err := sut(tFile, tDir, tFilename)
 		AssertNoError(t, err)
 		Assert(t, gotPath, wantPath, "returned path")
 	})
