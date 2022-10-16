@@ -14,13 +14,13 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type Status int
+type Status string
 
 const (
-	Unset Status = iota
-	Pending
-	Verified
-	Rejected
+	Unset Status = "unset"
+	Pending = "pending"
+	Verified = "verified" 
+	Rejected = "rejected"
 )
 
 type StatusModel struct {
