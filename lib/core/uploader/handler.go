@@ -1,9 +1,9 @@
 package uploader
 
 import (
-	"errors"
 	"net/http"
 
+	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
 	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/http_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 )
@@ -15,7 +15,7 @@ type UploaderFactory = func(filename string, policy Policy) http.HandlerFunc
 func decodeFile(user entities.User, req *http.Request) (UserFile, error) {
 	file := http_helpers.ParseFile(req, FileUploadField)
 	if !file.IsSet() {
-		return UserFile{}, errors.New("file could not be parsed")
+		return UserFile{}, client_errors.InvalidFile
 	}
 	return UserFile{User: user, File: file}, nil
 }
@@ -31,10 +31,12 @@ func NewUploaderFactory(uplService ServiceFactory) UploaderFactory {
 			uf, err := decodeFile(user, r)
 			if err != nil {
 				http_helpers.ThrowHTTPError(w, err)
+				return 
 			}
 			err = uplService(validate, filename)(uf)
 			if err != nil {
 				http_helpers.ThrowHTTPError(w, err)
+				return 
 			}
 		}
 	}
