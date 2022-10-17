@@ -1,6 +1,6 @@
 package kyc
 
-// TODO: add tests for the kyc feature 
+// TODO: add tests for the kyc feature
 
 import (
 	"net/http"
@@ -17,10 +17,10 @@ import (
 type Status string
 
 const (
-	Unset Status = "unset"
-	Pending = "pending"
-	Verified = "verified" 
-	Rejected = "rejected"
+	Unset    Status = "unset"
+	Pending         = "pending"
+	Verified        = "verified"
+	Rejected        = "rejected"
 )
 
 type StatusModel struct {
@@ -34,11 +34,12 @@ func NewStatusEndpointFactory(simpleDB db.SDB) StatusEndpointFactory {
 		store := crud.NewCRUDStore[StatusModel](simpleDB, []string{"kyc", name})
 		service := crud.Service[StatusModel]{
 			Store:          store,
+			DefaultValue:   StatusModel{Status: Unset},
 			IgnoreNotFound: true,
 			IdPolicy: func(rd crud.RequestData) (id string, err error) {
 				return rd.CallerId, nil
 			},
-			ReadP: crud.MustBeAuthenticated,
+			ReadP:  crud.MustBeAuthenticated,
 			WriteP: crud.MustBeAuthenticated,
 		}
 		return func(r chi.Router) {
@@ -48,18 +49,14 @@ func NewStatusEndpointFactory(simpleDB db.SDB) StatusEndpointFactory {
 	}
 }
 
-
 func newKYCSubmitter(service crud.Service[StatusModel]) http.HandlerFunc {
 	return http_helpers.NewAuthenticatedHandler(
 		func(user entities.User, req *http.Request, _ http_helpers.NoJSONRequest) (entities.User, error) {
-      return user, nil
+			return user, nil
 		},
 		service_helpers.NewNoResultService(func(u entities.User) error {
-      return service.Update(crud.RequestData{CallerId: u.Id}, StatusModel{Status: Pending}) 
+			return service.Update(crud.RequestData{CallerId: u.Id}, StatusModel{Status: Pending})
 		}),
 		http_helpers.NoResponseConverter,
 	)
 }
-
-
-

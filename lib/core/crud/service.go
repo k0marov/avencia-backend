@@ -5,12 +5,12 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 )
 
-
 type Service[E Entity] struct {
-	Store         Store[E]
-	IdPolicy      IdPolicy
-	IgnoreNotFound bool 
-	ReadP, WriteP PermissionPolicy
+	Store          Store[E]
+	IdPolicy       IdPolicy
+	DefaultValue   E
+	IgnoreNotFound bool
+	ReadP, WriteP  PermissionPolicy
 }
 
 type PermissionPolicy func(RequestData) error
@@ -21,6 +21,7 @@ var MustBeAuthenticated = PermissionPolicy(func(rd RequestData) error {
 	}
 	return nil
 })
+
 func (p1 PermissionPolicy) And(p2 PermissionPolicy) PermissionPolicy {
 	return func(rd RequestData) error {
 		if err := p1(rd); err != nil {
@@ -52,7 +53,10 @@ func (s Service[E]) Read(rd RequestData) (e E, err error) {
 		return e, err
 	}
 	e, err = s.Store.Read(id)
-	if err != nil && !(core_err.IsNotFound(err) && s.IgnoreNotFound) {
+	if err != nil {
+		if core_err.IsNotFound(err) && s.IgnoreNotFound {
+			return s.DefaultValue, nil
+		}
 		return e, err
 	}
 	return e, nil
