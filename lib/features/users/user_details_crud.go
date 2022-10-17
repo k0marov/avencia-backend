@@ -12,6 +12,7 @@ func NewUserDetailsCRUDEndpoint(simpleDB db.SDB) api.Endpoint {
 	service := crud.Service[api.DetailedUser]{
 		Store:          store,
 		IgnoreNotFound: true,
+		DefaultValue: api.DetailedUser{},
 		IdPolicy: func(rd crud.RequestData) (id string, err error) {
 			if rd.IdFromURL == "" {
 				return rd.CallerId, nil

@@ -2,7 +2,6 @@ package crud
 
 import (
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
-	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 )
 
 type Service[E Entity] struct {
@@ -54,9 +53,9 @@ func (s Service[E]) Read(rd RequestData) (e E, err error) {
 	}
 	e, err = s.Store.Read(id)
 	if err != nil {
-		if core_err.IsNotFound(err) && s.IgnoreNotFound {
-			return s.DefaultValue, nil
-		}
+		// if core_err.IsNotFound(err) && s.IgnoreNotFound {
+		// 	return s.DefaultValue, nil
+		// }
 		return e, err
 	}
 	return e, nil

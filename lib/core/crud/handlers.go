@@ -48,10 +48,12 @@ func (h Handlers[E]) Read(w http.ResponseWriter, r *http.Request) {
 	e, err := h.service.Read(getRequestData(r))
 	if err != nil {
 		http_helpers.ThrowHTTPError(w, err)
+		return 
 	}
 	err = json.NewEncoder(w).Encode(e)
 	if err != nil {
 		http_helpers.ThrowHTTPError(w, err)
+		return 
 	}
 }
 
@@ -63,6 +65,7 @@ func (h Handlers[E]) Update(w http.ResponseWriter, r *http.Request) {
 	err := h.service.Update(getRequestData(r), e)
 	if err != nil {
 		http_helpers.ThrowHTTPError(w, err)
+		return 
 	}
 }
 
