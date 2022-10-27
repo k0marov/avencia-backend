@@ -43,7 +43,7 @@ func NewStatusEndpointFactory(simpleDB db.SDB) StatusEndpointFactory {
 			WriteP: crud.MustBeAuthenticated,
 		}
 		return func(r chi.Router) {
-			r.Get("/", crud.NewCRUDHandlers(service).Read)
+			r.Get("/", crud.NewCRUDHandlers(&service).Read)
 			r.Patch("/", newKYCSubmitter(service))
 		}
 	}

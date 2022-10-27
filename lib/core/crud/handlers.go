@@ -10,10 +10,10 @@ import (
 )
 
 type Handlers[E Entity] struct {
-	service Service[E]
+	service *Service[E]
 }
 
-func NewCRUDHandlers[E Entity](service Service[E]) Handlers[E] {
+func NewCRUDHandlers[E Entity](service *Service[E]) Handlers[E] {
 	return Handlers[E]{service: service}
 }
 

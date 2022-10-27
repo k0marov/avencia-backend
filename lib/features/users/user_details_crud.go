@@ -27,7 +27,7 @@ func NewUserDetailsCRUDEndpoint(simpleDB db.SDB) api.Endpoint {
 			return client_errors.Unauthorized
 		}),
 	}
-	handlers := crud.NewCRUDHandlers(service)
+	handlers := crud.NewCRUDHandlers(&service)
 	return crud.NewCrudEndpoint(handlers, crud.EnabledMethods{
 		Read: true, Update: true,
 	})
