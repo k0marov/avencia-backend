@@ -24,8 +24,8 @@ const TransactionTypeClaim = "transaction_type"
 
 type Transaction struct {
 	Source TransSource
-	UserId string
-	Money  core.Money
+	WalletId string 
+	Money  core.MoneyAmount
 }
 
 type GeneratedCode struct {

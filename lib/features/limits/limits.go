@@ -1,7 +1,6 @@
 package limits
 
 import (
-	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
@@ -35,37 +34,37 @@ func NewLimitsGetter(getWithdraws store.WithdrawsGetter, compute limitsComputer)
 	}
 }
 
-func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
-	return func(db db.TDB, t transValues.Transaction) error {
-		if t.Money.Amount.IsPos() { // it's a deposit
-			return nil
-		}
-		withdraw := t.Money.Amount.Neg()
-		limits, err := getLimits(db, t.UserId)
-		if err != nil {
-			return core_err.Rethrow("while getting users's limits", err)
-		}
-		limit := limits[t.Money.Currency]
-		if limit.Max.IsSet() && limit.Withdrawn.Add(withdraw).IsBigger(limit.Max) {
-			return client_errors.WithdrawLimitExceeded
-		}
-		return nil
-	}
-}
-
-func NewLimitsComputer(limitedCurrencies map[core.Currency]core.MoneyAmount) limitsComputer {
-	return func(withdraws models.Withdraws) (Limits, error) {
-		limits := Limits{} 
-		for curr, maxLimit := range limitedCurrencies {
-			w := withdraws[curr].Withdrawn
-			if !w.IsSet() {
-				w = core.NewMoneyAmount(0)
-			}
-			limits[curr] = Limit{
-				Withdrawn: w,
-				Max:       maxLimit,
-			}
-		}
-		return limits, nil
-	}
-}
+// func NewLimitChecker(getLimits LimitsGetter) LimitChecker {
+// 	return func(db db.TDB, t transValues.Transaction) error {
+// 		if t.Money.IsPos() { // it's a deposit
+// 			return nil
+// 		}
+// 		withdraw := t.Money.Neg()
+// 		limits, err := getLimits(db, t.UserId)
+// 		if err != nil {
+// 			return core_err.Rethrow("while getting users's limits", err)
+// 		}
+// 		limit := limits[t.Money.Currency]
+// 		if limit.Max.IsSet() && limit.Withdrawn.Add(withdraw).IsBigger(limit.Max) {
+// 			return client_errors.WithdrawLimitExceeded
+// 		}
+// 		return nil
+// 	}
+// }
+//
+// func NewLimitsComputer(limitedCurrencies map[core.Currency]core.MoneyAmount) limitsComputer {
+// 	return func(withdraws models.Withdraws) (Limits, error) {
+// 		limits := Limits{} 
+// 		for curr, maxLimit := range limitedCurrencies {
+// 			w := withdraws[curr].Withdrawn
+// 			if !w.IsSet() {
+// 				w = core.NewMoneyAmount(0)
+// 			}
+// 			limits[curr] = Limit{
+// 				Withdrawn: w,
+// 				Max:       maxLimit,
+// 			}
+// 		}
+// 		return limits, nil
+// 	}
+// }

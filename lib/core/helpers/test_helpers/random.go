@@ -78,8 +78,7 @@ func RandomUserInfo() userEntities.UserInfo {
 func RandomTransactionData() transValues.Transaction {
 	return transValues.Transaction{
 		Source: RandomTransactionSource(),
-		UserId: RandomString(),
-		Money:  RandomPositiveMoney(),
+		WalletId: RandomString(),
 	}
 }
 
