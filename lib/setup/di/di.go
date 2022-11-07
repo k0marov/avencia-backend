@@ -60,7 +60,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	// ===== AUTH =====
 	userAdder := authService.NewUserInfoAdder(deps.Auth.Verify)
 	authMW := authMiddleware.NewAuthMiddleware(userAdder)
-	userFromEmail := deps.Auth.UserByEmail
+	// userFromEmail := deps.Auth.UserByEmail
 
 	// ===== JWT =====
 	jwtIssuer := jwt.NewIssuer(deps.JwtSecret)
@@ -126,7 +126,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 
 	atmAuthMiddleware := atmMiddleware.NewATMAuthMiddleware(atmSecretValidator)
 
-	genCodeHandler := atmHandlers.NewGenerateQRCodeHandler(codeGenerator)
+	// genCodeHandler := atmHandlers.NewGenerateQRCodeHandler(codeGenerator)
 	createTransHandler := atmHandlers.NewCreateTransactionHandler(deps.TRunner, createAtmTrans)
 	onCancelHandler := atmHandlers.NewCancelTransactionHandler(cancelTrans)
 	validateWithdrawalHandler := atmHandlers.NewWithdrawalValidationHandler(deps.TRunner, validateWithdrawal)
@@ -137,13 +137,13 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	preBanknoteDispensedHandler := atmHandlers.NewPreBanknoteDispensedHandler(deps.TRunner, dispensedBanknoteValidator)
 	postBanknoteDispensedHandler := atmHandlers.NewPostBanknoteDispensedHandler(deps.TRunner, dispensedBanknoteValidator)
 
-	// ===== TRANSFERS =====
-	convertTransfer := transService.NewTransferConverter(userFromEmail)
-	validateTransfer := transValidators.NewTransferValidator()
-	performTransfer := transService.NewTransferPerformer(multiTransact)
-	transfer := transService.NewTransferer(convertTransfer, validateTransfer, performTransfer)
-	transferHandler := transHandlers.NewTransferHandler(deps.TRunner, transfer)
-
+	// // ===== TRANSFERS =====
+	// convertTransfer := transService.NewTransferConverter(userFromEmail)
+	// validateTransfer := transValidators.NewTransferValidator()
+	// performTransfer := transService.NewTransferPerformer(multiTransact)
+	// transfer := transService.NewTransferer(convertTransfer, validateTransfer, performTransfer)
+	// transferHandler := transHandlers.NewTransferHandler(deps.TRunner, transfer)
+	//
 	// ===== KYC =====
 	statusEPFactory := kyc.NewStatusEndpointFactory(deps.SimpleDB)
 	passportEndpoint := kyc.NewPassportEndpoint(upld, statusEPFactory)
@@ -166,9 +166,9 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 				},
 			},
 			App: api.AppHandlers{
-				GenCode:     genCodeHandler,
+				// GenCode:     genCodeHandler,
 				GetUserInfo: getUserInfoHandler,
-				Transfer:    transferHandler,
+				// Transfer:    transferHandler,
 				GetHistory:  getHistoryHandler,
 				UserDetails: userDetailsCrudEndpoint,
 				Kyc: api.KycHandlers{
