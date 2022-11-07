@@ -11,11 +11,115 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/models"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	wEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
+
+func TestLimitChecker(t *testing.T) {
+	tLimit := limits.Limit{
+		Withdrawn: core.NewMoneyAmount(500),
+		Max:       core.NewMoneyAmount(600),
+	}
+	wallet := RandomString()
+	mockDB := NewStubDB()
+
+	getLimit := func(gotDB db.TDB, walletId string) (limits.Limit, error) {
+		if gotDB == mockDB && wallet == walletId {
+			return tLimit, nil
+		}
+		panic("unexpected")
+	}
+
+	t.Run("error case - getting limit throws", func(t *testing.T) {
+		getLimit := func(db.TDB, string) (limits.Limit, error) {
+			return limits.Limit{}, RandomError()
+		}
+		err := limits.NewLimitChecker(getLimit)(mockDB, transValues.Transaction{Money: RandomNegMoneyAmount()})
+		AssertSomeError(t, err)
+	})
+	t.Run("error case - limit exceeded", func(t *testing.T) {
+		trans := transValues.Transaction{
+			Source:   RandomTransactionSource(),
+			WalletId: wallet,
+			Money:    core.NewMoneyAmount(-200),
+		}
+		err := limits.NewLimitChecker(getLimit)(mockDB, trans)
+		AssertError(t, err, client_errors.WithdrawLimitExceeded)
+	})
+	t.Run("happy case", func(t *testing.T) {
+		trans := transValues.Transaction{
+			Source:   RandomTransactionSource(),
+			WalletId: wallet,
+			Money:    core.NewMoneyAmount(-50),
+		}
+		err := limits.NewLimitChecker(getLimit)(mockDB, trans)
+		AssertNoError(t, err)
+	})
+	t.Run("happy case - value is positive (its a deposit)", func(t *testing.T) {
+		trans := transValues.Transaction{
+			Source:   RandomTransactionSource(),
+			WalletId: wallet,
+			Money:    core.NewMoneyAmount(1000),
+		}
+		err := limits.NewLimitChecker(getLimit)(mockDB, trans)
+		AssertNoError(t, err)
+	})
+}
+
+func TestLimitGetter(t *testing.T) {
+	user := RandomString()
+	mockDB := NewStubDB()
+	 tLimits := limits.Limits{
+		"RUB": RandomLimit(),
+		"USD": RandomLimit(),
+	}
+	walletId := RandomString()
+	wallet := wEntities.WalletInfo{
+		OwnerId: user,
+		Money: core.Money{
+			Currency: "RUB",
+			Amount:   RandomMoneyAmount(),
+		},
+	}
+
+	getWallet := func(gotDB db.TDB, wId string) (wEntities.WalletInfo, error) {
+		if gotDB == mockDB && wId == walletId {
+			return wallet, nil
+		}
+		panic("unexpected")
+	}
+	t.Run("error case - getting wallet throws", func(t *testing.T) {
+		getWallet := func(db.TDB, string) (wEntities.WalletInfo, error) {
+			return wEntities.WalletInfo{}, RandomError()
+		}
+		_, err := limits.NewLimitGetter(getWallet, nil)(mockDB, walletId)
+		AssertSomeError(t, err)
+	})
+
+	getLimits := func(db.TDB, string) (limits.Limits, error) {
+		return tLimits, nil
+	}
+	t.Run("error case - getting limits throws", func(t *testing.T) {
+		getLimits := func(gotDB db.TDB, userId string) (limits.Limits, error) {
+			if gotDB == mockDB && userId == user {
+				return nil, RandomError()
+			}
+			panic("unexpected")
+		}
+		_, err := limits.NewLimitGetter(getWallet, getLimits)(mockDB, walletId)
+		AssertSomeError(t, err)
+	})
+
+	t.Run("happy case", func(t *testing.T) {
+		limit, err := limits.NewLimitGetter(getWallet, getLimits)(mockDB, walletId)
+		AssertNoError(t, err)
+		Assert(t, limit, tLimits["RUB"], "the returned limit")
+	})
+}
 
 func TestLimitsGetter(t *testing.T) {
 	user := RandomString()
 	mockDB := NewStubDB()
+
 	t.Run("error case - getting withdraws throws", func(t *testing.T) {
 		getWithdraws := func(gotDB db.TDB, userId string) (models.Withdraws, error) {
 			if gotDB == mockDB && userId == user {
@@ -87,70 +191,4 @@ func TestLimitsComputer(t *testing.T) {
 	gotLimits, err := limits.NewLimitsComputer(limitedCurrencies)(withdrawns)
 	AssertNoError(t, err)
 	Assert(t, gotLimits, wantLimits, "returned limits")
-}
-
-func TestLimitChecker(t *testing.T) {
-	tLimits := limits.Limits{
-		"USD": limits.Limit{
-			Withdrawn: core.NewMoneyAmount(500),
-			Max:       core.NewMoneyAmount(600),
-		},
-		"RUB": limits.Limit{
-			Withdrawn: core.NewMoneyAmount(400),
-			Max:       core.NewMoneyAmount(10000),
-		},
-	}
-	user := RandomString()
-	mockDB := NewStubDB()
-
-	getLimits := func(gotDB db.TDB, userId string) (limits.Limits, error) {
-		if gotDB == mockDB && userId == user {
-			return tLimits, nil
-		}
-		panic("unexpected")
-	}
-
-	t.Run("error case - getting limits throws", func(t *testing.T) {
-		getLimits := func(db.TDB, string) (limits.Limits, error) {
-			return nil, RandomError()
-		}
-		err := limits.NewLimitChecker(getLimits)(mockDB, transValues.Transaction{Money: RandomNegativeMoney()})
-		AssertSomeError(t, err)
-	})
-	t.Run("error case - limit exceeded", func(t *testing.T) {
-		trans := transValues.Transaction{
-			UserId: user,
-			Source: RandomTransactionSource(),
-			Money: core.Money{
-				Currency: "USD",
-				Amount:   core.NewMoneyAmount(-200),
-			},
-		}
-		err := limits.NewLimitChecker(getLimits)(mockDB, trans)
-		AssertError(t, err, client_errors.WithdrawLimitExceeded)
-	})
-	t.Run("happy case", func(t *testing.T) {
-		trans := transValues.Transaction{
-			Source: RandomTransactionSource(),
-			UserId: user,
-			Money: core.Money{
-				Currency: "RUB",
-				Amount:   core.NewMoneyAmount(-1000),
-			},
-		}
-		err := limits.NewLimitChecker(getLimits)(mockDB, trans)
-		AssertNoError(t, err)
-	})
-	t.Run("happy case - value is positive (its a deposit)", func(t *testing.T) {
-		trans := transValues.Transaction{
-			Source: RandomTransactionSource(),
-			UserId: user,
-			Money: core.Money{
-				Currency: "USD",
-				Amount:   core.NewMoneyAmount(1000),
-			},
-		}
-		err := limits.NewLimitChecker(getLimits)(mockDB, trans)
-		AssertNoError(t, err)
-	})
 }

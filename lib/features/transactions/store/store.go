@@ -7,6 +7,8 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/store/mappers"
 )
 
+// TODO: move from using this stupid complicated JWT stuff to a normal db entity 
+
 // The current implementation does not actually create any entities in the database.
 // It saves all of the needed data inside a jwt, which is signed and encoded in the id.
 // Thanks to this, the API remains stateless + it is more performant.
