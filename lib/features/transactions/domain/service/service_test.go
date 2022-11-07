@@ -107,26 +107,20 @@ func TestTransactionPerformer(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		// updBal := func(gotDB db.DB, user string, newBal core.Money) error {
-		// 	if gotDB == mockDB && user == trans.UserId && newBal.Currency == trans.Money.Currency && newBal.Amount.IsEqual(wantNewBal.Amount) { return tErr
-		// 	}
-		// 	panic("unexpected")
-		// }
 		err := service.NewTransactionPerformer(updateWithdrawn, addHist, updBal)(mockDB, curBalance, trans)
 		AssertError(t, err, tErr)
 	})
 }
 
 func TestTransBalUpdater(t *testing.T) {
-
 	mockDB := NewStubDB()
 	curBalance := RandomPosMoneyAmount()
 	trans := RandomTransactionData()
-	wantNewBal := curBalance.Add(trans.Money.Amount)
+	wantNewBal := curBalance.Add(trans.Money)
 
 	tErr := RandomError()
-	updBal := func(gotDB db.TDB, user string, newBal core.Money) error {
-		if gotDB == mockDB && user == trans.UserId && newBal.Currency == trans.Money.Currency && newBal.Amount.IsEqual(wantNewBal) {
+	updBal := func(gotDB db.TDB, walletId string, newBal core.MoneyAmount) error {
+		if gotDB == mockDB && newBal.IsEqual(wantNewBal) {
 			return tErr
 		}
 		panic("unexpected")

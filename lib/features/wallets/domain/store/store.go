@@ -7,4 +7,4 @@ import (
 )
 
 type WalletGetter = func(db db.TDB, userId string) (entities.Wallet, error)
-type BalanceUpdater = func(db db.TDB, userId string, newBalance core.Money) error
+type BalanceUpdater = func(db db.TDB, walletId string, newBalance core.MoneyAmount) error
