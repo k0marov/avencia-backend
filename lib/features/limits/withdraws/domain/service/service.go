@@ -8,6 +8,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/store"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	wService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 	"github.com/AvenciaLab/avencia-backend/lib/setup/config/configurable"
 )
 
@@ -26,6 +27,19 @@ func NewWithdrawnUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUp
 			return core_err.Rethrow("getting new withdrawn value", err)
 		}
 		return update(db, userId, newWithdrawn)
+	}
+}
+
+func NewTransWithdrawnUpdater(getWallet wService.WalletGetter, upd WithdrawnUpdater) TransWithdrawnUpdater {
+	return func(db db.TDB, t tValues.Transaction) error {
+		wallet, err := getWallet(db, t.WalletId) 
+		if err != nil {
+			return core_err.Rethrow("getting the wallet", err)
+		}
+		return upd(db, wallet.OwnerId, core.Money{
+			Currency:wallet.Currency,
+			Amount:   t.Money,
+		})
 	}
 }
 

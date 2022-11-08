@@ -9,6 +9,7 @@ import (
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
 
 func TestTransactionValidator(t *testing.T) {
@@ -54,32 +55,36 @@ func TestEnoughBalanceValidator(t *testing.T) {
 		WalletId: RandomString(),
 		Money:    core.NewMoneyAmount(-50.0),
 	}
-	notEnoughBalance := core.NewMoneyAmount(30)
-	enoughBalance := core.NewMoneyAmount(100)
+	notEnoughBalanceWallet := walletEntities.Wallet{
+		Amount: core.NewMoneyAmount(30),
+	} 
+	enoughBalanceWallet := walletEntities.Wallet{
+		Amount: core.NewMoneyAmount(100),
+	} 
 	t.Run("error case - getting balance throws", func(t *testing.T) {
-		getBalance := func(gotDB db.TDB, walletId string) (core.MoneyAmount, error) {
+		getWallet := func(gotDB db.TDB, walletId string) (walletEntities.Wallet, error) {
 			if gotDB == mockDB && walletId == trans.WalletId {
-				return core.MoneyAmount{}, RandomError()
+				return walletEntities.Wallet{}, RandomError()
 			}
 			panic("unexpected")
 		}
-		_, err := validators.NewEnoughBalanceValidator(getBalance)(mockDB, trans)
+		_, err := validators.NewEnoughBalanceValidator(getWallet)(mockDB, trans)
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - insufficient funds", func(t *testing.T) {
-		getBalance := func(db.TDB, string) (core.MoneyAmount, error) {
-			return notEnoughBalance, nil
+		getWallet := func(db.TDB, string) (walletEntities.Wallet, error) {
+			return notEnoughBalanceWallet, nil
 		}
-		_, err := validators.NewEnoughBalanceValidator(getBalance)(mockDB, trans)
+		_, err := validators.NewEnoughBalanceValidator(getWallet)(mockDB, trans)
 		AssertError(t, err, client_errors.InsufficientFunds)
 	})
 	t.Run("happy case", func(t *testing.T) {
-		getBalance := func(db.TDB, string) (core.MoneyAmount, error) {
-			return enoughBalance, nil
+		getWallet := func(db.TDB, string) (walletEntities.Wallet, error) {
+			return enoughBalanceWallet, nil
 		}
-		bal, err := validators.NewEnoughBalanceValidator(getBalance)(mockDB, trans)
+		bal, err := validators.NewEnoughBalanceValidator(getWallet)(mockDB, trans)
 		AssertNoError(t, err)
-		Assert(t, bal, enoughBalance, "returned current balance")
+		Assert(t, bal, enoughBalanceWallet.Amount, "returned current balance")
 	})
 
 }

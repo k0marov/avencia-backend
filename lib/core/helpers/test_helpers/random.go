@@ -93,12 +93,10 @@ func RandomSecret() []byte {
 }
 
 func RandomWallet() walletEntities.Wallet {
-	return walletEntities.Wallet{}
-}
-func RandomWalletInfo() walletEntities.WalletInfo {
-	return walletEntities.WalletInfo{
-		OwnerId: RandomString(),
-		Money:   RandomPositiveMoney(),
+	return walletEntities.Wallet{
+		OwnerId:RandomString(),
+		Currency:RandomCurrency(),
+		Amount:   RandomPosMoneyAmount(),
 	}
 }
 

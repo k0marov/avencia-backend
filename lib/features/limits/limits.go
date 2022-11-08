@@ -45,7 +45,7 @@ func NewLimitChecker(getLimit limitGetter) LimitChecker {
 type limitGetter = func(db db.TDB, walletId string) (Limit, error) 
 
 
-func NewLimitGetter(getWallet wallets.InfoGetter, getLimits LimitsGetter) limitGetter{
+func NewLimitGetter(getWallet wallets.WalletGetter, getLimits LimitsGetter) limitGetter{
 	return func(db db.TDB, walletId string) (Limit, error) {
 		wallet, err := getWallet(db, walletId) 
 		if err != nil {
@@ -55,7 +55,7 @@ func NewLimitGetter(getWallet wallets.InfoGetter, getLimits LimitsGetter) limitG
 		if err != nil {
 			return Limit{}, core_err.Rethrow("getting the limits", err)
 		}
-		return limits[wallet.Money.Currency], nil
+		return limits[wallet.Currency], nil
 	}
 }
 

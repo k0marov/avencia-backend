@@ -3,7 +3,6 @@ package apiRequests
 import (
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/AvenciaLab/avencia-api-contract/api"
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
 	"github.com/AvenciaLab/avencia-backend/lib/core"
@@ -12,6 +11,7 @@ import (
 	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 	transferValues "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
+	"github.com/go-chi/chi/v5"
 )
 
 func NewTransDecoder(user authEntities.User, _ *http.Request, req api.GenTransCodeRequest) (tValues.MetaTrans, error) {

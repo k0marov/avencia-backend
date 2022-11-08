@@ -63,17 +63,17 @@ func TestHistoryGetter(t *testing.T) {
 
 func TestTransStorer(t *testing.T) {
 	mockDB := NewStubDB()
-	wallet := RandomWalletInfo()
+	wallet := RandomWallet()
 	trans := RandomTransactionData()	
-	getWallet := func(gotDB db.TDB, walletId string) (walletEntities.WalletInfo, error) {
+	getWallet := func(gotDB db.TDB, walletId string) (walletEntities.Wallet, error) {
 		if gotDB == mockDB && walletId == trans.WalletId {
 			return wallet, nil
 		}
 		panic("unexpected")
 	}
 	t.Run("error case - getting wallet throws", func(t *testing.T) {
-		getWallet := func(db.TDB, string) (walletEntities.WalletInfo, error) {
-      return walletEntities.WalletInfo{}, RandomError()
+		getWallet := func(db.TDB, string) (walletEntities.Wallet, error) {
+      return walletEntities.Wallet{}, RandomError()
 		}
 		err := service.NewEntryStorer(getWallet, nil)(mockDB, trans)
 		AssertSomeError(t, err)
@@ -82,7 +82,7 @@ func TestTransStorer(t *testing.T) {
 		tErr := RandomError()
 		storeEntry := func(gotDB db.TDB, userId string, entry entities.TransEntry) error {
 			if gotDB == mockDB && userId == wallet.OwnerId && 
-				entry.Money.Currency == wallet.Money.Currency && 
+				entry.Money.Currency == wallet.Currency && 
 				entry.Money.Amount == trans.Money && entry.Source == trans.Source && 
 				TimeAlmostEqual(time.Unix(entry.CreatedAt, 0), time.Now()) {
         	return tErr

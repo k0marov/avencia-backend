@@ -29,9 +29,6 @@ import (
 	tValidators "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
 	tStore "github.com/AvenciaLab/avencia-backend/lib/features/transactions/store"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/store/mappers"
-	transHandlers "github.com/AvenciaLab/avencia-backend/lib/features/transfers/delivery/http/handlers"
-	transService "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/service"
-	transValidators "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/validators"
 	"github.com/AvenciaLab/avencia-backend/lib/features/users"
 	userHandlers "github.com/AvenciaLab/avencia-backend/lib/features/users/delivery/http/handlers"
 	userService "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/service"
@@ -69,7 +66,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	// ===== WALLETS =====
 	updBal := storeImpl.NewBalanceUpdater(db.JsonUpdaterImpl[core.MoneyAmount])
 	getWallet := storeImpl.NewWalletGetter(db.JsonGetterImpl[walletEntities.Wallet])
-	getBalance := walletService.NewBalanceGetter(getWallet)
+	getBalance := walletService.NewWalletGetter(getWallet)
 
 	// ===== STATIC STORE =====
 	staticFileCreator := static_store.NewStaticFileCreatorImpl(deps.Config.StaticDir)
@@ -83,8 +80,10 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	storeUpdateWithdrawn := withdrawsStore.NewWithdrawUpdater(db.JsonUpdaterImpl[models.WithdrawVal])
 	getUpdatedWithdrawn := withdrawsService.NewWithdrawnUpdateGetter(storeGetWithdraws)
 	updateWithdrawn := withdrawsService.NewWithdrawnUpdater(getUpdatedWithdrawn, storeUpdateWithdrawn)
+	transUpdateWithdrawn := withdrawsService.NewTransWithdrawnUpdater(getWallet, updateWithdrawn)
 	getLimits := limits.NewLimitsGetter(storeGetWithdraws, limits.NewLimitsComputer(configurable.LimitedCurrencies))
-	checkLimit := limits.NewLimitChecker(getLimits)
+	getLimit := limits.NewLimitGetter(getWallet, getLimits)
+	checkLimit := limits.NewLimitChecker(getLimit)
 
 	// ===== USERS =====
 	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits, deps.Auth.Get)
@@ -95,7 +94,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	storeGetHistory := histStore.NewHistoryGetter(db.JsonColGetterImpl[histEntities.TransEntry])
 	storeStoreTrans := histStore.NewTransStorer(db.JsonSetterImpl[histEntities.TransEntry])
 	getHistory := histService.NewHistoryGetter(storeGetHistory)
-	storeTrans := histService.NewEntryStorer(storeStoreTrans)
+	storeTrans := histService.NewEntryStorer(getWallet, storeStoreTrans)
 	getHistoryHandler := histHandlers.NewGetHistoryHandler(deps.TRunner, getHistory)
 
 	// ===== TRANSACTIONS =====
@@ -106,7 +105,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 
 	createTrans := tStore.NewTransactionCreator(codeGenerator)
 	getTrans := tStore.NewTransactionGetter(codeParser)
-	transPerformer := tService.NewTransactionPerformer(updateWithdrawn, storeTrans, tService.NewTransBalUpdater(updBal))
+	transPerformer := tService.NewTransactionPerformer(transUpdateWithdrawn, storeTrans, tService.NewTransBalUpdater(updBal))
 	transact := tService.NewTransactionFinalizer(transValidator, transPerformer)
 	multiTransact := tService.NewMultiTransactionFinalizer(transact)
 

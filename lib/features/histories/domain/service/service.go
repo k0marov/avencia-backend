@@ -28,7 +28,7 @@ func NewHistoryGetter(getHistory store.HistoryGetter) HistoryGetter {
   }
 }
 
-func NewEntryStorer(getWallet wallets.InfoGetter, storeTrans store.EntryStorer) EntryStorer {
+func NewEntryStorer(getWallet wallets.WalletGetter, storeTrans store.EntryStorer) EntryStorer {
   return func(db db.TDB, t transValues.Transaction) error {
   	wallet, err := getWallet(db, t.WalletId)
 		if err != nil {
@@ -37,7 +37,7 @@ func NewEntryStorer(getWallet wallets.InfoGetter, storeTrans store.EntryStorer) 
 		entry := entities.TransEntry{
 			Source:    t.Source,
 			Money:     core.Money{
-				Currency: wallet.Money.Currency,
+				Currency: wallet.Currency,
 				Amount: t.Money,
 			},
 			CreatedAt: time.Now().Unix(),

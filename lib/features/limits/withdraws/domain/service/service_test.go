@@ -9,8 +9,8 @@ import (
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/models"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/service"
+	wEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
-
 
 func TestWithdrawnUpdateGetter(t *testing.T) {
 	tWithdraws := models.Withdraws{
@@ -61,8 +61,8 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getWithdraws)(mockDB, userId, money)
 		AssertNoError(t, err)
 		expected := core.Money{
-			Currency: "BTC", 
-			Amount: core.NewMoneyAmount(0.01),
+			Currency: "BTC",
+			Amount:   core.NewMoneyAmount(0.01),
 		}
 		Assert(t, newWithdrawn, expected, "returned withdrawn value")
 	})
@@ -74,8 +74,8 @@ func TestWithdrawnUpdateGetter(t *testing.T) {
 		newWithdrawn, err := service.NewWithdrawnUpdateGetter(getWithdraws)(mockDB, userId, money)
 		AssertNoError(t, err)
 		expected := core.Money{
-			Currency: "RUB", 
-			Amount: core.NewMoneyAmount(420),
+			Currency: "RUB",
+			Amount:   core.NewMoneyAmount(420),
 		}
 		Assert(t, newWithdrawn, expected, "returned withdraw value")
 	})
@@ -87,10 +87,10 @@ func TestWithdrawnUpdater(t *testing.T) {
 	newWithdrawn := RandomPositiveMoney()
 
 	mockDB := NewStubDB()
-  t.Run("early return case - the provided transaction is not a withdrawal", func(t *testing.T) {
-  	err := service.NewWithdrawnUpdater(nil, nil)(mockDB, userId, RandomPositiveMoney())
-  	AssertNoError(t, err)
-  })
+	t.Run("early return case - the provided transaction is not a withdrawal", func(t *testing.T) {
+		err := service.NewWithdrawnUpdater(nil, nil)(mockDB, userId, RandomPositiveMoney())
+		AssertNoError(t, err)
+	})
 	t.Run("error case - getting new value throws", func(t *testing.T) {
 		getValue := func(gotDB db.TDB, user string, gotMoney core.Money) (core.Money, error) {
 			if gotDB == mockDB && user == userId && gotMoney == money {
@@ -115,5 +115,36 @@ func TestWithdrawnUpdater(t *testing.T) {
 		err := service.NewWithdrawnUpdater(getValue, update)(mockDB, userId, money)
 		AssertError(t, err, tErr)
 
+	})
+}
+
+func TestTransWithdrawnUpdater(t *testing.T) {
+	mockDB := NewStubDB()
+	trans := RandomTransactionData()
+	wallet := RandomWallet()
+	getWallet := func(gotDB db.TDB, walletId string) (wEntities.Wallet, error) {
+		if gotDB == mockDB && walletId == trans.WalletId {
+			return wallet, nil
+		}
+		panic("unexpected")
+	}
+	t.Run("error case - getting wallet throws", func(t *testing.T) {
+    getWallet := func(gotDB db.TDB, walletId string) (wEntities.Wallet, error) {
+    	return wEntities.Wallet{}, RandomError()
+    }
+    err := service.NewTransWithdrawnUpdater(getWallet, nil)(mockDB, trans)
+    AssertSomeError(t, err)
+	})
+	t.Run("forward case - forward to updateWithdrawn", func(t *testing.T) {
+		tErr := RandomError()
+		upd := func(gotDB db.TDB, userId string, money core.Money) error {
+			if gotDB == mockDB && userId == wallet.OwnerId &&
+				money.Currency == wallet.Currency && money.Amount == trans.Money {
+				return tErr
+			}
+			panic("unexpected")
+		}
+		err := service.NewTransWithdrawnUpdater(getWallet, upd)	(mockDB, trans)
+		AssertError(t, err, tErr)
 	})
 }

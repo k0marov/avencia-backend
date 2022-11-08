@@ -73,23 +73,21 @@ func TestLimitGetter(t *testing.T) {
 		"USD": RandomLimit(),
 	}
 	walletId := RandomString()
-	wallet := wEntities.WalletInfo{
+	wallet := wEntities.Wallet{
 		OwnerId: user,
-		Money: core.Money{
-			Currency: "RUB",
-			Amount:   RandomMoneyAmount(),
-		},
+		Currency: "RUB",
+		Amount:   RandomMoneyAmount(),
 	}
 
-	getWallet := func(gotDB db.TDB, wId string) (wEntities.WalletInfo, error) {
+	getWallet := func(gotDB db.TDB, wId string) (wEntities.Wallet, error) {
 		if gotDB == mockDB && wId == walletId {
 			return wallet, nil
 		}
 		panic("unexpected")
 	}
 	t.Run("error case - getting wallet throws", func(t *testing.T) {
-		getWallet := func(db.TDB, string) (wEntities.WalletInfo, error) {
-			return wEntities.WalletInfo{}, RandomError()
+		getWallet := func(db.TDB, string) (wEntities.Wallet, error) {
+			return wEntities.Wallet{}, RandomError()
 		}
 		_, err := limits.NewLimitGetter(getWallet, nil)(mockDB, walletId)
 		AssertSomeError(t, err)

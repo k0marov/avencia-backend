@@ -25,17 +25,17 @@ func NewTransactionValidator(checkLimits limits.LimitChecker, checkBalance enoug
 	}
 }
 
-func NewEnoughBalanceValidator(getBalance walletService.BalanceGetter) enoughBalanceValidator {
+func NewEnoughBalanceValidator(getWallet walletService.WalletGetter) enoughBalanceValidator {
 	return func(db db.TDB, t values.Transaction) (curBalance core.MoneyAmount, err error) {
-		bal, err := getBalance(db, t.WalletId)
+		wallet, err := getWallet(db, t.WalletId)
 		if err != nil {
 			return core.NewMoneyAmount(0), core_err.Rethrow("getting current balance", err)
 		}
 		if t.Money.IsNeg() {
-			if bal.Num() < math.Abs(t.Money.Num()) {
+			if wallet.Amount.Num() < math.Abs(t.Money.Num()) {
 				return core.NewMoneyAmount(0), client_errors.InsufficientFunds
 			}
 		}
-		return bal, nil
+		return wallet.Amount, nil
 	}
 }
