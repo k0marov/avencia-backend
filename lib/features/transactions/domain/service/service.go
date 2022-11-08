@@ -41,7 +41,7 @@ func NewTransactionFinalizer(validate validators.TransactionValidator, perform t
 
 type transBalUpdater = func(db db.TDB, curBal core.MoneyAmount, t values.Transaction) error
 
-func NewTransactionPerformer(updWithdrawn withdrawsService.TransWithdrawnUpdater, addHist histService.TransStorer, updBal transBalUpdater) transactionPerformer {
+func NewTransactionPerformer(updWithdrawn withdrawsService.TransWithdrawnUpdater, addHist histService.EntryStorer, updBal transBalUpdater) transactionPerformer {
 	return func(db db.TDB, curBal core.MoneyAmount, t values.Transaction) error {
 		err := updWithdrawn(db, t)
 		if err != nil {

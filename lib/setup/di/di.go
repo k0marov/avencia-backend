@@ -95,7 +95,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	storeGetHistory := histStore.NewHistoryGetter(db.JsonColGetterImpl[histEntities.TransEntry])
 	storeStoreTrans := histStore.NewTransStorer(db.JsonSetterImpl[histEntities.TransEntry])
 	getHistory := histService.NewHistoryGetter(storeGetHistory)
-	storeTrans := histService.NewTransStorer(storeStoreTrans)
+	storeTrans := histService.NewEntryStorer(storeStoreTrans)
 	getHistoryHandler := histHandlers.NewGetHistoryHandler(deps.TRunner, getHistory)
 
 	// ===== TRANSACTIONS =====

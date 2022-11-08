@@ -1,13 +1,11 @@
 package store
 
 import (
-	"time"
 
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/general_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
 	"github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/store"
-	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
 func NewHistoryGetter(getDocs db.JsonColGetter[entities.TransEntry]) store.HistoryGetter {
@@ -17,14 +15,9 @@ func NewHistoryGetter(getDocs db.JsonColGetter[entities.TransEntry]) store.Histo
 	}
 }
 
-func NewTransStorer(updDoc db.JsonSetter[entities.TransEntry]) store.TransStorer {
-	return func(db db.TDB, t transValues.Transaction) error {
-		path := []string{"histories", t.UserId, general_helpers.RandomId()}
-		tEntry := entities.TransEntry{
-			Source:    t.Source,
-			Money:     t.Money,
-			CreatedAt: time.Now().Unix(), // TODO: this should be in the business layer
-		}
-		return updDoc(db, path, tEntry)
+func NewTransStorer(updDoc db.JsonSetter[entities.TransEntry]) store.EntryStorer {
+	return func(db db.TDB, userId string, entry entities.TransEntry) error {
+		path := []string{"histories", userId, general_helpers.RandomId()}
+		return updDoc(db, path, entry)
 	}
 }

@@ -2,11 +2,13 @@ package service_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
 	"github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/service"
+	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
 
 func TestHistoryGetter(t *testing.T) {
@@ -60,5 +62,34 @@ func TestHistoryGetter(t *testing.T) {
 }
 
 func TestTransStorer(t *testing.T) {
-
+	mockDB := NewStubDB()
+	wallet := RandomWalletInfo()
+	trans := RandomTransactionData()	
+	getWallet := func(gotDB db.TDB, walletId string) (walletEntities.WalletInfo, error) {
+		if gotDB == mockDB && walletId == trans.WalletId {
+			return wallet, nil
+		}
+		panic("unexpected")
+	}
+	t.Run("error case - getting wallet throws", func(t *testing.T) {
+		getWallet := func(db.TDB, string) (walletEntities.WalletInfo, error) {
+      return walletEntities.WalletInfo{}, RandomError()
+		}
+		err := service.NewEntryStorer(getWallet, nil)(mockDB, trans)
+		AssertSomeError(t, err)
+	})
+	t.Run("forward case - forward to store", func(t *testing.T) {
+		tErr := RandomError()
+		storeEntry := func(gotDB db.TDB, userId string, entry entities.TransEntry) error {
+			if gotDB == mockDB && userId == wallet.OwnerId && 
+				entry.Money.Currency == wallet.Money.Currency && 
+				entry.Money.Amount == trans.Money && entry.Source == trans.Source && 
+				TimeAlmostEqual(time.Unix(entry.CreatedAt, 0), time.Now()) {
+        	return tErr
+				} 
+			panic("unexpected")
+		}
+		err := service.NewEntryStorer(getWallet, storeEntry)(mockDB, trans)
+		AssertError(t, err, tErr)
+	})
 }
