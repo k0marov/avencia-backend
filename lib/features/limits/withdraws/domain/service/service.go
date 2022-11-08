@@ -7,11 +7,12 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/store"
+	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/AvenciaLab/avencia-backend/lib/setup/config/configurable"
 )
 
-
 type WithdrawnUpdater = func(db db.TDB, userId string, tMoney core.Money) error
+type TransWithdrawnUpdater = func(db db.TDB, t tValues.Transaction)  error
 
 type withdrawnUpdateGetter = func(db db.TDB, userId string, tMoney core.Money) (core.Money, error)
 
