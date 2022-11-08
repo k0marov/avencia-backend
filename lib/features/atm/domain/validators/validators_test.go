@@ -43,7 +43,7 @@ func TestWithdrawalValidator(t *testing.T) {
 	}
 	metaTrans := tValues.MetaTrans{
 		Type: RandomTransactionType(),
-		UserId:    RandomString(),
+		WalletId:    RandomString(),
 	}
 
 	wantTrans := tValues.Transaction{
@@ -51,8 +51,8 @@ func TestWithdrawalValidator(t *testing.T) {
 			Type: tValues.Cash,
 			Detail: "",
 		},
-		UserId: metaTrans.UserId,
-		Money:  wd.Money,
+		WalletId: metaTrans.WalletId,
+		Money:  wd.Money.Amount,
 	}
 	mockDB := NewStubDB()
 
@@ -91,7 +91,7 @@ func TestMetaTransValidator(t *testing.T) {
 	id := RandomString() 
 	metaTrans := tValues.MetaTrans{
 		Type:   tValues.Deposit,
-		UserId: RandomString(),
+		WalletId: RandomString(),
 	}
 	wantType := tValues.Deposit
 	getTrans := func(gotId string) (tValues.MetaTrans, error) {

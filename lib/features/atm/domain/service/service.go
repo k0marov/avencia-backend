@@ -29,7 +29,7 @@ func NewATMTransactionCreator(
 		if err != nil {
 			return values.CreatedTransaction{}, err
 		}
-		user, err := getUser(db, metaTrans.UserId)
+		user, err := getUser(db, metaTrans.WalletId)
 		if err != nil {
 			return values.CreatedTransaction{}, core_err.Rethrow("getting user info", err)
 		}
@@ -81,8 +81,8 @@ func NewGeneralFinalizer(validate validators.MetaTransByIdValidator, finalize tS
 		for _, m := range m {
 			t = append(t, tValues.Transaction{
 				Source: source,
-				UserId: metaTrans.UserId,
-				Money:  m,
+				WalletId: metaTrans.WalletId,
+				Money:  m.Amount,
 			})
 		}
 		return finalize(db, t)

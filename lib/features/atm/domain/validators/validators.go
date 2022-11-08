@@ -7,9 +7,9 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
-	tStore "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/store"
 	tValidators "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	tStore "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/store"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/store/mappers"
 )
 
@@ -54,8 +54,8 @@ func NewWithdrawalValidator(validateMeta MetaTransByIdValidator, validateTrans t
 			Source: tValues.TransSource{
 				Type: tValues.Cash,
 			},
-			UserId: metaTrans.UserId,
-			Money:  wd.Money,
+			WalletId: metaTrans.WalletId,
+			Money:  wd.Money.Amount,
 		}
 		_, err = validateTrans(db, t)
 		return err

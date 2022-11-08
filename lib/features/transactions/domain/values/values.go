@@ -16,10 +16,10 @@ const (
 // TODO: TransSource should be added here
 type MetaTrans struct {
 	Type TransactionType
-	UserId    string
+	WalletId    string
 }
 
-const UserIdClaim = "sub"
+const WalletIdClaim = "sub"
 const TransactionTypeClaim = "transaction_type"
 
 type Transaction struct {

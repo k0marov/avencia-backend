@@ -10,13 +10,12 @@ import (
 )
 
 type CodeGenerator = func(values.MetaTrans) (values.GeneratedCode, error)
-type CodeParser = func(code string) (values.MetaTrans, error) 
-
+type CodeParser = func(code string) (values.MetaTrans, error)
 
 func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(trans values.MetaTrans) (values.GeneratedCode, error) {
 		claims := map[string]any{
-			values.UserIdClaim:          trans.UserId,
+			values.WalletIdClaim:        trans.WalletId,
 			values.TransactionTypeClaim: trans.Type,
 		}
 		expireAt := time.Now().UTC().Add(configurable.TransactionExpDuration)
@@ -31,23 +30,23 @@ func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 // TODO: somehow simplify this using struct tags and maybe JSON Marshalling
 func NewCodeParser(parseJWT jwt.Verifier) CodeParser {
 	return func(code string) (values.MetaTrans, error) {
-		claims, err := parseJWT(code) 
+		claims, err := parseJWT(code)
 		if err != nil {
 			return values.MetaTrans{}, client_errors.InvalidCode
 		}
 
-		tType, ok := claims[values.TransactionTypeClaim].(string) 
+		tType, ok := claims[values.TransactionTypeClaim].(string)
 		if !ok {
-			return values.MetaTrans{}, client_errors.InvalidCode 
+			return values.MetaTrans{}, client_errors.InvalidCode
 		}
-		userId, ok := claims[values.UserIdClaim].(string)
+		walletId, ok := claims[values.WalletIdClaim].(string)
 		if !ok {
 			return values.MetaTrans{}, client_errors.InvalidCode
 		}
 
 		return values.MetaTrans{
-			Type: values.TransactionType(tType),
-			UserId:    userId,
+			Type:   values.TransactionType(tType),
+			WalletId: walletId,
 		}, nil
 	}
 }
