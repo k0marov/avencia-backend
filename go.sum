@@ -102,6 +102,14 @@ github.com/AvenciaLab/avencia-api-contract v0.0.0-20221016144544-a4e7999ca4bc h1
 github.com/AvenciaLab/avencia-api-contract v0.0.0-20221016144544-a4e7999ca4bc/go.mod h1:kogtRGgiOOVgHhAEkMZi2XZ7pMMBKQHC8d5mELAg4i0=
 github.com/AvenciaLab/avencia-api-contract v0.0.0-20221107161059-d107de92dffd h1:iMzGwG+wZh3fui2iNU3kkDvLrBcipgdMKtHOu3rs+Oo=
 github.com/AvenciaLab/avencia-api-contract v0.0.0-20221107161059-d107de92dffd/go.mod h1:kogtRGgiOOVgHhAEkMZi2XZ7pMMBKQHC8d5mELAg4i0=
+github.com/AvenciaLab/avencia-api-contract v0.0.0-20221109063708-cf59be53eb63 h1:uMU8HxLeg2LbepJW9987NuO4IkePQfwF0J0YuwSsPhY=
+github.com/AvenciaLab/avencia-api-contract v0.0.0-20221109063708-cf59be53eb63/go.mod h1:kogtRGgiOOVgHhAEkMZi2XZ7pMMBKQHC8d5mELAg4i0=
+github.com/AvenciaLab/avencia-api-contract v0.0.0-20221109072420-fbdc3d0e0d76 h1:AIHcmeW/RapwnQCG/Nyh59U/cRIR+hG96fjKoq7KM7g=
+github.com/AvenciaLab/avencia-api-contract v0.0.0-20221109072420-fbdc3d0e0d76/go.mod h1:kogtRGgiOOVgHhAEkMZi2XZ7pMMBKQHC8d5mELAg4i0=
+github.com/AvenciaLab/avencia-api-contract v0.0.0-20221109073609-701e7df3d78f h1:LhI++SoeUXyFwOE4pjaTty2HHax5WHIR+CTMz8XfB1U=
+github.com/AvenciaLab/avencia-api-contract v0.0.0-20221109073609-701e7df3d78f/go.mod h1:kogtRGgiOOVgHhAEkMZi2XZ7pMMBKQHC8d5mELAg4i0=
+github.com/AvenciaLab/avencia-api-contract v0.0.0-20221109085829-67c70a5283f2 h1:CVgi7726gKvC/zepnOh5bXmTz9CPlXPU39sU80JNo+I=
+github.com/AvenciaLab/avencia-api-contract v0.0.0-20221109085829-67c70a5283f2/go.mod h1:kogtRGgiOOVgHhAEkMZi2XZ7pMMBKQHC8d5mELAg4i0=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=

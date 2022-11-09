@@ -6,7 +6,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
-	"github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/store"
+	wallets "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 	withdrawsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/service"
 	histService "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/service"
 )
@@ -56,7 +56,7 @@ func NewTransactionPerformer(updWithdrawn withdrawsService.TransWithdrawnUpdater
 	}
 }
 
-func NewTransBalUpdater(updBal store.BalanceUpdater) transBalUpdater {
+func NewTransBalUpdater(updBal wallets.BalanceUpdater) transBalUpdater {
 	return func(db db.TDB, curBal core.MoneyAmount, t values.Transaction) error {
 		return updBal(db, t.WalletId, curBal.Add(t.Money))
 	}

@@ -14,6 +14,10 @@ func TestWalletCreator(t *testing.T) {
 	mockDB := NewStubDB()
 	userId := RandomString()
 	currency := RandomCurrency()
+	data := service.WalletCreationData{
+		UserId:   userId,
+		Currency: currency,
+	}
 
 	t.Run("forward case", func(t *testing.T) {
 		tId := RandomString()
@@ -26,7 +30,7 @@ func TestWalletCreator(t *testing.T) {
 			}
 			panic("unexpected")
 		}
-		id, err := service.NewWalletCreator(storeCreator)(mockDB, userId, currency)
+		id, err := service.NewWalletCreator(storeCreator)(mockDB, data)
 		AssertError(t, err, tErr)
 		Assert(t, id, tId, "returned id")
 	})

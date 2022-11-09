@@ -8,7 +8,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/models"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/store"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
-	wallets "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/store"
+	wallets "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 )
 
 

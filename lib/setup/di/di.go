@@ -30,8 +30,8 @@ import (
 	tStore "github.com/AvenciaLab/avencia-backend/lib/features/transactions/store"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/store/mappers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/users"
-	userHandlers "github.com/AvenciaLab/avencia-backend/lib/features/users/delivery/http/handlers"
 	userService "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/service"
+	wHandlers "github.com/AvenciaLab/avencia-backend/lib/features/wallets/delivery/http/handlers"
 	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 	walletService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 	storeImpl "github.com/AvenciaLab/avencia-backend/lib/features/wallets/store"
@@ -64,9 +64,19 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	jwtVerifier := jwt.NewVerifier(deps.JwtSecret)
 
 	// ===== WALLETS =====
-	updBal := storeImpl.NewBalanceUpdater(db.JsonUpdaterImpl[core.MoneyAmount])
-	getWallet := storeImpl.NewWalletGetter(db.JsonGetterImpl[walletEntities.Wallet])
+	updBal := walletService.NewBalanceUpdater(storeImpl.NewBalanceUpdater(db.JsonUpdaterImpl[core.MoneyAmount]))
+	getWallet := walletService.NewWalletGetter(storeImpl.NewWalletGetter(db.JsonGetterImpl[walletEntities.Wallet]))
+	storeCreateWallet := storeImpl.NewWalletCreator(
+		db.JsonGetterImpl[storeImpl.UserWalletsModel], 
+		db.JsonUpdaterImpl[[]string], 
+    db.JsonSetterImpl[walletEntities.Wallet],
+	)
+	createWallet := walletService.NewWalletCreator(storeCreateWallet)
+	getWallets := walletService.NewWalletsGetter(storeImpl.NewWalletsGetter(db.JsonGetterImpl[storeImpl.UserWalletsModel], getWallet))
 	getBalance := walletService.NewWalletGetter(getWallet)
+
+	createWalletHandler := wHandlers.NewCreateWalletHandler(deps.TRunner, createWallet)
+	getWalletsHandler := wHandlers.NewGetWalletsHandler(deps.TRunner, getWallets)
 
 	// ===== STATIC STORE =====
 	staticFileCreator := static_store.NewStaticFileCreatorImpl(deps.Config.StaticDir)
@@ -87,7 +97,6 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 
 	// ===== USERS =====
 	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits, deps.Auth.Get)
-	getUserInfoHandler := userHandlers.NewGetUserInfoHandler(deps.TRunner, getUserInfo)
 	userDetailsCrudEndpoint := users.NewUserDetailsCRUDEndpoint(deps.SimpleDB)
 
 	// ===== HISTORIES =====
@@ -125,7 +134,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 
 	atmAuthMiddleware := atmMiddleware.NewATMAuthMiddleware(atmSecretValidator)
 
-	// genCodeHandler := atmHandlers.NewGenerateQRCodeHandler(codeGenerator)
+	genCodeHandler := atmHandlers.NewGenerateQRCodeHandler(codeGenerator)
 	createTransHandler := atmHandlers.NewCreateTransactionHandler(deps.TRunner, createAtmTrans)
 	onCancelHandler := atmHandlers.NewCancelTransactionHandler(cancelTrans)
 	validateWithdrawalHandler := atmHandlers.NewWithdrawalValidationHandler(deps.TRunner, validateWithdrawal)
@@ -165,13 +174,15 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 				},
 			},
 			App: api.AppHandlers{
-				// GenCode:     genCodeHandler,
-				GetUserInfo: getUserInfoHandler,
-				// Transfer:    transferHandler,
+				GenCode:     genCodeHandler,
+				Transfer: func(http.ResponseWriter, *http.Request) {
+				},
 				GetHistory:  getHistoryHandler,
+				Kyc:         api.KycHandlers{Passport: passportEndpoint},
 				UserDetails: userDetailsCrudEndpoint,
-				Kyc: api.KycHandlers{
-					Passport: passportEndpoint,
+				Wallets:     api.WalletHandlers{
+					GetAll: getWalletsHandler,
+					Create: createWalletHandler,
 				},
 			},
 		},

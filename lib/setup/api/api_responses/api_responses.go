@@ -6,10 +6,8 @@ import (
 	histEntities "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
-	userEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
-	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
+	wEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
-
 
 func CreatedTransactionEncoder(t atmValues.CreatedTransaction) api.OnTransactionCreateResponse {
 	return api.OnTransactionCreateResponse{
@@ -23,7 +21,6 @@ func CreatedTransactionEncoder(t atmValues.CreatedTransaction) api.OnTransaction
 	}
 }
 
-
 func TransCodeEncoder(code transValues.GeneratedCode) api.GenTransCodeResponse {
 	return api.GenTransCodeResponse{
 		TransactionCode: code.Code,
@@ -31,12 +28,25 @@ func TransCodeEncoder(code transValues.GeneratedCode) api.GenTransCodeResponse {
 	}
 }
 
-func UserInfoEncoder(u userEntities.UserInfo) api.UserInfoResponse {
-	return api.UserInfoResponse{
-		Id:     u.User.Id,
-		Wallet: WalletEncoder(u.Wallet),
-		Limits: LimitsEncoder(u.Limits),
+func WalletEncoder(w wEntities.Wallet) api.WalletResponse {
+	return api.WalletResponse{
+		Id:       "42", // TODO: add the id to the wallet entity
+		OwnerId:  w.OwnerId,
+		Currency: string(w.Currency),
+		Amount:   w.Amount.Num(),
 	}
+}
+
+func WalletsEncoder(wallets []wEntities.Wallet) api.WalletsResponse {
+	resp := api.WalletsResponse{}
+	for _, w := range wallets {
+		resp.Wallets = append(resp.Wallets, WalletEncoder(w))
+	}
+	return resp
+}
+
+func IdEncoder(id string) api.IdResponse {
+	return api.IdResponse{Id: id}
 }
 
 func LimitsEncoder(l limits.Limits) map[string]api.LimitResponse {
@@ -49,26 +59,16 @@ func LimitsEncoder(l limits.Limits) map[string]api.LimitResponse {
 	}
 	return resp
 }
-
-func WalletEncoder(w walletEntities.Wallet) map[string]float64 {
-	r := map[string]float64{}
-	for curr, a := range w {
-		r[string(curr)] = a.Num()
-	}
-	return r
-}
-
-
 func HistoryEncoder(entries []histEntities.TransEntry) api.TransactionHistory {
 	respEntries := []api.TransEntry{}
 	for _, e := range entries {
 		respEntries = append(respEntries, api.TransEntry{
 			TransactedAt: e.CreatedAt,
-			Source:  api.TransactionSource{
+			Source: api.TransactionSource{
 				Type:   string(e.Source.Type),
 				Detail: e.Source.Detail,
 			},
-			Money:        api.Money{
+			Money: api.Money{
 				Currency: string(e.Money.Currency),
 				Amount:   e.Money.Amount.Num(),
 			},

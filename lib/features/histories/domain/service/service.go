@@ -10,7 +10,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
 	"github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/store"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
-	wallets "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/store"
+	wallets "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 )
 
 type HistoryGetter = func(db db.TDB, userId string) ([]entities.TransEntry, error)

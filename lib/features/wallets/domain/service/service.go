@@ -7,17 +7,22 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/store"
 )
 
-type WalletCreator = func(db db.TDB, userId string, currency core.Currency) (id string, err error)
+type WalletCreationData struct {
+	UserId string 
+	Currency core.Currency
+}
+
+type WalletCreator = func(db db.TDB, wallet WalletCreationData) (id string, err error)
 type WalletGetter = func(db db.TDB, walletId string) (entities.Wallet, error)
 type WalletsGetter = func(db db.TDB, userId string) ([]entities.Wallet, error)
 
 type BalanceUpdater = func(db db.TDB, walletId string, newBal core.MoneyAmount) error
 
 func NewWalletCreator(create store.WalletCreator) WalletCreator {
-	return func(db db.TDB, userId string, currency core.Currency) (id string, err error) {
+	return func(db db.TDB, data WalletCreationData) (id string, err error) {
 		wallet := entities.Wallet{
-			OwnerId:  userId,
-			Currency: currency,
+			OwnerId:  data.UserId,
+			Currency: data.Currency,
 			Amount:   core.NewMoneyAmount(0),
 		}
 		return create(db, wallet)

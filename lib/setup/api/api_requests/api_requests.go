@@ -10,14 +10,15 @@ import (
 	atmValues "github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
 	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
-	transferValues "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
+	wallets "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 	"github.com/go-chi/chi/v5"
 )
+
 
 func NewTransDecoder(user authEntities.User, _ *http.Request, req api.GenTransCodeRequest) (tValues.MetaTrans, error) {
 	return tValues.MetaTrans{
 		Type:   tValues.TransactionType(req.TransactionType),
-		UserId: user.Id,
+		WalletId: req.WalletId,
 	}, nil
 }
 
@@ -36,6 +37,13 @@ func CancelTransactionDecoder(r *http.Request, _ http_helpers.NoJSONRequest) (tr
 	return id, nil
 }
 
+func WalletCreationDecoder(user authEntities.User, _ *http.Request, req api.CreateWalletRequest) (wallets.WalletCreationData, error) {
+	return wallets.WalletCreationData{
+		UserId:   user.Id,
+		Currency: core.Currency(req.Currency),
+	}, nil
+}
+
 func DepositDataDecoder(_ *http.Request, d api.CompleteDepositRequest) (atmValues.DepositData, error) {
 	return atmValues.DepositData{
 		TransactionId: d.TransactionId,
@@ -50,7 +58,7 @@ func WithdrawalDataDecoder(_ *http.Request, w api.StartWithdrawalRequest) (atmVa
 			Currency: core.Currency(w.Currency),
 			// in the business logic, it is assumed that a withdrawal's amount is negative
 			// but in the api, it is always positive, so here we must negate the value
-			Amount:   core.NewMoneyAmount(-w.Amount),
+			Amount: core.NewMoneyAmount(-w.Amount),
 		},
 	}, nil
 }
@@ -78,7 +86,6 @@ func DispensedBanknoteDecoder(_ *http.Request, b api.BanknoteDispensionRequest) 
 	}, nil
 }
 
-
 func moneyDecoder(m api.Money) core.Money {
 	return core.Money{
 		Currency: core.Currency(m.Currency),
@@ -94,13 +101,13 @@ func multiMoneyDecoder(m []api.Money) []core.Money {
 	return res
 }
 
-func TransferDecoder(user authEntities.User, _ *http.Request, req api.TransferRequest) (transferValues.RawTransfer, error) {
-	return transferValues.RawTransfer{
-		FromId:  user.Id,
-		ToEmail: req.RecipientIdentifier,
-		Money: core.Money{
-			Currency: core.Currency(req.Money.Currency),
-			Amount:   core.NewMoneyAmount(req.Money.Amount),
-		},
-	}, nil
-}
+// func TransferDecoder(user authEntities.User, _ *http.Request, req api.TransferRequest) (transferValues.RawTransfer, error) {
+// 	return value.RawTransfer{
+// 		FromId:  user.Id,
+// 		ToEmail: req.RecipientIdentifier,
+// 		Money: core.Money{
+// 			Currency: core.Currency(req.Money.Currency),
+// 			Amount:   core.NewMoneyAmount(req.Money.Amount),
+// 		},
+// 	}, nil
+// }
