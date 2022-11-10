@@ -9,8 +9,8 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/store"
 )
 
-func NewWalletCreator(getDoc db.JsonGetter[UserWalletsModel], updDoc db.JsonUpdater[[]string], setDoc db.JsonSetter[entities.Wallet]) store.WalletCreator {
-	return func(db db.TDB, w entities.Wallet) (id string, err error) {
+func NewWalletCreator(getDoc db.JsonGetter[UserWalletsModel], updDoc db.JsonUpdater[[]string], setDoc db.JsonSetter[entities.WalletVal]) store.WalletCreator {
+	return func(db db.TDB, w entities.WalletVal) (id string, err error) {
 		id = general_helpers.RandomId()
 		currWalletsPath := []string{"user_wallet", w.OwnerId}
 		currWallets, err := getDoc(db, currWalletsPath)
@@ -26,10 +26,14 @@ func NewWalletCreator(getDoc db.JsonGetter[UserWalletsModel], updDoc db.JsonUpda
 	}
 }
 
-func NewWalletGetter(getDoc db.JsonGetter[entities.Wallet]) store.WalletGetter {
+func NewWalletGetter(getDoc db.JsonGetter[entities.WalletVal]) store.WalletGetter {
 	return func(db db.TDB, walletId string) (entities.Wallet, error) {
 		path := []string{"wallets", walletId}
-		return getDoc(db, path)
+		w, err := getDoc(db, path)
+		if err != nil {
+			return entities.Wallet{}, core_err.Rethrow("getting wallet from store", err)
+		}
+		return entities.Wallet{Id: walletId, WalletVal: w}, nil
 	}
 }
 

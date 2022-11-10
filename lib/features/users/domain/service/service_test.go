@@ -15,21 +15,21 @@ import (
 func TestUserInfoGetter(t *testing.T) {
 	detUser := RandomDetailedUser()
 	userId := RandomString()
-	wallet := RandomWallet()
+	wallets := []walletEntities.Wallet{RandomWallet(), RandomWallet()}
 	tLimits := RandomLimits()
 	mockDB := NewStubDB()
 
-	getWallet := func(db.TDB, string) (walletEntities.Wallet, error) {
-		return wallet, nil
+	getWallet := func(db.TDB, string) ([]walletEntities.Wallet, error) {
+		return wallets, nil
 	}
 	t.Run("error case - getting wallets throws", func(t *testing.T) {
-		getWallet := func(gotDB db.TDB, user string) (walletEntities.Wallet, error) {
+		getWallets := func(gotDB db.TDB, user string) ([]walletEntities.Wallet, error) {
 			if gotDB == mockDB && user == userId {
-				return walletEntities.Wallet{}, RandomError()
+				return []walletEntities.Wallet{}, RandomError()
 			}
 			panic("unexpected")
 		}
-		_, err := service.NewUserInfoGetter(getWallet, nil, nil)(mockDB, userId)
+		_, err := service.NewUserInfoGetter(getWallets, nil, nil)(mockDB, userId)
 		AssertSomeError(t, err)
 	})
 	getLimits := func(db.TDB, string) (limits.Limits, error) {
@@ -64,7 +64,7 @@ func TestUserInfoGetter(t *testing.T) {
 		AssertNoError(t, err)
 		Assert(t, gotInfo, entities.UserInfo{
 			User:   detUser,
-			Wallet: wallet,
+			Wallets: wallets,
 			Limits: tLimits,
 		}, "returned users info")
 	})

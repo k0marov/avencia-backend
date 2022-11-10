@@ -6,19 +6,19 @@ import (
 	authStore "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/store"
 	limitsService "github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	"github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
-	walletStore "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/store"
+	wallets "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 )
 
 
 type UserInfoGetter = func(db db.TDB, userId string) (entities.UserInfo, error)
 
 func NewUserInfoGetter(
-	getWallet walletStore.WalletGetter, 
+	getWallets wallets.WalletsGetter, 
 	getLimits limitsService.LimitsGetter, 
 	getUser authStore.UserGetter,
 ) UserInfoGetter {
 	return func(db db.TDB, userId string) (entities.UserInfo, error) {
-		wallet, err := getWallet(db, userId)
+		wallets, err := getWallets(db, userId)
 		if err != nil {
 			return entities.UserInfo{}, core_err.Rethrow("getting wallets for users info", err)
 		}
@@ -32,7 +32,7 @@ func NewUserInfoGetter(
 		}
 		return entities.UserInfo{
 			User: user,
-			Wallet: wallet,
+			Wallets: wallets,
 			Limits: limits,
 		}, nil
 	}

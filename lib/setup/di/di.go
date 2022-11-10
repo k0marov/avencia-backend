@@ -65,11 +65,11 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 
 	// ===== WALLETS =====
 	updBal := walletService.NewBalanceUpdater(storeImpl.NewBalanceUpdater(db.JsonUpdaterImpl[core.MoneyAmount]))
-	getWallet := walletService.NewWalletGetter(storeImpl.NewWalletGetter(db.JsonGetterImpl[walletEntities.Wallet]))
+	getWallet := walletService.NewWalletGetter(storeImpl.NewWalletGetter(db.JsonGetterImpl[walletEntities.WalletVal]))
 	storeCreateWallet := storeImpl.NewWalletCreator(
 		db.JsonGetterImpl[storeImpl.UserWalletsModel], 
 		db.JsonUpdaterImpl[[]string], 
-    db.JsonSetterImpl[walletEntities.Wallet],
+    db.JsonSetterImpl[walletEntities.WalletVal],
 	)
 	createWallet := walletService.NewWalletCreator(storeCreateWallet)
 	getWallets := walletService.NewWalletsGetter(storeImpl.NewWalletsGetter(db.JsonGetterImpl[storeImpl.UserWalletsModel], getWallet))
@@ -96,7 +96,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	checkLimit := limits.NewLimitChecker(getLimit)
 
 	// ===== USERS =====
-	getUserInfo := userService.NewUserInfoGetter(getWallet, getLimits, deps.Auth.Get)
+	getUserInfo := userService.NewUserInfoGetter(getWallets, getLimits, deps.Auth.Get)
 	userDetailsCrudEndpoint := users.NewUserDetailsCRUDEndpoint(deps.SimpleDB)
 
 	// ===== HISTORIES =====

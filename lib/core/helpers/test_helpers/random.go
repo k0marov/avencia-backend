@@ -15,11 +15,10 @@ import (
 	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
 
-
 func RandomMetaTrans() transValues.MetaTrans {
 	return transValues.MetaTrans{
-		Type: RandomTransactionType(),
-		WalletId:    RandomString(),
+		Type:     RandomTransactionType(),
+		WalletId: RandomString(),
 	}
 }
 
@@ -33,7 +32,7 @@ func RandomGeneratedCode() transValues.GeneratedCode {
 func RandomClientError() client_errors.ClientError {
 	return client_errors.ClientError{
 		DisplayMessage: RandomString(),
-		HTTPCode:   400 + RandomInt(),
+		HTTPCode:       400 + RandomInt(),
 	}
 }
 
@@ -67,16 +66,13 @@ func RandomDetailedUser() authEntities.DetailedUser {
 	return authEntities.DetailedUser{
 		Id:          RandomString(),
 		Email:       RandomString(),
-		PhoneNum:       RandomString(),
+		PhoneNum:    RandomString(),
 		DisplayName: RandomString(),
 	}
 }
-func RandomUserInfo() userEntities.UserInfo {
-	return userEntities.UserInfo{User: RandomDetailedUser(), Wallet: RandomWallet(), Limits: RandomLimits()}
-}
 func RandomTransactionData() transValues.Transaction {
 	return transValues.Transaction{
-		Source: RandomTransactionSource(),
+		Source:   RandomTransactionSource(),
 		WalletId: RandomString(),
 	}
 }
@@ -94,9 +90,12 @@ func RandomSecret() []byte {
 
 func RandomWallet() walletEntities.Wallet {
 	return walletEntities.Wallet{
-		OwnerId:RandomString(),
-		Currency:RandomCurrency(),
-		Amount:   RandomPosMoneyAmount(),
+		Id: RandomString(),
+		WalletVal: walletEntities.WalletVal{
+			OwnerId:  RandomString(),
+			Currency: RandomCurrency(),
+			Amount:   RandomPosMoneyAmount(),
+		},
 	}
 }
 
@@ -134,20 +133,19 @@ func RandomNegativeMoney() core.Money {
 
 func RandomMoney() core.Money {
 	return core.Money{
-		Currency: RandomCurrency(), 
-		Amount: RandomMoneyAmount(),
+		Currency: RandomCurrency(),
+		Amount:   RandomMoneyAmount(),
 	}
 }
-
 
 func RandomLimits() limits.Limits {
 	return limits.Limits{RandomCurrency(): RandomLimit(), RandomCurrency(): RandomLimit()}
 }
 func RandomWithdraws() wModels.Withdraws {
 	return wModels.Withdraws{
-		RandomCurrency(): RandomWithdrawVal(), 
-		RandomCurrency(): RandomWithdrawVal(), 
-		RandomCurrency(): RandomWithdrawVal(), 
+		RandomCurrency(): RandomWithdrawVal(),
+		RandomCurrency(): RandomWithdrawVal(),
+		RandomCurrency(): RandomWithdrawVal(),
 	}
 
 }
@@ -159,8 +157,16 @@ func RandomWithdrawVal() wModels.WithdrawVal {
 
 }
 
+func RandomUserInfo() userEntities.UserInfo {
+	return userEntities.UserInfo{
+		User:    RandomDetailedUser(),
+		Wallets: []walletEntities.Wallet{RandomWallet(), RandomWallet()},
+		Limits:  RandomLimits(),
+	}
+}
+
 func RandomTime() time.Time {
-	return TimeWithYear(2000+RandomInt())
+	return TimeWithYear(2000 + RandomInt())
 }
 
 func RandomLimit() limits.Limit {
@@ -169,7 +175,6 @@ func RandomLimit() limits.Limit {
 		Max:       RandomPosMoneyAmount(),
 	}
 }
-
 
 func RandomTransactionType() transValues.TransactionType {
 	if RandomBool() {

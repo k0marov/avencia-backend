@@ -16,9 +16,9 @@ func TestTransactionValidator(t *testing.T) {
 	mockDB := NewStubDB()
 	tBalance := RandomPosMoneyAmount()
 	trans := values.Transaction{
-		Source: RandomTransactionSource(),
+		Source:   RandomTransactionSource(),
 		WalletId: RandomString(),
-		Money:   core.NewMoneyAmount(50.0),
+		Money:    core.NewMoneyAmount(50.0),
 	}
 	checkLimit := func(db.TDB, values.Transaction) error {
 		return nil
@@ -36,15 +36,15 @@ func TestTransactionValidator(t *testing.T) {
 	})
 	t.Run("forward case - forward to enoughBalanceValidator", func(t *testing.T) {
 		tErr := RandomError()
-    enoughBalanceValidator := func(gotDB db.TDB, gotTrans values.Transaction) (core.MoneyAmount, error) {
-    	if gotDB == mockDB && gotTrans == trans {
-    		return tBalance, tErr
-    	}
-    	panic("unexpected")
-    }
-    gotBalance, gotErr := validators.NewTransactionValidator(checkLimit, enoughBalanceValidator)(mockDB, trans)
-    AssertError(t, gotErr, tErr)
-    Assert(t, gotBalance, tBalance, "returned balance")
+		enoughBalanceValidator := func(gotDB db.TDB, gotTrans values.Transaction) (core.MoneyAmount, error) {
+			if gotDB == mockDB && gotTrans == trans {
+				return tBalance, tErr
+			}
+			panic("unexpected")
+		}
+		gotBalance, gotErr := validators.NewTransactionValidator(checkLimit, enoughBalanceValidator)(mockDB, trans)
+		AssertError(t, gotErr, tErr)
+		Assert(t, gotBalance, tBalance, "returned balance")
 	})
 }
 
@@ -56,11 +56,15 @@ func TestEnoughBalanceValidator(t *testing.T) {
 		Money:    core.NewMoneyAmount(-50.0),
 	}
 	notEnoughBalanceWallet := walletEntities.Wallet{
-		Amount: core.NewMoneyAmount(30),
-	} 
+		WalletVal: walletEntities.WalletVal{
+			Amount: core.NewMoneyAmount(30),
+		},
+	}
 	enoughBalanceWallet := walletEntities.Wallet{
-		Amount: core.NewMoneyAmount(100),
-	} 
+		WalletVal: walletEntities.WalletVal{
+			Amount: core.NewMoneyAmount(100),
+		},
+	}
 	t.Run("error case - getting balance throws", func(t *testing.T) {
 		getWallet := func(gotDB db.TDB, walletId string) (walletEntities.Wallet, error) {
 			if gotDB == mockDB && walletId == trans.WalletId {

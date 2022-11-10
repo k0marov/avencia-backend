@@ -30,7 +30,7 @@ func TransCodeEncoder(code transValues.GeneratedCode) api.GenTransCodeResponse {
 
 func WalletEncoder(w wEntities.Wallet) api.WalletResponse {
 	return api.WalletResponse{
-		Id:       "42", // TODO: add the id to the wallet entity
+		Id:       w.Id, // TODO: add the id to the wallet entity
 		OwnerId:  w.OwnerId,
 		Currency: string(w.Currency),
 		Amount:   w.Amount.Num(),

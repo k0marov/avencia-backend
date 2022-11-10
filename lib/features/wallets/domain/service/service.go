@@ -8,7 +8,7 @@ import (
 )
 
 type WalletCreationData struct {
-	UserId string 
+	UserId   string
 	Currency core.Currency
 }
 
@@ -20,7 +20,7 @@ type BalanceUpdater = func(db db.TDB, walletId string, newBal core.MoneyAmount) 
 
 func NewWalletCreator(create store.WalletCreator) WalletCreator {
 	return func(db db.TDB, data WalletCreationData) (id string, err error) {
-		wallet := entities.Wallet{
+		wallet := entities.WalletVal{
 			OwnerId:  data.UserId,
 			Currency: data.Currency,
 			Amount:   core.NewMoneyAmount(0),

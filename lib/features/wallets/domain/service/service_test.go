@@ -22,7 +22,7 @@ func TestWalletCreator(t *testing.T) {
 	t.Run("forward case", func(t *testing.T) {
 		tId := RandomString()
 		tErr := RandomError()
-		storeCreator := func(gotDB db.TDB, wallet entities.Wallet) (string, error) {
+		storeCreator := func(gotDB db.TDB, wallet entities.WalletVal) (string, error) {
 			if gotDB == mockDB &&
 				wallet.OwnerId == userId &&
 				wallet.Currency == currency && wallet.Amount.IsEqual(core.NewMoneyAmount(0)) {

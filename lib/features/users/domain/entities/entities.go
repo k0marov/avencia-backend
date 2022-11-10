@@ -8,7 +8,7 @@ import (
 
 type UserInfo struct {
 	User authEntities.DetailedUser
-	Wallet walletEntities.Wallet
+	Wallets []walletEntities.Wallet
 	Limits limits.Limits
 }
 
