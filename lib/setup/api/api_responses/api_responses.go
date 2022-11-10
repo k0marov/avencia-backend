@@ -38,7 +38,7 @@ func WalletEncoder(w wEntities.Wallet) api.WalletResponse {
 }
 
 func WalletsEncoder(wallets []wEntities.Wallet) api.WalletsResponse {
-	resp := api.WalletsResponse{}
+	resp := api.WalletsResponse{Wallets: []api.WalletResponse{}}
 	for _, w := range wallets {
 		resp.Wallets = append(resp.Wallets, WalletEncoder(w))
 	}
