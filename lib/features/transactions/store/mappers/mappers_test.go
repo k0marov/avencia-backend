@@ -19,13 +19,13 @@ func TestPropertiesOfCodeMapping(t *testing.T) {
 	assertion := func(trans values.MetaTrans) bool {
 		code, err := generate(trans)
 		if err != nil {
-			return false 
+			return false
 		}
 
 		wantExpireAt := time.Now().UTC().Add(configurable.TransactionExpDuration)
 		Assert(t, TimeAlmostEqual(code.ExpiresAt, wantExpireAt), true, "the expiration time is Now + ExpDuration")
 
-		parsedTrans, err := parse(code.Code) 
+		parsedTrans, err := parse(code.Code)
 		return parsedTrans == trans && err == nil
 	}
 

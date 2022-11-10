@@ -25,6 +25,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/models"
 	withdrawsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/service"
 	withdrawsStore "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/store"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
 	tService "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
 	tValidators "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
 	tStore "github.com/AvenciaLab/avencia-backend/lib/features/transactions/store"
@@ -107,12 +108,13 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	getHistoryHandler := histHandlers.NewGetHistoryHandler(deps.TRunner, getHistory)
 
 	// ===== TRANSACTIONS =====
-
+  walletOwnershipValidator := tValidators.NewWalletOwnershipValidator(getWallet)
 	transValidator := tValidators.NewTransactionValidator(checkLimit, tValidators.NewEnoughBalanceValidator(getBalance))
 	codeParser := mappers.NewCodeParser(jwtVerifier)
-	codeGenerator := mappers.NewCodeGenerator(jwtIssuer)
+	codeMapper := mappers.NewCodeGenerator(jwtIssuer)
+	codeGenerator := service.NewCodeGenerator(walletOwnershipValidator, codeMapper)
 
-	createTrans := tStore.NewTransactionCreator(codeGenerator)
+	createTrans := tStore.NewTransactionCreator(codeMapper)
 	getTrans := tStore.NewTransactionGetter(codeParser)
 	transPerformer := tService.NewTransactionPerformer(transUpdateWithdrawn, storeTrans, tService.NewTransBalUpdater(updBal))
 	transact := tService.NewTransactionFinalizer(transValidator, transPerformer)
@@ -134,7 +136,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 
 	atmAuthMiddleware := atmMiddleware.NewATMAuthMiddleware(atmSecretValidator)
 
-	genCodeHandler := atmHandlers.NewGenerateQRCodeHandler(codeGenerator)
+	genCodeHandler := atmHandlers.NewGenerateQRCodeHandler(deps.TRunner, codeGenerator)
 	createTransHandler := atmHandlers.NewCreateTransactionHandler(deps.TRunner, createAtmTrans)
 	onCancelHandler := atmHandlers.NewCancelTransactionHandler(cancelTrans)
 	validateWithdrawalHandler := atmHandlers.NewWithdrawalValidationHandler(deps.TRunner, validateWithdrawal)

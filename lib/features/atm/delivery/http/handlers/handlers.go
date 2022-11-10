@@ -8,15 +8,15 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/service_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/service"
 	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/validators"
-	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/store/mappers"
+	tService "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
 	apiRequests "github.com/AvenciaLab/avencia-backend/lib/setup/api/api_requests"
 	apiResponses "github.com/AvenciaLab/avencia-backend/lib/setup/api/api_responses"
 )
 
-func NewGenerateQRCodeHandler(generate mappers.CodeGenerator) http.HandlerFunc {
+func NewGenerateQRCodeHandler(runT db.TransRunner, generate tService.CodeGenerator) http.HandlerFunc {
   return http_helpers.NewAuthenticatedHandler(
   	apiRequests.NewTransDecoder, 
-    generate, 
+    service_helpers.NewDBTransService(runT, generate), 
     apiResponses.TransCodeEncoder,
   ) 
 }

@@ -4,17 +4,30 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
+	histService "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/service"
+	withdrawsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/service"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/store/mappers"
 	wallets "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
-	withdrawsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/service"
-	histService "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/service"
 )
 
-type MultiTransactionFinalizer = func(db db.TDB, t []values.Transaction) error 
+type CodeGenerator = func(db db.TDB, metaTrans values.MetaTrans) (values.GeneratedCode, error)
+
+type MultiTransactionFinalizer = func(db db.TDB, t []values.Transaction) error
 type TransactionFinalizer = func(db db.TDB, t values.Transaction) error
 type transactionPerformer = func(db db.TDB, curBalance core.MoneyAmount, t values.Transaction) error
 
+
+func NewCodeGenerator(valWalletOwnership validators.WalletOwnershipValidator, mapper mappers.CodeGenerator) CodeGenerator {
+	return func(db db.TDB, metaTrans values.MetaTrans) (values.GeneratedCode, error) {
+		err := valWalletOwnership(db, metaTrans) 
+		if err != nil {
+			return values.GeneratedCode{}, err
+		}
+		return mapper(metaTrans)
+	}
+}
 
 func NewMultiTransactionFinalizer(finalize TransactionFinalizer) MultiTransactionFinalizer {
 	return func(db db.TDB, tList []values.Transaction) error {
@@ -24,10 +37,9 @@ func NewMultiTransactionFinalizer(finalize TransactionFinalizer) MultiTransactio
 				return core_err.Rethrow("finalizing one of the transactions", err)
 			}
 		}
-		return nil 
+		return nil
 	}
 }
-
 
 func NewTransactionFinalizer(validate validators.TransactionValidator, perform transactionPerformer) TransactionFinalizer {
 	return func(db db.TDB, t values.Transaction) error {
@@ -47,7 +59,7 @@ func NewTransactionPerformer(updWithdrawn withdrawsService.TransWithdrawnUpdater
 		if err != nil {
 			return core_err.Rethrow("updating withdrawn", err)
 		}
-		err = addHist(db, t) 
+		err = addHist(db, t)
 		if err != nil {
 			return core_err.Rethrow("adding trans to history", err)
 		}
@@ -61,5 +73,3 @@ func NewTransBalUpdater(updBal wallets.BalanceUpdater) transBalUpdater {
 		return updBal(db, t.WalletId, curBal.Add(t.Money))
 	}
 }
-
-

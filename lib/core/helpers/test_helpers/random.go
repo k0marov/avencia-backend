@@ -18,6 +18,7 @@ import (
 func RandomMetaTrans() transValues.MetaTrans {
 	return transValues.MetaTrans{
 		Type:     RandomTransactionType(),
+		CallerId:   RandomString(),
 		WalletId: RandomString(),
 	}
 }

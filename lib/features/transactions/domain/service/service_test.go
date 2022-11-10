@@ -10,6 +10,38 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 )
 
+func TestCodeGenerator(t *testing.T) {
+	mockDB := NewStubDB()
+	metaTrans := RandomMetaTrans()
+	ownerValidator := func(gotDB db.TDB, gotTrans values.MetaTrans) error {
+		if gotDB == mockDB && gotTrans == metaTrans {
+			return nil
+		}
+		panic("unexpected")
+	}
+	t.Run("error case - owner validation throws", func(t *testing.T) {
+		tErr := RandomError()
+     ownerValidator := func(db.TDB, values.MetaTrans) error {
+     	 return tErr
+     }
+     _, err := service.NewCodeGenerator(ownerValidator, nil)(mockDB, metaTrans) 
+     AssertError(t, err, tErr)
+	})
+	t.Run("forward case - forward to code generator mapper", func(t *testing.T) {
+		tCode := RandomGeneratedCode()
+		tErr := RandomError()
+		mapper := func(gotTrans values.MetaTrans) (values.GeneratedCode, error) {
+			if gotTrans == metaTrans {
+				return tCode, tErr
+			}
+			panic("unexpected")
+		}
+		gotCode, gotErr := service.NewCodeGenerator(ownerValidator, mapper)(mockDB, metaTrans) 
+		AssertError(t, gotErr, tErr)
+		Assert(t, gotCode, tCode, "returned code")
+	})
+}
+
 func TestMultiTransactionFinalizer(t *testing.T) {
 	ts := []values.Transaction{
 		RandomTransactionData(),
@@ -76,7 +108,7 @@ func TestTransactionPerformer(t *testing.T) {
 	}
 	t.Run("updating withdrawn throws", func(t *testing.T) {
 		updateWithdrawn := func(gotDB db.TDB, gotTrans values.Transaction) error {
-			if gotDB == mockDB && gotTrans == trans{
+			if gotDB == mockDB && gotTrans == trans {
 				return RandomError()
 			}
 			panic("unexpected")

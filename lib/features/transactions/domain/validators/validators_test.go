@@ -12,6 +12,46 @@ import (
 	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
 
+func TestWalletOwnershipValidator(t *testing.T) {
+	mockDB := NewStubDB()
+	trans := RandomMetaTrans()
+	fittingWallet := walletEntities.Wallet{
+		WalletVal: walletEntities.WalletVal{
+			OwnerId: trans.CallerId,
+		},
+	}
+	notFittingWallet := walletEntities.Wallet{
+		WalletVal: walletEntities.WalletVal{
+			OwnerId: RandomString(),
+		},
+	}
+
+	t.Run("error case - getting wallet throws", func(t *testing.T) {
+		getWallet := func(gotDB db.TDB, id string) (walletEntities.Wallet, error) {
+			if gotDB == mockDB && id == trans.WalletId {
+				return fittingWallet, RandomError()
+			}
+			panic("unexpected")
+		}
+		err := validators.NewWalletOwnershipValidator(getWallet)(mockDB, trans)
+		AssertSomeError(t, err)
+	})
+	t.Run("error case - the transaction initiator is not the owner of the provided wallet", func(t *testing.T) {
+		getWallet := func(db.TDB, string) (walletEntities.Wallet, error) {
+			return notFittingWallet, nil
+		}
+		err := validators.NewWalletOwnershipValidator(getWallet)(mockDB, trans)
+		AssertError(t, err, client_errors.Unauthorized)
+	})
+	t.Run("happy case", func(t *testing.T) {
+		getWallet := func(db.TDB, string) (walletEntities.Wallet, error) {
+			return fittingWallet, nil
+		}
+		err := validators.NewWalletOwnershipValidator(getWallet)(mockDB, trans)
+		AssertNoError(t, err)
+	})
+}
+
 func TestTransactionValidator(t *testing.T) {
 	mockDB := NewStubDB()
 	tBalance := RandomPosMoneyAmount()

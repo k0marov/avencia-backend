@@ -18,6 +18,7 @@ import (
 func NewTransDecoder(user authEntities.User, _ *http.Request, req api.GenTransCodeRequest) (tValues.MetaTrans, error) {
 	return tValues.MetaTrans{
 		Type:   tValues.TransactionType(req.TransactionType),
+		CallerId:  user.Id,
 		WalletId: req.WalletId,
 	}, nil
 }
