@@ -21,6 +21,7 @@ type MetaTrans struct {
 }
 
 const WalletIdClaim = "sub"
+const CallerIdClaim = "caller_id"
 const TransactionTypeClaim = "transaction_type"
 
 type Transaction struct {

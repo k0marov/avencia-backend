@@ -16,6 +16,7 @@ func NewCodeGenerator(issueJWT jwt.Issuer) CodeGenerator {
 	return func(trans values.MetaTrans) (values.GeneratedCode, error) {
 		claims := map[string]any{
 			values.WalletIdClaim:        trans.WalletId,
+			values.CallerIdClaim:        trans.CallerId,
 			values.TransactionTypeClaim: trans.Type,
 		}
 		expireAt := time.Now().UTC().Add(configurable.TransactionExpDuration)
@@ -43,9 +44,14 @@ func NewCodeParser(parseJWT jwt.Verifier) CodeParser {
 		if !ok {
 			return values.MetaTrans{}, client_errors.InvalidCode
 		}
+		callerId, ok := claims[values.CallerIdClaim].(string) 
+		if !ok {
+			return values.MetaTrans{}, client_errors.InvalidCode
+		}
 
 		return values.MetaTrans{
-			Type:   values.TransactionType(tType),
+			Type:     values.TransactionType(tType),
+			CallerId: callerId,
 			WalletId: walletId,
 		}, nil
 	}
