@@ -68,7 +68,7 @@ func LimitsEncoder(l limits.Limits) map[string]api.LimitResponse {
 	}
 	return resp
 }
-func HistoryEncoder(entries []histEntities.HistEntry) api.TransactionHistory {
+func HistoryEncoder(entries histEntities.History) api.TransactionHistory {
 	respEntries := []api.TransEntry{}
 	for _, e := range entries {
 		respEntries = append(respEntries, api.TransEntry{

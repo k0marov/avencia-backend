@@ -97,17 +97,18 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	getLimit := limits.NewLimitGetter(getWallet, getLimits)
 	checkLimit := limits.NewLimitChecker(getLimit)
 
-	// ===== USERS =====
-	getUserInfo := userService.NewUserInfoGetter(getWallets, getLimits, deps.Auth.Get)
-	getUserInfoHandler := uHandlers.NewGetUserInfoHandler(deps.TRunner, getUserInfo)
-	userDetailsCrudEndpoint := users.NewUserDetailsCRUDEndpoint(deps.SimpleDB)
-
 	// ===== HISTORIES =====
 	storeGetHistory := histStore.NewHistoryGetter(db.JsonColGetterImpl[histEntities.HistEntry])
 	storeStoreTrans := histStore.NewTransStorer(db.JsonSetterImpl[histEntities.HistEntry])
 	getHistory := histService.NewHistoryGetter(storeGetHistory)
 	storeTrans := histService.NewEntryStorer(getWallet, storeStoreTrans)
 	getHistoryHandler := histHandlers.NewGetHistoryHandler(deps.TRunner, getHistory)
+
+	// ===== USERS =====
+	getUserInfo := userService.NewUserInfoGetter(getWallets, getLimits, getHistory, deps.Auth.Get)
+	getUserInfoHandler := uHandlers.NewGetUserInfoHandler(deps.TRunner, getUserInfo)
+	userDetailsCrudEndpoint := users.NewUserDetailsCRUDEndpoint(deps.SimpleDB)
+
 
 	// ===== TRANSACTIONS =====
   walletOwnershipValidator := tValidators.NewWalletOwnershipValidator(getWallet)
