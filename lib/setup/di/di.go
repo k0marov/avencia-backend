@@ -103,8 +103,8 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	userDetailsCrudEndpoint := users.NewUserDetailsCRUDEndpoint(deps.SimpleDB)
 
 	// ===== HISTORIES =====
-	storeGetHistory := histStore.NewHistoryGetter(db.JsonColGetterImpl[histEntities.TransEntry])
-	storeStoreTrans := histStore.NewTransStorer(db.JsonSetterImpl[histEntities.TransEntry])
+	storeGetHistory := histStore.NewHistoryGetter(db.JsonColGetterImpl[histEntities.HistEntry])
+	storeStoreTrans := histStore.NewTransStorer(db.JsonSetterImpl[histEntities.HistEntry])
 	getHistory := histService.NewHistoryGetter(storeGetHistory)
 	storeTrans := histService.NewEntryStorer(getWallet, storeStoreTrans)
 	getHistoryHandler := histHandlers.NewGetHistoryHandler(deps.TRunner, getHistory)

@@ -8,6 +8,7 @@ import (
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
 	"github.com/AvenciaLab/avencia-backend/lib/core"
 	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
+	hist "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	wModels "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/models"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
@@ -118,6 +119,19 @@ func RandomMoneyAmount() core.MoneyAmount {
 		return RandomNegMoneyAmount()
 	}
 }
+
+func RandomHistEntry() hist.HistEntry {
+	return hist.HistEntry{
+		Source:    RandomTransactionSource(),
+		Money:     RandomMoney(),
+		CreatedAt: RandomTime().Unix(),
+	}
+}
+
+func RandomHistory() hist.History {
+	return hist.History{RandomHistEntry(), RandomHistEntry(), RandomHistEntry()}
+}
+
 
 func RandomPositiveMoney() core.Money {
 	return core.Money{

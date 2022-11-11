@@ -26,6 +26,7 @@ func UserInfoEncoder(u userEntities.UserInfo) api.UserInfoResponse {
 	return api.UserInfoResponse{
 		Wallets: WalletsEncoder(u.Wallets),
 		History: HistoryEncoder(u.History),
+		// Limits: LimitsEncoder(u.Limits),
 	}
 }
 
@@ -67,7 +68,7 @@ func LimitsEncoder(l limits.Limits) map[string]api.LimitResponse {
 	}
 	return resp
 }
-func HistoryEncoder(entries []histEntities.TransEntry) api.TransactionHistory {
+func HistoryEncoder(entries []histEntities.HistEntry) api.TransactionHistory {
 	respEntries := []api.TransEntry{}
 	for _, e := range entries {
 		respEntries = append(respEntries, api.TransEntry{

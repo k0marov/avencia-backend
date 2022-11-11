@@ -8,15 +8,15 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/store"
 )
 
-func NewHistoryGetter(getDocs db.JsonColGetter[entities.TransEntry]) store.HistoryGetter {
-	return func(db db.TDB, userId string) ([]entities.TransEntry, error) {
+func NewHistoryGetter(getDocs db.JsonColGetter[entities.HistEntry]) store.HistoryGetter {
+	return func(db db.TDB, userId string) ([]entities.HistEntry, error) {
 		col := []string{"histories", userId}
 		return getDocs(db,col)
 	}
 }
 
-func NewTransStorer(updDoc db.JsonSetter[entities.TransEntry]) store.EntryStorer {
-	return func(db db.TDB, userId string, entry entities.TransEntry) error {
+func NewTransStorer(updDoc db.JsonSetter[entities.HistEntry]) store.EntryStorer {
+	return func(db db.TDB, userId string, entry entities.HistEntry) error {
 		path := []string{"histories", userId, general_helpers.RandomId()}
 		return updDoc(db, path, entry)
 	}

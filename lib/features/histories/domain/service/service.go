@@ -13,15 +13,15 @@ import (
 	wallets "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 )
 
-type HistoryGetter = func(db db.TDB, userId string) ([]entities.TransEntry, error)
+type HistoryGetter = func(db db.TDB, userId string) (entities.History, error)
 type EntryStorer = func(db.TDB, transValues.Transaction) error
 
 
 func NewHistoryGetter(getHistory store.HistoryGetter) HistoryGetter {
-  return func(db db.TDB, userId string) ([]entities.TransEntry, error) {
+  return func(db db.TDB, userId string) (entities.History, error) {
   	e, err := getHistory(db, userId) 
   	if err != nil {
-  		return []entities.TransEntry{}, core_err.Rethrow("getting history from store", err)
+  		return []entities.HistEntry{}, core_err.Rethrow("getting history from store", err)
   	}
   	sort.Slice(e, func(i, j int) bool {return e[i].CreatedAt > (e[j].CreatedAt)})
   	return e, nil
@@ -34,7 +34,7 @@ func NewEntryStorer(getWallet wallets.WalletGetter, storeTrans store.EntryStorer
 		if err != nil {
   		return err
 		}
-		entry := entities.TransEntry{
+		entry := entities.HistEntry{
 			Source:    t.Source,
 			Money:     core.Money{
 				Currency: wallet.Currency,

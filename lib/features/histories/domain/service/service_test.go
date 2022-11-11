@@ -15,7 +15,7 @@ func TestHistoryGetter(t *testing.T) {
 	userId := RandomString()
 	mockDB := NewStubDB() 
 	t.Run("error case - getting history entries from store throws", func(t *testing.T) {
-		getFromStore := func(gotDB db.TDB, gotUserId string) ([]entities.TransEntry, error) {
+		getFromStore := func(gotDB db.TDB, gotUserId string) ([]entities.HistEntry, error) {
 			if gotDB == mockDB && gotUserId == userId {
 				return nil, RandomError()
 			}
@@ -25,31 +25,31 @@ func TestHistoryGetter(t *testing.T) {
 		AssertSomeError(t, err)
 	})
 	t.Run("happy case - should return entries from store sorted by createdAt", func(t *testing.T) {
-		entryNewest := entities.TransEntry{
+		entryNewest := entities.HistEntry{
 			Source:    RandomTransactionSource(),
 			Money:     RandomMoney(),
 			CreatedAt: TimeWithYear(2022).Unix(), 
 		}
-		entryOldest := entities.TransEntry{
+		entryOldest := entities.HistEntry{
 			Source:    RandomTransactionSource(),
 			Money:     RandomMoney(),
 			CreatedAt: TimeWithYear(2000).Unix(),
 		}
-		entryMiddle := entities.TransEntry{
+		entryMiddle := entities.HistEntry{
 			Source:    RandomTransactionSource(),
 			Money:     RandomMoney(),
 			CreatedAt: TimeWithYear(2010).Unix(),
 		}
-		storeEntries := []entities.TransEntry{
+		storeEntries := []entities.HistEntry{
 			entryOldest, 
 			entryNewest, 
 			entryMiddle, 
 		}
-		getFromStore := func(gotDB db.TDB, userId string) ([]entities.TransEntry, error) {
+		getFromStore := func(gotDB db.TDB, userId string) ([]entities.HistEntry, error) {
 			return storeEntries, nil
 		}
 
-		wantEntries := []entities.TransEntry{
+		wantEntries := []entities.HistEntry{
 			entryNewest, 
 			entryMiddle, 
 			entryOldest, 
@@ -80,7 +80,7 @@ func TestTransStorer(t *testing.T) {
 	})
 	t.Run("forward case - forward to store", func(t *testing.T) {
 		tErr := RandomError()
-		storeEntry := func(gotDB db.TDB, userId string, entry entities.TransEntry) error {
+		storeEntry := func(gotDB db.TDB, userId string, entry entities.HistEntry) error {
 			if gotDB == mockDB && userId == wallet.OwnerId && 
 				entry.Money.Currency == wallet.Currency && 
 				entry.Money.Amount == trans.Money && entry.Source == trans.Source && 
