@@ -21,6 +21,7 @@ func TestATMTransactionCreator(t *testing.T) {
 	}
 	metaTrans := tValues.MetaTrans{
 		Type:   newTrans.Type,
+		CallerId: RandomString(),
 		WalletId: RandomString(),
 	}
 	id := RandomString()
@@ -48,7 +49,7 @@ func TestATMTransactionCreator(t *testing.T) {
 
 	t.Run("error case - getting user info throws", func(t *testing.T) {
 		getUser := func(gotDB db.TDB, userId string) (uEntities.UserInfo, error) {
-			if gotDB == mockDB && userId ==  metaTrans.WalletId {
+			if gotDB == mockDB && userId ==  metaTrans.CallerId {
 				return uEntities.UserInfo{}, RandomError()
 			}
 			panic("unexpected")

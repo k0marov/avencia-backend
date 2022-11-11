@@ -29,7 +29,7 @@ func NewATMTransactionCreator(
 		if err != nil {
 			return values.CreatedTransaction{}, err
 		}
-		user, err := getUser(db, metaTrans.WalletId)
+		user, err := getUser(db, metaTrans.CallerId)
 		if err != nil {
 			return values.CreatedTransaction{}, core_err.Rethrow("getting user info", err)
 		}
