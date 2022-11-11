@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	firebase.google.com/go/v4 v4.9.0
-	github.com/AvenciaLab/avencia-api-contract v0.0.0-20221110143259-7183a9e654dd
+	github.com/AvenciaLab/avencia-api-contract v0.0.0-20221111114758-fe8289cb972a
 	github.com/apple/foundationdb/bindings/go v0.0.0-20221010201932-cdb57aa00f6c
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/golang-jwt/jwt v3.2.2+incompatible

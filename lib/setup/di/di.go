@@ -31,6 +31,7 @@ import (
 	tStore "github.com/AvenciaLab/avencia-backend/lib/features/transactions/store"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/store/mappers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/users"
+	uHandlers "github.com/AvenciaLab/avencia-backend/lib/features/users/delivery/http/handlers"
 	userService "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/service"
 	wHandlers "github.com/AvenciaLab/avencia-backend/lib/features/wallets/delivery/http/handlers"
 	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
@@ -98,6 +99,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 
 	// ===== USERS =====
 	getUserInfo := userService.NewUserInfoGetter(getWallets, getLimits, deps.Auth.Get)
+	getUserInfoHandler := uHandlers.NewGetUserInfoHandler(deps.TRunner, getUserInfo)
 	userDetailsCrudEndpoint := users.NewUserDetailsCRUDEndpoint(deps.SimpleDB)
 
 	// ===== HISTORIES =====
@@ -178,7 +180,9 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 			App: api.AppHandlers{
 				GenCode:     genCodeHandler,
 				Transfer: func(http.ResponseWriter, *http.Request) {
+					panic("unimplemented")
 				},
+				GetUserInfo: getUserInfoHandler,
 				GetHistory:  getHistoryHandler,
 				Kyc:         api.KycHandlers{Passport: passportEndpoint},
 				UserDetails: userDetailsCrudEndpoint,

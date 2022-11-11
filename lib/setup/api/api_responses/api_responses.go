@@ -6,6 +6,7 @@ import (
 	histEntities "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	userEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
 	wEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
 
@@ -18,6 +19,13 @@ func CreatedTransactionEncoder(t atmValues.CreatedTransaction) api.OnTransaction
 			Mobile:    t.UserInfo.User.PhoneNum,
 			FirstName: t.UserInfo.User.DisplayName,
 		},
+	}
+}
+
+func UserInfoEncoder(u userEntities.UserInfo) api.UserInfoResponse {
+	return api.UserInfoResponse{
+		Wallets: WalletsEncoder(u.Wallets),
+		History: HistoryEncoder(u.History),
 	}
 }
 

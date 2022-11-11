@@ -12,6 +12,9 @@ import (
 
 type UserInfoGetter = func(db db.TDB, userId string) (entities.UserInfo, error)
 
+
+// TODO: add getting History to the UserInfoGetter
+
 func NewUserInfoGetter(
 	getWallets wallets.WalletsGetter, 
 	getLimits limitsService.LimitsGetter, 

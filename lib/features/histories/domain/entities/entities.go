@@ -10,3 +10,5 @@ type TransEntry struct {
 	CreatedAt int64 `json:"created_at"` // a unix timestamp 
 }
 
+
+type History []TransEntry
