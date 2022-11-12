@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
@@ -9,137 +10,133 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
 	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
+	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/service"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
 	wEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
 
-//
-// func TestTransferer(t *testing.T) {
-// 	tRaw := RandomRawTransfer()
-// 	transf := RandomTransfer()
-// 	mockDB := NewStubDB()
-// 	convert := func(values.RawTransfer) (values.Transfer, error) {
-// 		return transf, nil
-// 	}
-// 	t.Run("error case - converting transfers throws", func(t *testing.T) {
-// 		convert := func(gotTransf values.RawTransfer) (values.Transfer, error) {
-// 			if gotTransf == tRaw {
-// 				return values.Transfer{}, RandomError()
-// 			}
-// 			panic("unexpected")
-// 		}
-// 		err := service.NewTransferer(convert, nil, nil)(mockDB, tRaw)
-// 		AssertSomeError(t, err)
-// 	})
-// 	validate := func(db.TDB, values.Transfer) error {
-// 		return nil
-// 	}
-// 	t.Run("error case - validating transfers throws", func(t *testing.T) {
-// 		err := RandomError()
-// 		validate := func(gotDB db.TDB, transfer values.Transfer) error {
-// 			if gotDB == mockDB && transfer == transf {
-// 				return err
-// 			}
-// 			panic("unexpected")
-// 		}
-// 		gotErr := service.NewTransferer(convert, validate, nil)(mockDB, tRaw)
-// 		AssertError(t, gotErr, err)
-// 	})
-//
-// 	t.Run("happy case - forward to perform", func(t *testing.T) {
-// 		err := RandomError()
-// 		perform := func(gotDB db.TDB, t values.Transfer) error {
-// 			if gotDB == mockDB && t == transf {
-// 				return err
-// 			}
-// 			panic("unexpected")
-// 		}
-// 		gotErr := service.NewTransferer(convert, validate, perform)(mockDB, tRaw)
-// 		AssertError(t, gotErr, err)
-// 	})
-// }
-//
-// func TestTransferPerformer(t *testing.T) {
-// 	transf := values.Transfer{
-// 		FromId: "John",
-// 		ToId:   "Sam",
-// 		SourceWalletId: "JohnWallet",
-// 		Amount:   core.NewMoneyAmount(42),
-// 	}
-//
-// 	withdrawTrans := transValues.Transaction{
-// 		Source: transValues.TransSource{
-// 			Type:   transValues.Transfer,
-// 			Detail: "Sam",
-// 		},
-// 		WalletId: "JohnWallet",
-// 		Money:   core.NewMoneyAmount(-42),
-// 	}
-// 	depositTrans := transValues.Transaction{
-// 		Source: transValues.TransSource{
-// 			Type:   transValues.Transfer,
-// 			Detail: "John",
-// 		},
-// 		UserId: "Sam",
-// 		Money: core.Money{
-// 			Currency: "RUB",
-// 			Amount:   core.NewMoneyAmount(42),
-// 		},
-// 	}
-//
-// 	mockDB := NewStubDB()
-//
-// 	t.Run("forward case", func(t *testing.T) {
-// 		tErr := RandomError()
-// 		transact := func(gotDB db.TDB, tList []transValues.Transaction) error {
-// 			if gotDB == mockDB && reflect.DeepEqual(tList, []transValues.Transaction{withdrawTrans, depositTrans}) {
-// 				return tErr
-// 			}
-// 			panic("unexpected")
-// 		}
-// 		gotErr := service.NewTransferPerformer(transact)(mockDB, transf)
-// 		AssertError(t, gotErr, tErr)
-// 	})
-// }
-//
+func TestTransferer(t *testing.T) {
+	tRaw := RandomRawTransfer()
+	transf := RandomTransfer()
+	mockDB := NewStubDB()
+	convert := func(db.TDB, values.RawTransfer) (values.Transfer, error) {
+		return transf, nil
+	}
+	t.Run("error case - converting transfers throws", func(t *testing.T) {
+		convert := func(gotDB db.TDB, gotTransf values.RawTransfer) (values.Transfer, error) {
+			if gotDB == mockDB && gotTransf == tRaw {
+				return values.Transfer{}, RandomError()
+			}
+			panic("unexpected")
+		}
+		err := service.NewTransferer(convert, nil, nil)(mockDB, tRaw)
+		AssertSomeError(t, err)
+	})
+	validate := func(values.Transfer) error {
+		return nil
+	}
+	t.Run("error case - validating transfers throws", func(t *testing.T) {
+		err := RandomError()
+		validate := func(transfer values.Transfer) error {
+			if transfer == transf {
+				return err
+			}
+			panic("unexpected")
+		}
+		gotErr := service.NewTransferer(convert, validate, nil)(mockDB, tRaw)
+		AssertError(t, gotErr, err)
+	})
+
+	t.Run("happy case - forward to perform", func(t *testing.T) {
+		err := RandomError()
+		perform := func(gotDB db.TDB, t values.Transfer) error {
+			if gotDB == mockDB && t == transf {
+				return err
+			}
+			panic("unexpected")
+		}
+		gotErr := service.NewTransferer(convert, validate, perform)(mockDB, tRaw)
+		AssertError(t, gotErr, err)
+	})
+}
+
+func TestTransferPerformer(t *testing.T) {
+	transf := values.Transfer{
+		FromId:     "John",
+		ToId:       "Sam",
+		FromWallet: wEntities.Wallet{Id: "JohnWallet"},
+		ToWallet:   wEntities.Wallet{Id: "SamWallet"},
+		Amount:     core.NewMoneyAmount(42),
+	}
+
+	withdrawTrans := transValues.Transaction{
+		Source: transValues.TransSource{
+			Type:   transValues.Transfer,
+			Detail: "Sam",
+		},
+		WalletId: "JohnWallet",
+		Money:    core.NewMoneyAmount(-42),
+	}
+	depositTrans := transValues.Transaction{
+		Source: transValues.TransSource{
+			Type:   transValues.Transfer,
+			Detail: "John",
+		},
+		WalletId: "SamWallet",
+		Money: core.NewMoneyAmount(42),
+	}
+
+	mockDB := NewStubDB()
+
+	t.Run("forward case", func(t *testing.T) {
+		tErr := RandomError()
+		transact := func(gotDB db.TDB, tList []transValues.Transaction) error {
+			if gotDB == mockDB && reflect.DeepEqual(tList, []transValues.Transaction{withdrawTrans, depositTrans}) {
+				return tErr
+			}
+			panic("unexpected")
+		}
+		gotErr := service.NewTransferPerformer(transact)(mockDB, transf)
+		AssertError(t, gotErr, tErr)
+	})
+}
 
 func TestWalletFinder(t *testing.T) {
 	mockDB := NewStubDB()
 	curr := RandomCurrency()
-  wallets := []wEntities.Wallet{
-  	RandomWallet(), 
-  	RandomWallet(), 
-  	{WalletVal: wEntities.WalletVal{Currency: curr}},
-  	RandomWallet(), 
-  }
-  userId := RandomString()
+	wallets := []wEntities.Wallet{
+		RandomWallet(),
+		RandomWallet(),
+		{WalletVal: wEntities.WalletVal{Currency: curr}},
+		RandomWallet(),
+	}
+	userId := RandomString()
 
-  getWallets := func(gotDB db.TDB, user string) ([]wEntities.Wallet, error) {
+	getWallets := func(gotDB db.TDB, user string) ([]wEntities.Wallet, error) {
 		if gotDB == mockDB && user == userId {
 			return wallets, nil
 		}
 		panic("unexpected")
-  }
+	}
 
 	t.Run("error case - getting wallets throws", func(t *testing.T) {
 		getWallets := func(db.TDB, string) ([]wEntities.Wallet, error) {
-      return wallets, RandomError()
+			return wallets, RandomError()
 		}
 		_, err := service.NewWalletFinder(getWallets)(mockDB, userId, curr)
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - proper wallet is not found", func(t *testing.T) {
-    _, err := service.NewWalletFinder(getWallets)(mockDB, userId, core.Currency(RandomString()))
-    AssertError(t, err, client_errors.ProperWalletNotFound)
+		_, err := service.NewWalletFinder(getWallets)(mockDB, userId, core.Currency(RandomString()))
+		AssertError(t, err, client_errors.ProperWalletNotFound)
 	})
-  t.Run("happy case", func(t *testing.T) {
-  	wallet, err := service.NewWalletFinder(getWallets)(mockDB, userId, curr) 
-  	AssertNoError(t, err)
-  	Assert(t, wallet, wallets[2], "returned wallet")
-  })
+	t.Run("happy case", func(t *testing.T) {
+		wallet, err := service.NewWalletFinder(getWallets)(mockDB, userId, curr)
+		AssertNoError(t, err)
+		Assert(t, wallet, wallets[2], "returned wallet")
+	})
 }
-
 
 func TestTransferConverter(t *testing.T) {
 	mockDB := NewStubDB()
@@ -198,11 +195,11 @@ func TestTransferConverter(t *testing.T) {
 		gotTrans, err := service.NewTransferConverter(userFromEmail, getWallet, findWallet)(mockDB, rawTrans)
 		AssertNoError(t, err)
 		want := values.Transfer{
-			FromId: rawTrans.FromId,
-			ToId:   user.Id,
+			FromId:     rawTrans.FromId,
+			ToId:       user.Id,
 			FromWallet: wallet,
-			ToWallet: toWallet,
-			Amount:  rawTrans.Amount,
+			ToWallet:   toWallet,
+			Amount:     rawTrans.Amount,
 		}
 		Assert(t, gotTrans, want, "converted transfers")
 	})

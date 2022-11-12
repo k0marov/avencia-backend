@@ -28,6 +28,9 @@ import (
 	withdrawsService "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/service"
 	withdrawsStore "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/store"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
+	transService "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/service"
+	transValidators "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/validators"
+	transHandlers "github.com/AvenciaLab/avencia-backend/lib/features/transfers/delivery/http/handlers"
 	tService "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/service"
 	tValidators "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
 	tStore "github.com/AvenciaLab/avencia-backend/lib/features/transactions/store"
@@ -63,7 +66,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	// ===== AUTH =====
 	userAdder := authService.NewUserInfoAdder(deps.Auth.Verify)
 	authMW := authMiddleware.NewAuthMiddleware(userAdder)
-	// userFromEmail := deps.Auth.UserByEmail
+	userFromEmail := deps.Auth.UserByEmail
 
 	// ===== JWT =====
 	jwtIssuer := jwt.NewIssuer(deps.JwtSecret)
@@ -159,12 +162,13 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	postBanknoteDispensedHandler := atmHandlers.NewPostBanknoteDispensedHandler(deps.TRunner, dispensedBanknoteValidator)
 
 	// // ===== TRANSFERS =====
-	// convertTransfer := transService.NewTransferConverter(userFromEmail)
-	// validateTransfer := transValidators.NewTransferValidator()
-	// performTransfer := transService.NewTransferPerformer(multiTransact)
-	// transfer := transService.NewTransferer(convertTransfer, validateTransfer, performTransfer)
-	// transferHandler := transHandlers.NewTransferHandler(deps.TRunner, transfer)
-	//
+	findWallet := transService.NewWalletFinder(getWallets)
+	convertTransfer := transService.NewTransferConverter(userFromEmail, getWallet, findWallet)
+	validateTransfer := transValidators.NewTransferValidator()
+	performTransfer := transService.NewTransferPerformer(multiTransact)
+	transfer := transService.NewTransferer(convertTransfer, validateTransfer, performTransfer)
+	transferHandler := transHandlers.NewTransferHandler(deps.TRunner, transfer)
+
 	// ===== KYC =====
 	statusEPFactory := kyc.NewStatusEndpointFactory(deps.SimpleDB)
 	passportEndpoint := kyc.NewPassportEndpoint(upld, statusEPFactory)
@@ -190,9 +194,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 			},
 			App: api.AppHandlers{
 				GenCode: genCodeHandler,
-				Transfer: func(http.ResponseWriter, *http.Request) {
-					panic("unimplemented")
-				},
+				Transfer: transferHandler,
 				GetUserInfo:      getUserInfoHandler,
 				GetHistory:       getHistoryHandler,
 				Kyc:              api.KycHandlers{
