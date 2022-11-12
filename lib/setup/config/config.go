@@ -11,6 +11,7 @@ type Config struct {
 	FirebaseSecretPath string `json:"firebase_secret_path"`
 	JWTSecretPath      string `json:"jwt_secret_path"`
 	ATMSecretPath      string `json:"atm_secret_path"`
+	ExchangeRatesAPIKey string `json:"exchange_rates_api_key"`
 
   StaticDir string `json:"static_dir"`
   StaticHost string `json:"static_host"`

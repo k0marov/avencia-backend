@@ -16,6 +16,8 @@ import (
 	authMiddleware "github.com/AvenciaLab/avencia-backend/lib/features/auth/delivery/http/middleware"
 	authService "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/service"
 	authStore "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/store"
+	currHandlers "github.com/AvenciaLab/avencia-backend/lib/features/currencies/delivery/http/handlers"
+	currService "github.com/AvenciaLab/avencia-backend/lib/features/currencies/domain/service"
 	histHandlers "github.com/AvenciaLab/avencia-backend/lib/features/histories/delivery/http/handlers"
 	histEntities "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
 	histService "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/service"
@@ -39,6 +41,7 @@ import (
 	storeImpl "github.com/AvenciaLab/avencia-backend/lib/features/wallets/store"
 	"github.com/AvenciaLab/avencia-backend/lib/setup/config"
 	"github.com/AvenciaLab/avencia-backend/lib/setup/config/configurable"
+	SDK "github.com/CoinAPI/coinapi-sdk/data-api/go-rest/v1"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
@@ -48,6 +51,7 @@ type ExternalDeps struct {
 	Auth                 authStore.AuthFacade
 	TRunner              db.TransRunner
 	SimpleDB             db.SDB
+	ExchangeRatesSDK     *SDK.SDK 
 }
 type APIDeps struct {
 	Handlers  api.Handlers
@@ -64,6 +68,11 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	// ===== JWT =====
 	jwtIssuer := jwt.NewIssuer(deps.JwtSecret)
 	jwtVerifier := jwt.NewVerifier(deps.JwtSecret)
+
+
+	// ===== CURRENCIES ===== 
+	getRates := currService.NewExchangeRatesGetter(deps.ExchangeRatesSDK)
+	getRatesHandler := currHandlers.NewGetExchangeRatesHandler(getRates)
 
 	// ===== WALLETS =====
 	updBal := walletService.NewBalanceUpdater(storeImpl.NewBalanceUpdater(db.JsonUpdaterImpl[core.MoneyAmount]))
@@ -187,6 +196,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 				GetHistory:  getHistoryHandler,
 				Kyc:         api.KycHandlers{Passport: passportEndpoint},
 				UserDetails: userDetailsCrudEndpoint,
+				GetExchangeRates: getRatesHandler,
 				Wallets:     api.WalletHandlers{
 					GetAll: getWalletsHandler,
 					Create: createWalletHandler,

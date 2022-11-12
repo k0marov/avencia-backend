@@ -3,12 +3,17 @@ package apiResponses
 import (
 	"github.com/AvenciaLab/avencia-api-contract/api"
 	atmValues "github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
+	currValues "github.com/AvenciaLab/avencia-backend/lib/features/currencies/domain/values"
 	histEntities "github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 	userEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
 	wEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
+
+func ExchangeRatesEncoder(rates currValues.ExchangeRates) api.ExchangeRatesResponse {
+	return rates
+}
 
 func CreatedTransactionEncoder(t atmValues.CreatedTransaction) api.OnTransactionCreateResponse {
 	return api.OnTransactionCreateResponse{

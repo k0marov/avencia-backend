@@ -13,6 +13,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/setup/di"
 	"github.com/apple/foundationdb/bindings/go/src/fdb"
 	"google.golang.org/api/option"
+	SDK "github.com/CoinAPI/coinapi-sdk/data-api/go-rest/v1"
 )
 
 func removeEOF(contents []byte) []byte {
@@ -57,6 +58,7 @@ func InitializeExternal() di.ExternalDeps {
 	simpleDB := foundationdb.NewSimpleDB(runTrans)
 
 	authFacade := authStoreImpl.NewFBAuthFacade(fbAuth)
+	exchangeRatesSDK := SDK.NewSDK(conf.ExchangeRatesAPIKey)
 
 	return di.ExternalDeps{
 		Config: conf, 
@@ -65,6 +67,7 @@ func InitializeExternal() di.ExternalDeps {
 		Auth:      authFacade,
 		TRunner:   runTrans,
 		SimpleDB:  simpleDB,
+		ExchangeRatesSDK: exchangeRatesSDK,
 	}
 
 }

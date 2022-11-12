@@ -9,11 +9,15 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/http_helpers"
 	atmValues "github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
 	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
+	currValues "github.com/AvenciaLab/avencia-backend/lib/features/currencies/domain/values"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 	wallets "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 	"github.com/go-chi/chi/v5"
 )
 
+func CurrenciesDecoder(_ *http.Request, req api.GetExchangeRatesRequest) (currValues.Currencies, error) {
+	return req.Currencies, nil
+}
 
 func NewTransDecoder(user authEntities.User, _ *http.Request, req api.GenTransCodeRequest) (tValues.MetaTrans, error) {
 	return tValues.MetaTrans{
