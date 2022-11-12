@@ -12,18 +12,18 @@ import (
 	walletService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 )
 
-type WalletOwnershipValidator = func(db db.TDB, metaTrans values.MetaTrans) error
+type WalletOwnershipValidator = func(db db.TDB, callerId, walletId string) error
 
 type TransactionValidator = func(db db.TDB, t values.Transaction) (curBalance core.MoneyAmount, err error)
 type enoughBalanceValidator = func(db db.TDB, t values.Transaction) (curBalance core.MoneyAmount, err error)
 
 func NewWalletOwnershipValidator(getWallet walletService.WalletGetter) WalletOwnershipValidator {
-	return func(db db.TDB, metaTrans values.MetaTrans) error {
-		wallet, err := getWallet(db, metaTrans.WalletId) 
+	return func(db db.TDB, callerId, walletId string) error {
+		wallet, err := getWallet(db, walletId) 
 		if err != nil {
 			return core_err.Rethrow("while getting the wallet", err)
 		}
-		if wallet.OwnerId != metaTrans.CallerId {
+		if wallet.OwnerId != callerId {
 			return client_errors.Unauthorized
 		}
 		return nil

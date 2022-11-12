@@ -11,6 +11,7 @@ import (
 	authEntities "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/entities"
 	currValues "github.com/AvenciaLab/avencia-backend/lib/features/currencies/domain/values"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	"github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
 	wallets "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 	"github.com/go-chi/chi/v5"
 )
@@ -21,8 +22,8 @@ func CurrenciesDecoder(_ *http.Request, req api.GetExchangeRatesRequest) (currVa
 
 func NewTransDecoder(user authEntities.User, _ *http.Request, req api.GenTransCodeRequest) (tValues.MetaTrans, error) {
 	return tValues.MetaTrans{
-		Type:   tValues.TransactionType(req.TransactionType),
-		CallerId:  user.Id,
+		Type:     tValues.TransactionType(req.TransactionType),
+		CallerId: user.Id,
 		WalletId: req.WalletId,
 	}, nil
 }
@@ -106,13 +107,11 @@ func multiMoneyDecoder(m []api.Money) []core.Money {
 	return res
 }
 
-// func TransferDecoder(user authEntities.User, _ *http.Request, req api.TransferRequest) (transferValues.RawTransfer, error) {
-// 	return value.RawTransfer{
-// 		FromId:  user.Id,
-// 		ToEmail: req.RecipientIdentifier,
-// 		Money: core.Money{
-// 			Currency: core.Currency(req.Money.Currency),
-// 			Amount:   core.NewMoneyAmount(req.Money.Amount),
-// 		},
-// 	}, nil
-// }
+func TransferDecoder(user authEntities.User, _ *http.Request, req api.TransferRequest) (values.RawTransfer, error) {
+	return values.RawTransfer{
+		FromId:         user.Id,
+		ToEmail:        req.RecipientIdentifier,
+		SourceWalletId: req.SourceWalletId,
+		Amount:         core.NewMoneyAmount(req.Amount),
+	}, nil
+}

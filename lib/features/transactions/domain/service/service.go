@@ -21,7 +21,7 @@ type transactionPerformer = func(db db.TDB, curBalance core.MoneyAmount, t value
 
 func NewCodeGenerator(valWalletOwnership validators.WalletOwnershipValidator, mapper mappers.CodeGenerator) CodeGenerator {
 	return func(db db.TDB, metaTrans values.MetaTrans) (values.GeneratedCode, error) {
-		err := valWalletOwnership(db, metaTrans) 
+		err := valWalletOwnership(db, metaTrans.CallerId, metaTrans.WalletId) 
 		if err != nil {
 			return values.GeneratedCode{}, err
 		}

@@ -14,13 +14,16 @@ import (
 
 func TestWalletOwnershipValidator(t *testing.T) {
 	mockDB := NewStubDB()
-	trans := RandomMetaTrans()
+	walletId := RandomString()
+	callerId := RandomString()
 	fittingWallet := walletEntities.Wallet{
+		Id: walletId,
 		WalletVal: walletEntities.WalletVal{
-			OwnerId: trans.CallerId,
+			OwnerId: callerId,
 		},
 	}
 	notFittingWallet := walletEntities.Wallet{
+		Id: walletId,
 		WalletVal: walletEntities.WalletVal{
 			OwnerId: RandomString(),
 		},
@@ -28,26 +31,26 @@ func TestWalletOwnershipValidator(t *testing.T) {
 
 	t.Run("error case - getting wallet throws", func(t *testing.T) {
 		getWallet := func(gotDB db.TDB, id string) (walletEntities.Wallet, error) {
-			if gotDB == mockDB && id == trans.WalletId {
+			if gotDB == mockDB && id == walletId {
 				return fittingWallet, RandomError()
 			}
 			panic("unexpected")
 		}
-		err := validators.NewWalletOwnershipValidator(getWallet)(mockDB, trans)
+		err := validators.NewWalletOwnershipValidator(getWallet)(mockDB, callerId, walletId)
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - the transaction initiator is not the owner of the provided wallet", func(t *testing.T) {
 		getWallet := func(db.TDB, string) (walletEntities.Wallet, error) {
 			return notFittingWallet, nil
 		}
-		err := validators.NewWalletOwnershipValidator(getWallet)(mockDB, trans)
+		err := validators.NewWalletOwnershipValidator(getWallet)(mockDB, callerId, walletId)
 		AssertError(t, err, client_errors.Unauthorized)
 	})
 	t.Run("happy case", func(t *testing.T) {
 		getWallet := func(db.TDB, string) (walletEntities.Wallet, error) {
 			return fittingWallet, nil
 		}
-		err := validators.NewWalletOwnershipValidator(getWallet)(mockDB, trans)
+		err := validators.NewWalletOwnershipValidator(getWallet)(mockDB, callerId, walletId)
 		AssertNoError(t, err)
 	})
 }

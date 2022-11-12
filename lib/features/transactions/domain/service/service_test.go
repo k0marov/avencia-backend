@@ -13,15 +13,15 @@ import (
 func TestCodeGenerator(t *testing.T) {
 	mockDB := NewStubDB()
 	metaTrans := RandomMetaTrans()
-	ownerValidator := func(gotDB db.TDB, gotTrans values.MetaTrans) error {
-		if gotDB == mockDB && gotTrans == metaTrans {
+	ownerValidator := func(gotDB db.TDB, callerId, walletId string) error {
+		if gotDB == mockDB && callerId == metaTrans.CallerId && walletId == metaTrans.WalletId{
 			return nil
 		}
 		panic("unexpected")
 	}
 	t.Run("error case - owner validation throws", func(t *testing.T) {
 		tErr := RandomError()
-     ownerValidator := func(db.TDB, values.MetaTrans) error {
+     ownerValidator := func(db.TDB, string, string) error {
      	 return tErr
      }
      _, err := service.NewCodeGenerator(ownerValidator, nil)(mockDB, metaTrans) 

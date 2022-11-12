@@ -12,6 +12,7 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/limits"
 	wModels "github.com/AvenciaLab/avencia-backend/lib/features/limits/withdraws/domain/models"
 	transValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
+	transferValues "github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
 	userEntities "github.com/AvenciaLab/avencia-backend/lib/features/users/domain/entities"
 	walletEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
@@ -38,22 +39,24 @@ func RandomClientError() client_errors.ClientError {
 	}
 }
 
-// func RandomTransfer() transferValues.Transfer {
-// 	return transferValues.Transfer{
-// 		FromId: RandomString(),
-// 		ToId:   RandomString(),
-// 		Money:  RandomPositiveMoney(),
-// 	}
-// }
-//
-// func RandomRawTransfer() transferValues.RawTransfer {
-// 	return transferValues.RawTransfer{
-// 		FromId:  RandomString(),
-// 		ToEmail: RandomString(),
-// 		Money:   RandomPositiveMoney(),
-// 	}
-// }
-//
+func RandomTransfer() transferValues.Transfer {
+	return transferValues.Transfer{
+		FromId: RandomString(),
+		ToId:   RandomString(),
+		SourceWallet: RandomWallet(),
+		Amount:  RandomPosMoneyAmount(),
+	}
+}
+
+func RandomRawTransfer() transferValues.RawTransfer {
+	return transferValues.RawTransfer{
+		FromId:  RandomString(),
+		ToEmail: RandomString(),
+		SourceWalletId: RandomString(),
+		Amount:   RandomPosMoneyAmount(),
+	}
+}
+
 func RandomAPIMoney() api.Money {
 	return api.Money{
 		Currency: RandomString(),
