@@ -70,6 +70,8 @@ github.com/AvenciaLab/avencia-api-contract v0.0.0-20221112062027-dfb1c5739e9a h1
 github.com/AvenciaLab/avencia-api-contract v0.0.0-20221112062027-dfb1c5739e9a/go.mod h1:kogtRGgiOOVgHhAEkMZi2XZ7pMMBKQHC8d5mELAg4i0=
 github.com/AvenciaLab/avencia-api-contract v0.0.0-20221112102711-849587d853a5 h1:/FhDXJvjwLoPLKi0GdFYiN+wUfFe+oEiFd+jbIz62Cg=
 github.com/AvenciaLab/avencia-api-contract v0.0.0-20221112102711-849587d853a5/go.mod h1:kogtRGgiOOVgHhAEkMZi2XZ7pMMBKQHC8d5mELAg4i0=
+github.com/AvenciaLab/avencia-api-contract v0.0.0-20221112105547-57b6c357d6b9 h1:Rs4C6vTmtVVM92D6rgIhoi3RS1wcGJmskyNwe+5tooc=
+github.com/AvenciaLab/avencia-api-contract v0.0.0-20221112105547-57b6c357d6b9/go.mod h1:kogtRGgiOOVgHhAEkMZi2XZ7pMMBKQHC8d5mELAg4i0=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/CoinAPI/coinapi-sdk v0.0.0-20221110014053-53b61f38c03d h1:FICA+nEA+6rZ0fxEboYau0iz7AUm9RDI6tRHVirJCSI=
