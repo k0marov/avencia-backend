@@ -51,7 +51,7 @@ type ExternalDeps struct {
 	Auth                 authStore.AuthFacade
 	TRunner              db.TransRunner
 	SimpleDB             db.SDB
-	ExchangeRatesSDK     *SDK.SDK 
+	ExchangeRatesSDK     *SDK.SDK
 }
 type APIDeps struct {
 	Handlers  api.Handlers
@@ -69,8 +69,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	jwtIssuer := jwt.NewIssuer(deps.JwtSecret)
 	jwtVerifier := jwt.NewVerifier(deps.JwtSecret)
 
-
-	// ===== CURRENCIES ===== 
+	// ===== CURRENCIES =====
 	getRates := currService.NewExchangeRatesGetter(deps.ExchangeRatesSDK)
 	getRatesHandler := currHandlers.NewGetExchangeRatesHandler(getRates)
 
@@ -78,9 +77,9 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	updBal := walletService.NewBalanceUpdater(storeImpl.NewBalanceUpdater(db.JsonUpdaterImpl[core.MoneyAmount]))
 	getWallet := walletService.NewWalletGetter(storeImpl.NewWalletGetter(db.JsonGetterImpl[walletEntities.WalletVal]))
 	storeCreateWallet := storeImpl.NewWalletCreator(
-		db.JsonGetterImpl[storeImpl.UserWalletsModel], 
-		db.JsonUpdaterImpl[[]string], 
-    db.JsonSetterImpl[walletEntities.WalletVal],
+		db.JsonGetterImpl[storeImpl.UserWalletsModel],
+		db.JsonUpdaterImpl[[]string],
+		db.JsonSetterImpl[walletEntities.WalletVal],
 	)
 	createWallet := walletService.NewWalletCreator(storeCreateWallet)
 	getWallets := walletService.NewWalletsGetter(storeImpl.NewWalletsGetter(db.JsonGetterImpl[storeImpl.UserWalletsModel], getWallet))
@@ -117,10 +116,10 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	getUserInfo := userService.NewUserInfoGetter(getWallets, getLimits, getHistory, deps.Auth.Get)
 	getUserInfoHandler := uHandlers.NewGetUserInfoHandler(deps.TRunner, getUserInfo)
 	userDetailsCrudEndpoint := users.NewUserDetailsCRUDEndpoint(deps.SimpleDB)
-
+	addressCrudEndpoint := users.NewAddressCrudEndpoint(deps.SimpleDB)
 
 	// ===== TRANSACTIONS =====
-  walletOwnershipValidator := tValidators.NewWalletOwnershipValidator(getWallet)
+	walletOwnershipValidator := tValidators.NewWalletOwnershipValidator(getWallet)
 	transValidator := tValidators.NewTransactionValidator(checkLimit, tValidators.NewEnoughBalanceValidator(getBalance))
 	codeParser := mappers.NewCodeParser(jwtVerifier)
 	codeMapper := mappers.NewCodeGenerator(jwtIssuer)
@@ -188,16 +187,17 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 				},
 			},
 			App: api.AppHandlers{
-				GenCode:     genCodeHandler,
+				GenCode: genCodeHandler,
 				Transfer: func(http.ResponseWriter, *http.Request) {
 					panic("unimplemented")
 				},
-				GetUserInfo: getUserInfoHandler,
-				GetHistory:  getHistoryHandler,
-				Kyc:         api.KycHandlers{Passport: passportEndpoint},
-				UserDetails: userDetailsCrudEndpoint,
+				GetUserInfo:      getUserInfoHandler,
+				GetHistory:       getHistoryHandler,
+				Kyc:              api.KycHandlers{Passport: passportEndpoint},
+				UserDetails:      userDetailsCrudEndpoint,
+				Address:          addressCrudEndpoint,
 				GetExchangeRates: getRatesHandler,
-				Wallets:     api.WalletHandlers{
+				Wallets: api.WalletHandlers{
 					GetAll: getWalletsHandler,
 					Create: createWalletHandler,
 				},

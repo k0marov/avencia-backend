@@ -7,12 +7,14 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 )
 
-func NewUserDetailsCRUDEndpoint(simpleDB db.SDB) api.Endpoint {
-	store := crud.NewCRUDStore[api.DetailedUser](simpleDB, []string{"users", "details"})
-	service := crud.Service[api.DetailedUser]{
+// TODO: remove code duplication with user_details_crud.go
+
+func NewAddressCrudEndpoint(simpleDB db.SDB) api.Endpoint {
+	store := crud.NewCRUDStore[api.Address](simpleDB, []string{"users", "addresses"})
+	service := crud.Service[api.Address]{
 		Store:          store,
 		IgnoreNotFound: true,
-		DefaultValue: api.DetailedUser{},
+		DefaultValue: api.Address{},
 		IdPolicy: func(rd crud.RequestData) (id string, err error) {
 			if rd.IdFromURL == "" {
 				return rd.CallerId, nil
