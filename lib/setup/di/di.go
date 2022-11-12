@@ -168,6 +168,8 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 	// ===== KYC =====
 	statusEPFactory := kyc.NewStatusEndpointFactory(deps.SimpleDB)
 	passportEndpoint := kyc.NewPassportEndpoint(upld, statusEPFactory)
+	nationalIdEndpoint := kyc.NewNationalIdEndpoint(upld, statusEPFactory) 
+	drivingLicenseEndpoint := kyc.NewDrivingLicenseEndpoint(upld, statusEPFactory)
 
 	return APIDeps{
 		Handlers: api.Handlers{
@@ -193,7 +195,11 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 				},
 				GetUserInfo:      getUserInfoHandler,
 				GetHistory:       getHistoryHandler,
-				Kyc:              api.KycHandlers{Passport: passportEndpoint},
+				Kyc:              api.KycHandlers{
+					Passport:       passportEndpoint,
+					NationalId:     nationalIdEndpoint,
+					DrivingLicense: drivingLicenseEndpoint,
+				},
 				UserDetails:      userDetailsCrudEndpoint,
 				Address:          addressCrudEndpoint,
 				GetExchangeRates: getRatesHandler,
