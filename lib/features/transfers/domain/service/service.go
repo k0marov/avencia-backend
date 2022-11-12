@@ -2,16 +2,19 @@ package service
 
 import (
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	authStore "github.com/AvenciaLab/avencia-backend/lib/features/auth/domain/store"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transfers/domain/values"
 	wService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
+	wEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
 )
 
 type Transferer = func(transactionalDB db.TDB, t values.RawTransfer) error
 
 type transferConverter = func(db.TDB, values.RawTransfer) (values.Transfer, error)
+type walletFinder = func(db db.TDB, userId string, needCurrency core.Currency) (wEntities.Wallet, error)
 type transferPerformer = func(transactionalDB db.TDB, t values.Transfer) error
 
 // func NewTransferer(convert transferConverter, validate validators.TransferValidator, perform transferPerformer) Transferer {
@@ -35,11 +38,8 @@ type transferPerformer = func(transactionalDB db.TDB, t values.Transfer) error
 // 				Type:   transValues.Transfer,
 // 				Detail: t.ToId,
 // 			},
-// 			UserId: t.FromId,
-// 			Money: core.Money{
-// 				Currency: t.Money.Currency,
-// 				Amount:   t.Money.Amount.Neg(),
-// 			},
+// 			WalletId: ,
+// 			Money:   t.Amount.Neg(),
 // 		}
 // 		depositTrans := transValues.Transaction{
 // 			Source: transValues.TransSource{
@@ -47,18 +47,30 @@ type transferPerformer = func(transactionalDB db.TDB, t values.Transfer) error
 // 				Detail: t.FromId,
 // 			},
 // 			UserId: t.ToId,
-// 			Money: core.Money{
-// 				Currency: t.Money.Currency,
-// 				Amount:   t.Money.Amount,
-// 			},
+// 			Money:   t.Amount,
 // 		}
 // 		return transact(db, []transValues.Transaction{withdrawTrans, depositTrans})
 // 	}
 // }
 
-func NewTransferConverter(userFromEmail authStore.UserByEmailGetter, getWallet wService.WalletGetter) transferConverter {
+func NewWalletFinder(getWallets wService.WalletsGetter) walletFinder {
+	return func(db db.TDB, userId string, needCurrency core.Currency) (wEntities.Wallet, error) {
+    wallets, err := getWallets(db, userId) 
+    if err != nil {
+    	return wEntities.Wallet{}, core_err.Rethrow("getting recipient's wallets", err)
+    }
+    for _, w := range wallets {
+    	if w.Currency == needCurrency {
+    		return w, nil
+    	}
+    }
+    return wEntities.Wallet{}, client_errors.ProperWalletNotFound
+	}
+}
+
+func NewTransferConverter(userFromEmail authStore.UserByEmailGetter, getWallet wService.WalletGetter, findWallet walletFinder) transferConverter {
 	return func(db db.TDB, t values.RawTransfer) (values.Transfer, error) {
-		user, err := userFromEmail(t.ToEmail)
+		toUser, err := userFromEmail(t.ToEmail)
 		if core_err.IsNotFound(err) {
 			return values.Transfer{}, client_errors.NotFound
 		}
@@ -69,10 +81,15 @@ func NewTransferConverter(userFromEmail authStore.UserByEmailGetter, getWallet w
 		if err != nil {
 			return values.Transfer{}, core_err.Rethrow("getting source wallet", err)
 		}
+		toWallet, err := findWallet(db, toUser.Id, wallet.Currency)
+		if err != nil {
+			return values.Transfer{}, core_err.Rethrow("finding a fitting target wallet", err)
+		}
 		return values.Transfer{
 			FromId: t.FromId,
-			SourceWallet: wallet,
-			ToId:   user.Id,
+			FromWallet: wallet,
+			ToWallet: toWallet,
+			ToId:   toUser.Id,
 			Amount:  t.Amount,
 		}, nil
 	}

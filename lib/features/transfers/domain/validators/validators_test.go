@@ -20,7 +20,7 @@ func TestTransferValidator(t *testing.T) {
 	t.Run("error case - money.amount is negative", func(t *testing.T) {
 		trans := values.Transfer{
 			Amount: RandomNegMoneyAmount(),
-			SourceWallet: wallet,
+			FromWallet: wallet,
 		}
 		err := validators.NewTransferValidator()(trans)
 		AssertError(t, err, client_errors.NegativeTransferAmount)
@@ -29,7 +29,7 @@ func TestTransferValidator(t *testing.T) {
 		trans := values.Transfer{
 			FromId: caller,
 			ToId:   caller,
-			SourceWallet: wallet,
+			FromWallet: wallet,
 			Amount: RandomPosMoneyAmount(),
 		}
 		err := validators.NewTransferValidator()(trans)
@@ -38,7 +38,7 @@ func TestTransferValidator(t *testing.T) {
 	t.Run("error case - transferring 0", func(t *testing.T) {
 		trans := values.Transfer{
 			FromId: caller,
-			SourceWallet: wallet,
+			FromWallet: wallet,
 			Amount: core.NewMoneyAmount(0),
 		}
 		err := validators.NewTransferValidator()(trans)
@@ -47,7 +47,7 @@ func TestTransferValidator(t *testing.T) {
 	t.Run("error case - caller is not the wallet owner", func(t *testing.T) {
 		trans := values.Transfer{
 			FromId: RandomString(), 
-			SourceWallet: wallet,
+			FromWallet: wallet,
 			Amount: RandomPosMoneyAmount(),
 		}
 		err := validators.NewTransferValidator()(trans) 
@@ -57,7 +57,7 @@ func TestTransferValidator(t *testing.T) {
 		trans := values.Transfer{
 			FromId:caller,
 			ToId:         RandomString(),
-			SourceWallet: wallet,
+			FromWallet: wallet,
 			Amount:       RandomPosMoneyAmount(),
 		}
 		err := validators.NewTransferValidator()(trans) 

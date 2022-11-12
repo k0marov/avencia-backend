@@ -8,7 +8,8 @@ import (
 type Transfer struct {
 	FromId string
 	ToId   string
-	SourceWallet entities.Wallet
+	FromWallet entities.Wallet
+	ToWallet entities.Wallet
 	Amount  core.MoneyAmount
 }
 

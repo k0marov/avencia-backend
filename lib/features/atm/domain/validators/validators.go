@@ -30,6 +30,7 @@ func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
 	}
 }
 
+// TODO: probably there should be a check if the banknote currency matches the wallet currency 
 func NewInsertedBanknoteValidator(validate MetaTransByIdValidator) InsertedBanknoteValidator {
 	return func(db db.TDB, ib values.InsertedBanknote) error {
 		_, err := validate(ib.TransactionId, tValues.Deposit)

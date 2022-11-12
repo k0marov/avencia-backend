@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	. "github.com/AvenciaLab/avencia-backend/lib/core/helpers/test_helpers"
@@ -101,12 +102,51 @@ import (
 // 		AssertError(t, gotErr, tErr)
 // 	})
 // }
+//
+
+func TestWalletFinder(t *testing.T) {
+	mockDB := NewStubDB()
+	curr := RandomCurrency()
+  wallets := []wEntities.Wallet{
+  	RandomWallet(), 
+  	RandomWallet(), 
+  	{WalletVal: wEntities.WalletVal{Currency: curr}},
+  	RandomWallet(), 
+  }
+  userId := RandomString()
+
+  getWallets := func(gotDB db.TDB, user string) ([]wEntities.Wallet, error) {
+		if gotDB == mockDB && user == userId {
+			return wallets, nil
+		}
+		panic("unexpected")
+  }
+
+	t.Run("error case - getting wallets throws", func(t *testing.T) {
+		getWallets := func(db.TDB, string) ([]wEntities.Wallet, error) {
+      return wallets, RandomError()
+		}
+		_, err := service.NewWalletFinder(getWallets)(mockDB, userId, curr)
+		AssertSomeError(t, err)
+	})
+	t.Run("error case - proper wallet is not found", func(t *testing.T) {
+    _, err := service.NewWalletFinder(getWallets)(mockDB, userId, core.Currency(RandomString()))
+    AssertError(t, err, client_errors.ProperWalletNotFound)
+	})
+  t.Run("happy case", func(t *testing.T) {
+  	wallet, err := service.NewWalletFinder(getWallets)(mockDB, userId, curr) 
+  	AssertNoError(t, err)
+  	Assert(t, wallet, wallets[2], "returned wallet")
+  })
+}
+
 
 func TestTransferConverter(t *testing.T) {
 	mockDB := NewStubDB()
 	rawTrans := RandomRawTransfer()
 	user := RandomUser()
 	wallet := RandomWallet()
+	toWallet := RandomWallet()
 
 	userFromEmail := func(gotEmail string) (authEntities.User, error) {
 		if gotEmail == rawTrans.ToEmail {
@@ -118,14 +158,14 @@ func TestTransferConverter(t *testing.T) {
 		userFromEmail := func(string) (authEntities.User, error) {
 			return authEntities.User{}, core_err.ErrNotFound
 		}
-		_, err := service.NewTransferConverter(userFromEmail, nil)(mockDB, rawTrans)
+		_, err := service.NewTransferConverter(userFromEmail, nil, nil)(mockDB, rawTrans)
 		AssertError(t, err, client_errors.NotFound)
 	})
 	t.Run("error case - auth getter throws some other error", func(t *testing.T) {
 		userFromEmail := func(string) (authEntities.User, error) {
 			return authEntities.User{}, RandomError()
 		}
-		_, err := service.NewTransferConverter(userFromEmail, nil)(mockDB, rawTrans)
+		_, err := service.NewTransferConverter(userFromEmail, nil, nil)(mockDB, rawTrans)
 		AssertSomeError(t, err)
 	})
 	getWallet := func(gotDB db.TDB, walletId string) (wEntities.Wallet, error) {
@@ -138,16 +178,30 @@ func TestTransferConverter(t *testing.T) {
 		getWallet := func(db.TDB, string) (wEntities.Wallet, error) {
 			return wEntities.Wallet{}, RandomError()
 		}
-		_, err := service.NewTransferConverter(userFromEmail, getWallet)(mockDB, rawTrans)
+		_, err := service.NewTransferConverter(userFromEmail, getWallet, nil)(mockDB, rawTrans)
+		AssertSomeError(t, err)
+	})
+	findWallet := func(gotDB db.TDB, userId string, curr core.Currency) (wEntities.Wallet, error) {
+		if gotDB == mockDB && userId == user.Id && curr == wallet.Currency {
+			return toWallet, nil
+		}
+		panic("unexpected")
+	}
+	t.Run("error case - wallet finder throws", func(t *testing.T) {
+		findWallet := func(db.TDB, string, core.Currency) (wEntities.Wallet, error) {
+			return wEntities.Wallet{}, RandomError()
+		}
+		_, err := service.NewTransferConverter(userFromEmail, getWallet, findWallet)(mockDB, rawTrans)
 		AssertSomeError(t, err)
 	})
 	t.Run("happy case", func(t *testing.T) {
-		gotTrans, err := service.NewTransferConverter(userFromEmail, getWallet)(mockDB, rawTrans)
+		gotTrans, err := service.NewTransferConverter(userFromEmail, getWallet, findWallet)(mockDB, rawTrans)
 		AssertNoError(t, err)
 		want := values.Transfer{
 			FromId: rawTrans.FromId,
 			ToId:   user.Id,
-			SourceWallet: wallet,
+			FromWallet: wallet,
+			ToWallet: toWallet,
 			Amount:  rawTrans.Amount,
 		}
 		Assert(t, gotTrans, want, "converted transfers")

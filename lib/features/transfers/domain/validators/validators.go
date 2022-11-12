@@ -20,7 +20,7 @@ func NewTransferValidator() TransferValidator {
 		if t.ToId == t.FromId {
 			return client_errors.TransferringToYourself
 		}
-		if t.FromId != t.SourceWallet.OwnerId {
+		if t.FromId != t.FromWallet.OwnerId {
 			return client_errors.Unauthorized
 		}
 		return nil

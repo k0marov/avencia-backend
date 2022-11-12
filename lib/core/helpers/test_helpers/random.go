@@ -43,7 +43,8 @@ func RandomTransfer() transferValues.Transfer {
 	return transferValues.Transfer{
 		FromId: RandomString(),
 		ToId:   RandomString(),
-		SourceWallet: RandomWallet(),
+		FromWallet: RandomWallet(),
+		ToWallet: RandomWallet(),
 		Amount:  RandomPosMoneyAmount(),
 	}
 }
