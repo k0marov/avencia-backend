@@ -1,7 +1,6 @@
 package store
 
 import (
-
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/core/helpers/general_helpers"
 	"github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
@@ -11,7 +10,7 @@ import (
 func NewHistoryGetter(getDocs db.JsonColGetter[entities.HistEntry]) store.HistoryGetter {
 	return func(db db.TDB, userId string) ([]entities.HistEntry, error) {
 		col := []string{"histories", userId}
-		return getDocs(db,col)
+		return getDocs(db, col)
 	}
 }
 
