@@ -56,7 +56,7 @@ func NewWithdrawalValidator(validateMeta MetaTransByIdValidator, validateTrans t
 				Type: tValues.Cash,
 			},
 			WalletId: metaTrans.WalletId,
-			Money:  wd.Money.Amount,
+			Money:  wd.Money,
 		}
 		_, err = validateTrans(db, t)
 		return err

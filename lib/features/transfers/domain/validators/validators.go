@@ -11,10 +11,10 @@ type TransferValidator = func(values.Transfer) error
 
 func NewTransferValidator() TransferValidator {
 	return func(t values.Transfer) error {
-		if t.Amount.IsNeg() {
+		if t.Money.Amount.IsNeg() {
 			return client_errors.NegativeTransferAmount
 		}
-		if t.Amount.IsEqual(core.NewMoneyAmount(0)) {
+		if t.Money.Amount.IsEqual(core.NewMoneyAmount(0)) {
 			return client_errors.TransferringZero
 		}
 		if t.ToId == t.FromId {

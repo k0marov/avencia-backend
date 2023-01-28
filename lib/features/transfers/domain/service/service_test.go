@@ -67,24 +67,33 @@ func TestTransferPerformer(t *testing.T) {
 		ToId:       "Sam",
 		FromWallet: wEntities.Wallet{Id: "JohnWallet"},
 		ToWallet:   wEntities.Wallet{Id: "SamWallet"},
-		Amount:     core.NewMoneyAmount(42),
+		Money: core.Money{
+			Currency: "USD",
+			Amount:   core.NewMoneyAmount(42),
+		},
 	}
 
-	withdrawTrans := transValues.Transaction{
+	wantWithdrawTrans := transValues.Transaction{
 		Source: transValues.TransSource{
 			Type:   transValues.Transfer,
 			Detail: "Sam",
 		},
 		WalletId: "JohnWallet",
-		Money:    core.NewMoneyAmount(-42),
+		Money: core.Money{
+			Currency: "USD",
+			Amount:   core.NewMoneyAmount(-42),
+		},
 	}
-	depositTrans := transValues.Transaction{
+	wantDepositTrans := transValues.Transaction{
 		Source: transValues.TransSource{
 			Type:   transValues.Transfer,
 			Detail: "John",
 		},
 		WalletId: "SamWallet",
-		Money: core.NewMoneyAmount(42),
+		Money: core.Money{
+			Currency: "USD",
+			Amount:   core.NewMoneyAmount(42),
+		},
 	}
 
 	mockDB := NewStubDB()
@@ -92,7 +101,7 @@ func TestTransferPerformer(t *testing.T) {
 	t.Run("forward case", func(t *testing.T) {
 		tErr := RandomError()
 		transact := func(gotDB db.TDB, tList []transValues.Transaction) error {
-			if gotDB == mockDB && reflect.DeepEqual(tList, []transValues.Transaction{withdrawTrans, depositTrans}) {
+			if gotDB == mockDB && reflect.DeepEqual(tList, []transValues.Transaction{wantWithdrawTrans, wantDepositTrans}) {
 				return tErr
 			}
 			panic("unexpected")
@@ -199,7 +208,10 @@ func TestTransferConverter(t *testing.T) {
 			ToId:       user.Id,
 			FromWallet: wallet,
 			ToWallet:   toWallet,
-			Amount:     rawTrans.Amount,
+			Money: core.Money{
+				Currency: wallet.Currency,
+				Amount:   rawTrans.Amount,
+			},
 		}
 		Assert(t, gotTrans, want, "converted transfers")
 	})

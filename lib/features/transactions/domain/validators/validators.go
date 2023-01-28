@@ -15,7 +15,7 @@ import (
 type WalletOwnershipValidator = func(db db.TDB, callerId, walletId string) error
 
 type TransactionValidator = func(db db.TDB, t values.Transaction) (curBalance core.MoneyAmount, err error)
-type enoughBalanceValidator = func(db db.TDB, t values.Transaction) (curBalance core.MoneyAmount, err error)
+type walletValidator = func(db db.TDB, t values.Transaction) (curBalance core.MoneyAmount, err error)
 
 func NewWalletOwnershipValidator(getWallet walletService.WalletGetter) WalletOwnershipValidator {
 	return func(db db.TDB, callerId, walletId string) error {
@@ -30,24 +30,27 @@ func NewWalletOwnershipValidator(getWallet walletService.WalletGetter) WalletOwn
 	}
 }
 
-func NewTransactionValidator(checkLimits limits.LimitChecker, checkBalance enoughBalanceValidator) TransactionValidator {
+func NewTransactionValidator(checkLimits limits.LimitChecker, checkWallet walletValidator) TransactionValidator {
 	return func(db db.TDB, t values.Transaction) (curBalance core.MoneyAmount, err error) {
 		if err := checkLimits(db, t); err != nil {
 			return core.NewMoneyAmount(0), err
 		}
 
-		return checkBalance(db, t)
+		return checkWallet(db, t)
 	}
 }
 
-func NewEnoughBalanceValidator(getWallet walletService.WalletGetter) enoughBalanceValidator {
+func NewWalletValidator(getWallet walletService.WalletGetter) walletValidator {
 	return func(db db.TDB, t values.Transaction) (curBalance core.MoneyAmount, err error) {
 		wallet, err := getWallet(db, t.WalletId)
 		if err != nil {
 			return core.NewMoneyAmount(0), core_err.Rethrow("getting current balance", err)
 		}
-		if t.Money.IsNeg() {
-			if wallet.Amount.Num() < math.Abs(t.Money.Num()) {
+		if (wallet.Currency != t.Money.Currency) {
+			return core.NewMoneyAmount(0), client_errors.InvalidCurrency
+		}
+		if t.Money.Amount.IsNeg() {
+			if wallet.Amount.Num() < math.Abs(t.Money.Amount.Num()) {
 				return core.NewMoneyAmount(0), client_errors.InsufficientFunds
 			}
 		}

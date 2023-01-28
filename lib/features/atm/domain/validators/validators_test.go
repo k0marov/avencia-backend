@@ -52,7 +52,7 @@ func TestWithdrawalValidator(t *testing.T) {
 			Detail: "",
 		},
 		WalletId: metaTrans.WalletId,
-		Money:  wd.Money.Amount,
+		Money:  wd.Money,
 	}
 	mockDB := NewStubDB()
 
@@ -126,6 +126,7 @@ func TestMetaTransValidator(t *testing.T) {
 func TestInsertedBanknoteValidator(t *testing.T) {
 	ib := values.InsertedBanknote{
 		TransactionId: RandomString(),
+		Banknote: core.Money{Currency: RandomCurrency()},
 	}
 	baseBanknoteValidatorTest(t, ib.TransactionId, tValues.Deposit, func(validate validators.MetaTransByIdValidator) error {
     return validators.NewInsertedBanknoteValidator(validate)(NewStubDB(), ib)

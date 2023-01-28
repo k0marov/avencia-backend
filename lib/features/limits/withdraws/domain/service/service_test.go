@@ -129,22 +129,22 @@ func TestTransWithdrawnUpdater(t *testing.T) {
 		panic("unexpected")
 	}
 	t.Run("error case - getting wallet throws", func(t *testing.T) {
-    getWallet := func(gotDB db.TDB, walletId string) (wEntities.Wallet, error) {
-    	return wEntities.Wallet{}, RandomError()
-    }
-    err := service.NewTransWithdrawnUpdater(getWallet, nil)(mockDB, trans)
-    AssertSomeError(t, err)
+		getWallet := func(gotDB db.TDB, walletId string) (wEntities.Wallet, error) {
+			return wEntities.Wallet{}, RandomError()
+		}
+		err := service.NewTransWithdrawnUpdater(getWallet, nil)(mockDB, trans)
+		AssertSomeError(t, err)
 	})
 	t.Run("forward case - forward to updateWithdrawn", func(t *testing.T) {
 		tErr := RandomError()
 		upd := func(gotDB db.TDB, userId string, money core.Money) error {
 			if gotDB == mockDB && userId == wallet.OwnerId &&
-				money.Currency == wallet.Currency && money.Amount == trans.Money {
+				money == trans.Money {
 				return tErr
 			}
 			panic("unexpected")
 		}
-		err := service.NewTransWithdrawnUpdater(getWallet, upd)	(mockDB, trans)
+		err := service.NewTransWithdrawnUpdater(getWallet, upd)(mockDB, trans)
 		AssertError(t, err, tErr)
 	})
 }

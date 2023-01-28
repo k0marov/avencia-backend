@@ -148,7 +148,7 @@ func TestTransBalUpdater(t *testing.T) {
 	mockDB := NewStubDB()
 	curBalance := RandomPosMoneyAmount()
 	trans := RandomTransactionData()
-	wantNewBal := curBalance.Add(trans.Money)
+	wantNewBal := curBalance.Add(trans.Money.Amount)
 
 	tErr := RandomError()
 	updBal := func(gotDB db.TDB, walletId string, newBal core.MoneyAmount) error {

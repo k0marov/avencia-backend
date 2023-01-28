@@ -42,7 +42,7 @@ func NewTransferPerformer(transact tService.MultiTransactionFinalizer) transferP
 				Detail: t.ToId,
 			},
 			WalletId: t.FromWallet.Id,
-			Money:    t.Amount.Neg(),
+			Money:    t.Money.Neg(),
 		}
 		depositTrans := transValues.Transaction{
 			Source: transValues.TransSource{
@@ -50,7 +50,7 @@ func NewTransferPerformer(transact tService.MultiTransactionFinalizer) transferP
 				Detail: t.FromId,
 			},
 			WalletId: t.ToWallet.Id,
-			Money:    t.Amount,
+			Money:    t.Money,
 		}
 		return transact(db, []transValues.Transaction{withdrawTrans, depositTrans})
 	}
@@ -93,7 +93,10 @@ func NewTransferConverter(userFromEmail authStore.UserByEmailGetter, getWallet w
 			FromWallet: wallet,
 			ToWallet:   toWallet,
 			ToId:       toUser.Id,
-			Amount:     t.Amount,
+			Money:      core.Money{
+				Currency: wallet.Currency, 
+				Amount: t.Amount,
+			},
 		}, nil
 	}
 }

@@ -70,6 +70,6 @@ func NewTransactionPerformer(updWithdrawn withdrawsService.TransWithdrawnUpdater
 
 func NewTransBalUpdater(updBal wallets.BalanceUpdater) transBalUpdater {
 	return func(db db.TDB, curBal core.MoneyAmount, t values.Transaction) error {
-		return updBal(db, t.WalletId, curBal.Add(t.Money))
+		return updBal(db, t.WalletId, curBal.Add(t.Money.Amount))
 	}
 }

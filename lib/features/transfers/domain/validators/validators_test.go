@@ -19,7 +19,7 @@ func TestTransferValidator(t *testing.T) {
 	}
 	t.Run("error case - money.amount is negative", func(t *testing.T) {
 		trans := values.Transfer{
-			Amount: RandomNegMoneyAmount(),
+			Money: RandomNegativeMoney(),
 			FromWallet: wallet,
 		}
 		err := validators.NewTransferValidator()(trans)
@@ -30,7 +30,7 @@ func TestTransferValidator(t *testing.T) {
 			FromId: caller,
 			ToId:   caller,
 			FromWallet: wallet,
-			Amount: RandomPosMoneyAmount(),
+			Money: RandomPositiveMoney(),
 		}
 		err := validators.NewTransferValidator()(trans)
 		AssertError(t, err, client_errors.TransferringToYourself)
@@ -39,7 +39,7 @@ func TestTransferValidator(t *testing.T) {
 		trans := values.Transfer{
 			FromId: caller,
 			FromWallet: wallet,
-			Amount: core.NewMoneyAmount(0),
+			Money: core.Money{Amount: core.NewMoneyAmount(0)},
 		}
 		err := validators.NewTransferValidator()(trans)
 		AssertError(t, err, client_errors.TransferringZero)
@@ -48,7 +48,7 @@ func TestTransferValidator(t *testing.T) {
 		trans := values.Transfer{
 			FromId: RandomString(), 
 			FromWallet: wallet,
-			Amount: RandomPosMoneyAmount(),
+			Money: RandomPositiveMoney(),
 		}
 		err := validators.NewTransferValidator()(trans) 
 		AssertError(t, err, client_errors.Unauthorized)
@@ -58,7 +58,7 @@ func TestTransferValidator(t *testing.T) {
 			FromId:caller,
 			ToId:         RandomString(),
 			FromWallet: wallet,
-			Amount:       RandomPosMoneyAmount(),
+			Money:       RandomPositiveMoney(),
 		}
 		err := validators.NewTransferValidator()(trans) 
 		AssertNoError(t, err)

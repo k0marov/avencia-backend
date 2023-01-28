@@ -26,7 +26,7 @@ type LimitsGetter = func(db db.TDB, walletId string) (Limits, error)
 
 func NewLimitChecker(getLimit limitGetter) LimitChecker {
 	return func(db db.TDB, t transValues.Transaction) error {
-		if t.Money.IsPos() { // it's a deposit
+		if t.Money.Amount.IsPos() { // it's a deposit
 			return nil
 		}
 		withdraw := t.Money.Neg()
@@ -35,7 +35,7 @@ func NewLimitChecker(getLimit limitGetter) LimitChecker {
 		if err != nil {
 			return core_err.Rethrow("while getting users's limits", err)
 		}
-		if limit.Max.IsSet() && limit.Withdrawn.Add(withdraw).IsBigger(limit.Max) {
+		if limit.Max.IsSet() && limit.Withdrawn.Add(withdraw.Amount).IsBigger(limit.Max) {
 			return client_errors.WithdrawLimitExceeded
 		}
 		return nil

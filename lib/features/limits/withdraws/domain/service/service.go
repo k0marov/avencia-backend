@@ -13,12 +13,12 @@ import (
 )
 
 type WithdrawnUpdater = func(db db.TDB, userId string, tMoney core.Money) error
-type TransWithdrawnUpdater = func(db db.TDB, t tValues.Transaction)  error
+type TransWithdrawnUpdater = func(db db.TDB, t tValues.Transaction) error
 
 type withdrawnUpdateGetter = func(db db.TDB, userId string, tMoney core.Money) (core.Money, error)
 
 func NewWithdrawnUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUpdater) WithdrawnUpdater {
-	return func(db db.TDB, userId string, tMoney core.Money) error { 
+	return func(db db.TDB, userId string, tMoney core.Money) error {
 		if tMoney.Amount.IsPos() { // it is a deposit - no update needed
 			return nil
 		}
@@ -32,14 +32,11 @@ func NewWithdrawnUpdater(getValue withdrawnUpdateGetter, update store.WithdrawUp
 
 func NewTransWithdrawnUpdater(getWallet wService.WalletGetter, upd WithdrawnUpdater) TransWithdrawnUpdater {
 	return func(db db.TDB, t tValues.Transaction) error {
-		wallet, err := getWallet(db, t.WalletId) 
+		wallet, err := getWallet(db, t.WalletId)
 		if err != nil {
 			return core_err.Rethrow("getting the wallet", err)
 		}
-		return upd(db, wallet.OwnerId, core.Money{
-			Currency:wallet.Currency,
-			Amount:   t.Money,
-		})
+		return upd(db, wallet.OwnerId, t.Money)
 	}
 }
 
@@ -49,10 +46,10 @@ func NewWithdrawnUpdateGetter(getWithdraws store.WithdrawsGetter) withdrawnUpdat
 		if err != nil {
 			return core.Money{}, core_err.Rethrow("getting limits", err)
 		}
-		curWithdrawn := withdraws[tMoney.Currency] 
+		curWithdrawn := withdraws[tMoney.Currency]
 		newWithdraw := tMoney.Amount.Neg()
-    
-    result := core.Money{Currency: tMoney.Currency}
+
+		result := core.Money{Currency: tMoney.Currency}
 		if configurable.IsWithdrawLimitRelevant(time.Unix(curWithdrawn.UpdatedAt, 0)) {
 			result.Amount = curWithdrawn.Withdrawn.Add(newWithdraw)
 		} else {
@@ -61,4 +58,3 @@ func NewWithdrawnUpdateGetter(getWithdraws store.WithdrawsGetter) withdrawnUpdat
 		return result, nil
 	}
 }
-

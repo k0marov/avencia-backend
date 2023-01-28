@@ -82,8 +82,7 @@ func TestTransStorer(t *testing.T) {
 		tErr := RandomError()
 		storeEntry := func(gotDB db.TDB, userId string, entry entities.HistEntry) error {
 			if gotDB == mockDB && userId == wallet.OwnerId && 
-				entry.Money.Currency == wallet.Currency && 
-				entry.Money.Amount == trans.Money && entry.Source == trans.Source && 
+				entry.Money == trans.Money && entry.Source == trans.Source && 
 				TimeAlmostEqual(time.Unix(entry.CreatedAt, 0), time.Now()) {
         	return tErr
 				} 

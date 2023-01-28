@@ -4,7 +4,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/features/histories/domain/entities"
@@ -36,10 +35,7 @@ func NewEntryStorer(getWallet wallets.WalletGetter, storeTrans store.EntryStorer
 		}
 		entry := entities.HistEntry{
 			Source:    t.Source,
-			Money:     core.Money{
-				Currency: wallet.Currency,
-				Amount: t.Money,
-			},
+			Money:     t.Money,
 			CreatedAt: time.Now().Unix(),
 		}
 		return storeTrans(db, wallet.OwnerId, entry)

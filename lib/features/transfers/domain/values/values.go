@@ -10,7 +10,7 @@ type Transfer struct {
 	ToId   string
 	FromWallet entities.Wallet
 	ToWallet entities.Wallet
-	Amount  core.MoneyAmount
+	Money core.Money
 }
 
 type RawTransfer struct {

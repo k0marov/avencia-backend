@@ -33,14 +33,16 @@ func TestLimitChecker(t *testing.T) {
 		getLimit := func(db.TDB, string) (limits.Limit, error) {
 			return limits.Limit{}, RandomError()
 		}
-		err := limits.NewLimitChecker(getLimit)(mockDB, transValues.Transaction{Money: RandomNegMoneyAmount()})
+		err := limits.NewLimitChecker(getLimit)(mockDB, transValues.Transaction{Money: RandomNegativeMoney()})
 		AssertSomeError(t, err)
 	})
 	t.Run("error case - limit exceeded", func(t *testing.T) {
 		trans := transValues.Transaction{
 			Source:   RandomTransactionSource(),
 			WalletId: wallet,
-			Money:    core.NewMoneyAmount(-200),
+			Money: core.Money{
+				Amount: core.NewMoneyAmount(-200),
+			},
 		}
 		err := limits.NewLimitChecker(getLimit)(mockDB, trans)
 		AssertError(t, err, client_errors.WithdrawLimitExceeded)
@@ -49,7 +51,9 @@ func TestLimitChecker(t *testing.T) {
 		trans := transValues.Transaction{
 			Source:   RandomTransactionSource(),
 			WalletId: wallet,
-			Money:    core.NewMoneyAmount(-50),
+			Money: core.Money{
+				Amount: core.NewMoneyAmount(-50),
+			},
 		}
 		err := limits.NewLimitChecker(getLimit)(mockDB, trans)
 		AssertNoError(t, err)
@@ -58,7 +62,9 @@ func TestLimitChecker(t *testing.T) {
 		trans := transValues.Transaction{
 			Source:   RandomTransactionSource(),
 			WalletId: wallet,
-			Money:    core.NewMoneyAmount(1000),
+			Money: core.Money{
+				Amount: core.NewMoneyAmount(1000),
+			},
 		}
 		err := limits.NewLimitChecker(getLimit)(mockDB, trans)
 		AssertNoError(t, err)

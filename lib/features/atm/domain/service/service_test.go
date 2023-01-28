@@ -146,7 +146,7 @@ func TestGeneralFinalizer(t *testing.T) {
 				Detail: "",
 			},
 			WalletId: metaTrans.WalletId,
-			Money:  m[0].Amount,
+			Money:  m[0],
 		},
 		{
 			Source: tValues.TransSource{
@@ -154,7 +154,7 @@ func TestGeneralFinalizer(t *testing.T) {
 				Detail: "",
 			},
 			WalletId: metaTrans.WalletId,
-			Money:  m[1].Amount,
+			Money:  m[1],
 		},
 	}
 

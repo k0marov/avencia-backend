@@ -82,7 +82,7 @@ func NewGeneralFinalizer(validate validators.MetaTransByIdValidator, finalize tS
 			t = append(t, tValues.Transaction{
 				Source: source,
 				WalletId: metaTrans.WalletId,
-				Money:  m.Amount,
+				Money:  m,
 			})
 		}
 		return finalize(db, t)

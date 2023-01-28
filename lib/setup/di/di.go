@@ -123,7 +123,7 @@ func InitializeBusiness(deps ExternalDeps) APIDeps {
 
 	// ===== TRANSACTIONS =====
 	walletOwnershipValidator := tValidators.NewWalletOwnershipValidator(getWallet)
-	transValidator := tValidators.NewTransactionValidator(checkLimit, tValidators.NewEnoughBalanceValidator(getBalance))
+	transValidator := tValidators.NewTransactionValidator(checkLimit, tValidators.NewWalletValidator(getBalance))
 	codeParser := mappers.NewCodeParser(jwtVerifier)
 	codeMapper := mappers.NewCodeGenerator(jwtIssuer)
 	codeGenerator := service.NewCodeGenerator(walletOwnershipValidator, codeMapper)
