@@ -4,20 +4,23 @@ import (
 	"crypto/subtle"
 
 	"github.com/AvenciaLab/avencia-api-contract/api/client_errors"
+	"github.com/AvenciaLab/avencia-backend/lib/core"
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
-	wService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 	tStore "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/store"
 	tValidators "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/store/mappers"
+	wService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 )
 
 type ATMSecretValidator = func(gotAtmSecret []byte) error
+type WithdrawalValidator = func(db.TDB, values.WithdrawalData) error
+
+type baseBanknoteValidator = func(db db.TDB, transId string, expType tValues.TransactionType, banknote core.Money) error
 type InsertedBanknoteValidator = func(db.TDB, values.InsertedBanknote) error
 type DispensedBanknoteValidator = func(db.TDB, values.DispensedBanknote) error
-type WithdrawalValidator = func(db.TDB, values.WithdrawalData) error
 
 type MetaTransByIdValidator = func(transId string, wantType tValues.TransactionType) (tValues.MetaTrans, error)
 type MetaTransByCodeValidator = func(code string, wantType tValues.TransactionType) (tValues.MetaTrans, error)
@@ -31,26 +34,21 @@ func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
 	}
 }
 
-func NewInsertedBanknoteValidator(validate MetaTransByIdValidator, getWallet wService.WalletGetter) InsertedBanknoteValidator {
+func NewInsertedBanknoteValidator(validate baseBanknoteValidator) InsertedBanknoteValidator {
 	return func(db db.TDB, ib values.InsertedBanknote) error {
-		trans, err := validate(ib.TransactionId, tValues.Deposit)
-		if err != nil {
-			return err
-		}
-		wallet, err := getWallet(db, trans.WalletId)
-		if err != nil {
-			return err
-		}
-		if ib.Banknote.Currency != wallet.Currency {
-			return client_errors.InvalidCurrency
-		}
-		return nil
+		return validate(db, ib.TransactionId, tValues.Deposit, ib.Banknote)
 	}
 }
 
-func NewDispensedBanknoteValidator(validate MetaTransByIdValidator, getWallet wService.WalletGetter) DispensedBanknoteValidator {
+func NewDispensedBanknoteValidator(validate baseBanknoteValidator) DispensedBanknoteValidator {
 	return func(db db.TDB, banknote values.DispensedBanknote) error {
-		trans, err := validate(banknote.TransactionId, tValues.Withdrawal) 
+		return validate(db, banknote.TransactionId, tValues.Withdrawal, banknote.Banknote)
+	}
+}
+
+func NewBaseBanknoteValidator(validate MetaTransByIdValidator, getWallet wService.WalletGetter) baseBanknoteValidator {
+	return func(db db.TDB, transId string, expType tValues.TransactionType, banknote core.Money) error {
+		trans, err := validate(transId, expType)
 		if err != nil {
 			return err
 		}
@@ -58,7 +56,7 @@ func NewDispensedBanknoteValidator(validate MetaTransByIdValidator, getWallet wS
 		if err != nil {
 			return err
 		}
-		if banknote.Banknote.Currency != wallet.Currency {
+		if banknote.Currency != wallet.Currency {
 			return client_errors.InvalidCurrency
 		}
 		return nil
@@ -76,7 +74,7 @@ func NewWithdrawalValidator(validateMeta MetaTransByIdValidator, validateTrans t
 				Type: tValues.Cash,
 			},
 			WalletId: metaTrans.WalletId,
-			Money:  wd.Money,
+			Money:    wd.Money,
 		}
 		_, err = validateTrans(db, t)
 		return err

@@ -11,7 +11,6 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
 	wEntities "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/entities"
-	wService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
 )
 
 func TestATMSecretValidator(t *testing.T) {
@@ -121,29 +120,46 @@ func TestMetaTransValidator(t *testing.T) {
 }
 
 func TestInsertedBanknoteValidator(t *testing.T) {
-	act := func(validate validators.MetaTransByIdValidator, getWallet wService.WalletGetter, tId string, banknote core.Money, db db.TDB) error {
-		return validators.NewInsertedBanknoteValidator(validate, getWallet)(db, values.InsertedBanknote{
-			TransactionId: tId,
-			Banknote:      banknote,
-		})
-	}
-	baseBanknoteValidatorTest(t, tValues.Deposit, act)
+	t.Run("forward case - should forward to base validator", func(t *testing.T) {
+		mockDB := NewStubDB()
+		ib := values.InsertedBanknote{
+			TransactionId: RandomString(),
+			Banknote:      RandomMoney(),
+		}
+		tErr := RandomError()
+		baseValidator := func(gotDB db.TDB, transId string, expType tValues.TransactionType, banknote core.Money) error {
+			if gotDB == mockDB && transId == ib.TransactionId && expType == tValues.Deposit && banknote == ib.Banknote {
+				return tErr
+			}
+			panic("unexpected")
+		}
+		gotErr := validators.NewInsertedBanknoteValidator(baseValidator)(mockDB, ib)
+		AssertError(t, gotErr, tErr)
+	})
 }
 func TestDispensedBanknoteValidator(t *testing.T) {
-	act := func(validate validators.MetaTransByIdValidator, getWallet wService.WalletGetter, tId string, banknote core.Money, db db.TDB) error {
-		return validators.NewDispensedBanknoteValidator(validate, getWallet)(db, values.DispensedBanknote{
-			TransactionId: tId,
-			Banknote:      banknote,
-		})
-	}
-	baseBanknoteValidatorTest(t, tValues.Withdrawal, act)
+	t.Run("forward case - should forward to base validator", func(t *testing.T) {
+		mockDB := NewStubDB()
+		dispensed := values.DispensedBanknote{
+			TransactionId: RandomString(),
+			Banknote:      RandomMoney(),
+		}
+		tErr := RandomError()
+		baseValidator := func(gotDB db.TDB, transId string, expType tValues.TransactionType, banknote core.Money) error {
+			if gotDB == mockDB && transId == dispensed.TransactionId && expType == tValues.Withdrawal && banknote == dispensed.Banknote {
+				return tErr
+			}
+			panic("unexpected")
+		}
+		gotErr := validators.NewDispensedBanknoteValidator(baseValidator)(mockDB, dispensed)
+		AssertError(t, gotErr, tErr)
+	})
 }
 
-type baseBanknoteValidator = func(validators.MetaTransByIdValidator, wService.WalletGetter, string, core.Money, db.TDB) error
-
-func baseBanknoteValidatorTest(t *testing.T, tType tValues.TransactionType, act baseBanknoteValidator) {
+func TestBaseBanknoteValidator(t *testing.T) {
 	mockDB := NewStubDB()
 	transId := RandomString()
+	tType := RandomTransactionType()
 	trans := RandomMetaTrans()
 	wallet := RandomWallet()
 
@@ -155,7 +171,7 @@ func baseBanknoteValidatorTest(t *testing.T, tType tValues.TransactionType, act 
 			}
 			panic("unexpected")
 		}
-		gotErr := act(validateTrans, nil, transId, RandomMoney(), nil)
+		gotErr := validators.NewBaseBanknoteValidator(validateTrans, nil)(mockDB, transId, tType, RandomMoney())
 		AssertError(t, gotErr, tErr)
 	})
 	validateTrans := func(string, tValues.TransactionType) (tValues.MetaTrans, error) {
@@ -170,7 +186,7 @@ func baseBanknoteValidatorTest(t *testing.T, tType tValues.TransactionType, act 
 			}
 			panic("unexpected")
 		}
-		gotErr := act(validateTrans, getWallet, transId, RandomMoney(), mockDB)
+		gotErr := validators.NewBaseBanknoteValidator(validateTrans, getWallet)(mockDB, transId, tType, RandomMoney())
 		AssertError(t, gotErr, tErr)
 	})
 
@@ -179,15 +195,15 @@ func baseBanknoteValidatorTest(t *testing.T, tType tValues.TransactionType, act 
 	}
 	t.Run("error case - banknote's currency does not match the wallet currency", func(t *testing.T) {
 		banknote := RandomMoney()
-		gotErr := act(validateTrans, getWallet, transId, banknote, mockDB)
+		gotErr := validators.NewBaseBanknoteValidator(validateTrans, getWallet)(mockDB, transId, tType, banknote)
 		AssertError(t, gotErr, client_errors.InvalidCurrency)
 	})
 	t.Run("happy case", func(t *testing.T) {
-  	banknote := core.Money{
-  		Currency: wallet.Currency, 
-  		Amount: RandomPosMoneyAmount(), 
-  	}   
-  	err := act(validateTrans, getWallet, transId, banknote, mockDB) 
-  	AssertNoError(t, err)
+		banknote := core.Money{
+			Currency: wallet.Currency,
+			Amount:   RandomPosMoneyAmount(),
+		}
+		err := validators.NewBaseBanknoteValidator(validateTrans, getWallet)(mockDB, transId, tType, banknote)
+		AssertNoError(t, err)
 	})
 }
