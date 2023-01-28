@@ -7,9 +7,10 @@ import (
 	"github.com/AvenciaLab/avencia-backend/lib/core/core_err"
 	"github.com/AvenciaLab/avencia-backend/lib/core/db"
 	"github.com/AvenciaLab/avencia-backend/lib/features/atm/domain/values"
+	wService "github.com/AvenciaLab/avencia-backend/lib/features/wallets/domain/service"
+	tStore "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/store"
 	tValidators "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/validators"
 	tValues "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/values"
-	tStore "github.com/AvenciaLab/avencia-backend/lib/features/transactions/domain/store"
 	"github.com/AvenciaLab/avencia-backend/lib/features/transactions/store/mappers"
 )
 
@@ -30,18 +31,37 @@ func NewATMSecretValidator(trueATMSecret []byte) ATMSecretValidator {
 	}
 }
 
-// TODO: probably there should be a check if the banknote currency matches the wallet currency 
-func NewInsertedBanknoteValidator(validate MetaTransByIdValidator) InsertedBanknoteValidator {
+func NewInsertedBanknoteValidator(validate MetaTransByIdValidator, getWallet wService.WalletGetter) InsertedBanknoteValidator {
 	return func(db db.TDB, ib values.InsertedBanknote) error {
-		_, err := validate(ib.TransactionId, tValues.Deposit)
-		return err
+		trans, err := validate(ib.TransactionId, tValues.Deposit)
+		if err != nil {
+			return err
+		}
+		wallet, err := getWallet(db, trans.WalletId)
+		if err != nil {
+			return err
+		}
+		if ib.Banknote.Currency != wallet.Currency {
+			return client_errors.InvalidCurrency
+		}
+		return nil
 	}
 }
 
-func NewDispensedBanknoteValidator(validate MetaTransByIdValidator) DispensedBanknoteValidator {
+func NewDispensedBanknoteValidator(validate MetaTransByIdValidator, getWallet wService.WalletGetter) DispensedBanknoteValidator {
 	return func(db db.TDB, banknote values.DispensedBanknote) error {
-		_, err := validate(banknote.TransactionId, tValues.Withdrawal) 
-		return err
+		trans, err := validate(banknote.TransactionId, tValues.Withdrawal) 
+		if err != nil {
+			return err
+		}
+		wallet, err := getWallet(db, trans.WalletId)
+		if err != nil {
+			return err
+		}
+		if banknote.Banknote.Currency != wallet.Currency {
+			return client_errors.InvalidCurrency
+		}
+		return nil
 	}
 }
 
